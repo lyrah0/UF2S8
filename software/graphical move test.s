@@ -1,12 +1,12 @@
 .equ STACK_TOP, 0xFDFF
-.equ VRAM_START, 0x8000
-.equ VRAM_SIZE, 0x4000
+.equ VRAM_START, 0xC000
+.equ VRAM_SIZE, 0x2000
 .equ KBD_INT_VECTOR, 0xFF06
 .equ KBD_STATUS, 0xFEF2
 .equ KBD_DATA, 0xFEF1
 .equ HW_CONTROL, 0xFEFF
 .equ GRAPHICS_CONTROL, 0xFEFD
-.equ INITIAL_POS, 0x00B4
+.equ INITIAL_POS, 0x80
 
 init_stack:
         LI      r0, >STACK_TOP
@@ -58,18 +58,12 @@ clear_loop:
         B       ZC, clear_loop
 
 game_loop:
-        ; Draw initial dot
-        LI      r7, >player_y_l
-        LI      r6, <player_y_l
-        LB      r4, [a3]
-        LB      r5, [a3+1]
-        
-        LI      r7, >player_x_l
-        LI      r6, <player_x_l
-        LB      r2, [a3]
-        LB      r3, [a3+1]
-        
-        LI      r0, 1           ; mode 1=set
+        ; Draw initial dot at stored position
+        LI      r7, >player_x
+        LI      r6, <player_x
+        LB      r2, [a3]        ; x
+        LB      r3, [a3+1]      ; y
+        LI      r0, 1           ; color=set
         BL      AL, draw_pixel
 
 wait_for_input:
@@ -79,193 +73,89 @@ wait_for_input:
         LB      r0, [a3]
         CMA     r0, r0
         B       EQ, wait_for_input
-        
+
         ; Reset moved flag
         LI      r0, 0
         SB      r0, [a3]
 
         ; Clear old pixel
-        LI      r7, >player_y_l
-        LI      r6, <player_y_l
-        LB      r4, [a3]
-        LB      r5, [a3+1]
-        LI      r7, >player_x_l
-        LI      r6, <player_x_l
-        LB      r2, [a3]
-        LB      r3, [a3+1]
-        LI      r0, 0           ; mode 0=clear
+        LI      r7, >player_x
+        LI      r6, <player_x
+        LB      r2, [a3]        ; x
+        LB      r3, [a3+1]      ; y
+        LI      r0, 0           ; color=clear
         BL      AL, draw_pixel
 
-        ; Update X
+        ; Update X: x += dx  (wraps 0-255 naturally)
         LI      r7, >next_dx
         LI      r6, <next_dx
-        LB      r2, [a3]
-        
-        LI      r7, >player_x_l
-        LI      r6, <player_x_l
-        LB      r0, [a3]
-        LB      r1, [a3+1]
-        LI      r4, 0
-        CMA     r2, r2
-        B       PL, upd_x_pos
-        LI      r4, 0xFF
-upd_x_pos:
-        ADD     r0, r0, r2
-        ADC     r1, r1, r4
-        
-        ; Bounds check X -> clamp 0 to 359
-        CMA     r1, r1
-        B       PL, upd_x_max
-        LI      r0, 0
-        LI      r1, 0
-        B       AL, upd_x_done
-upd_x_max:
-        LI      r4, 1
-        CMP     r1, r4
-        B       LO, upd_x_done
-        B       EQ, check_low_x
-        B       AL, clamp_x
-check_low_x:
-        LI      r4, 0x68
-        CMP     r0, r4
-        B       LO, upd_x_done
-clamp_x:
-        LI      r0, 0x67
-        LI      r1, 0x01
-upd_x_done:
-        SB      r0, [a3]
-        SB      r1, [a3+1]
+        LB      r4, [a3]        ; dx
+        LB      r5, [a3+1]      ; dy
 
-        ; Update Y
-        LI      r7, >next_dy
-        LI      r6, <next_dy
-        LB      r2, [a3]
-
-        LI      r7, >player_y_l
-        LI      r6, <player_y_l
-        LB      r0, [a3]
-        LB      r1, [a3+1]
-        LI      r4, 0
-        CMA     r2, r2
-        B       PL, upd_y_pos
-        LI      r4, 0xFF
-upd_y_pos:
-        ADD     r0, r0, r2
-        ADC     r1, r1, r4
-        
-        ; Bounds check Y < 360
-        CMA     r1, r1
-        B       PL, upd_y_max
-        LI      r0, 0
-        LI      r1, 0
-        B       AL, upd_y_done
-upd_y_max:
-        LI      r4, 1
-        CMP     r1, r4
-        B       LO, upd_y_done
-        B       EQ, check_low_y
-        B       AL, clamp_y
-check_low_y:
-        LI      r4, 0x68
-        CMP     r0, r4
-        B       LO, upd_y_done
-clamp_y:
-        LI      r0, 0x67
-        LI      r1, 0x01
-upd_y_done:
-        SB      r0, [a3]
-        SB      r1, [a3+1]
-
-        ; Now set up for draw_pixel
-        LI      r7, >player_x_l
-        LI      r6, <player_x_l
+        LI      r7, >player_x
+        LI      r6, <player_x
         LB      r2, [a3]
         LB      r3, [a3+1]
-        LI      r7, >player_y_l
-        LI      r6, <player_y_l
-        LB      r4, [a3]
-        LB      r5, [a3+1]
-        
+        ADD     r2, r2, r4      ; x += dx
+        ADD     r3, r3, r5      ; y += dy
+        SB      r2, [a3]        ; store new x
+        SB      r3, [a3+1]      ; store new y
+
         ; Draw new pixel
-        LI      r0, 1           ; mode 1=set
+        LI      r0, 1           ; color=set
         BL      AL, draw_pixel
         B       AL, wait_for_input
 
+
 ; --- draw_pixel routine ---
-; Inputs: r3:r2 = X, r5:r4 = Y, r0 = color (0 or 1)
-; Clobbers: r1-r7
+; Inputs: r2 = x, r3 = y, r0 = color (0 or 1)
+; Clobbers: r1, r4, r5, r6, r7
 draw_pixel:
         PUSH    r0              ; save color
-        
-        ; Calculate Y * 45 into r7:r6
-        LI      r6, 0   ; result low
-        LI      r7, 0   ; result high
-        LI      r1, 45  ; counter
-dp_mul_loop:
-        CMA     r1, r1
-        B       EQ, dp_mul_done
-        ADD     r6, r6, r4  ; result_low += Y_low
-        ADC     r7, r7, r5  ; result_high += Y_high
-        
-        PUSH    r0
-        LI      r0, -1
-        ADD     r1, r1, r0  ; r1 -= 1
-        POP     r0
-        B       AL, dp_mul_loop
-dp_mul_done:
 
-        ; r7:r6 now has Y * 45. Add VRAM base 0x80 to r7
-        PUSH    r1
-        LI      r1, 0x80
-        ADD     r7, r7, r1
-        POP     r1
-        
-        ; Calculate X / 8
-        MOV     r1, r2       ; r1 = X low
-        SRL     r1, r1, 3    ; r1 = X low >> 3
-        CMA     r3, r3       ; is X high 0?
-        B       EQ, dp_x_div_8_done
-        PUSH    r0
-        LI      r0, 32
-        ADD     r1, r1, r0   ; +32
-        POP     r0
-dp_x_div_8_done:
-        
-        ; Add (X / 8) to r7:r6 (a3 is addressed)
-        ADD     r6, r6, r1
-        PUSH    r1
+        ; Address = 0xC000 + (y * 32) + (x / 8)
+        ; y * 32 = y << 5: low byte = y << 5, high = y >> 3
+        MOV     r4, r3
+        SLL     r4, r4, 5       ; r4 = low byte of y*32
+        MOV     r5, r3
+        SRL     r5, r5, 3       ; r5 = high byte of y*32
+
+        ; x / 8
+        MOV     r1, r2
+        SRL     r1, r1, 3       ; r1 = x/8
+
+        ; Add x/8 to low byte, carry into high, add base 0xC0
+        ADD     r4, r4, r1
         LI      r1, 0
-        ADC     r7, r7, r1  ; add carry
-        POP     r1
-        
-        ; X % 8 into r1
-        MOV     r1, r2       ; r1 = X low
-        PUSH    r0
-        LI      r0, 7
-        AND     r1, r1, r0   ; r1 = X % 8
-        LI      r0, 7
-        SUB     r1, r0, r1   ; r1 = 7 - (X % 8) (shift count)
-        POP     r0
-        
-        ; Create mask into r4
-        LI      r4, 1
-        SLL     r4, r4, r1   ; r4 = 1 << shift count
-        
-        ; Read byte from VRAM
-        LB      r1, [a3]
-        
-        POP     r0           ; restore color
+        ADC     r5, r5, r1
+        LI      r1, 0xC0
+        ADD     r5, r5, r1      ; r5:r4 = VRAM address (a2)
+
+        ; Mask = 1 << (7 - (x % 8))
+        LI      r1, 7
+        MOV     r6, r2
+        LI      r7, 0x07
+        AND     r6, r6, r7      ; x % 8
+        SUB     r6, r1, r6      ; 7 - (x % 8)
+        LI      r7, 1
+        SLL     r7, r7, r6      ; r7 = bit mask
+
+        ; Read-Modify-Write
+        LB      r1, [a2]        ; load VRAM byte
+
+        POP     r0              ; restore color
         CMA     r0, r0
         B       EQ, dp_clear
 dp_set:
-        OR      r1, r1, r4
+        OR      r1, r1, r7
         B       AL, dp_store
 dp_clear:
-        NOR     r4, r4, r4   ; invert mask
-        AND     r1, r1, r4
+        NOR     r7, r7, r7      ; invert mask
+        AND     r1, r1, r7
 dp_store:
-        SB      r1, [a3]
+        SB      r1, [a2]
         RET
+
 
 
 kbd_isr:
@@ -370,10 +260,8 @@ isr_done:
         RETI
 
 ; --- Data Section ---
-player_x_l: .db 0xB4
-player_x_h: .db 0x00
-player_y_l: .db 0xB4
-player_y_h: .db 0x00
+player_x: .db 0x80
+player_y: .db 0x80
 next_dx:  .db 0x00
 next_dy:  .db 0x00
 moved:    .db 0x00
