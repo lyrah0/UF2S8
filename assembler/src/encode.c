@@ -321,6 +321,14 @@ static bool encode_directive_space(struct TokenList *tokenList, FILE *foutput,
 	return false;
 }
 
+static bool encode_directive_equ(
+	struct TokenList *tokenList, int *current_token)
+{
+	if (*current_token + 4 >= tokenList->count) { return true; }
+	*current_token += 4;
+	return false;
+}
+
 static bool encode_directives(struct TokenList *tokenList, FILE *foutput,
 	int *current_address, int *current_token)
 {
@@ -365,6 +373,10 @@ static bool encode_directives(struct TokenList *tokenList, FILE *foutput,
 		strcasecmp(next->str, "resb") == 0) {
 		return encode_directive_space(
 			tokenList, foutput, current_address, current_token);
+	}
+	if (strcasecmp(next->str, "equ") == 0 ||
+		strcasecmp(next->str, "define") == 0) {
+		return encode_directive_equ(tokenList, current_token);
 	}
 
 	return false;

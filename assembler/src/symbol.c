@@ -142,8 +142,36 @@ static bool symbol_directive_space(
 	return false;
 }
 
-static bool symbol_directives(
-	struct TokenList *tokenList, int *current_address, int *current_token)
+static bool symbol_directive_equ(struct TokenList *tokenList,
+	int *current_token, struct SymbolTable *symbolTable)
+{
+	if (*current_token + 4 >= tokenList->count) { return false; }
+
+	struct Token *sym_token = &tokenList->tokens[*current_token + 2];
+	struct Token *comma_token = &tokenList->tokens[*current_token + 3];
+	struct Token *num_token = &tokenList->tokens[*current_token + 4];
+
+	if (sym_token->type != TOKEN_SYMBOL ||
+		comma_token->type != TOKEN_COMMA ||
+		num_token->type != TOKEN_NUMBER) {
+		printf("ERROR: %d: equ expects a symbol, a comma, and a "
+		       "number\n",
+			sym_token->line);
+		return true;
+	}
+
+	if (symbol_construct(
+		    symbolTable, (int)num_token->num_value, sym_token)) {
+		return true;
+	}
+
+	*current_token += 4;
+	return false;
+}
+
+static bool symbol_directives(struct TokenList *tokenList,
+	struct SymbolTable *symbolTable, int *current_address,
+	int *current_token)
 {
 	struct Token *next = &tokenList->tokens[*current_token + 1];
 	if (next->type != TOKEN_SYMBOL) {
@@ -187,6 +215,11 @@ static bool symbol_directives(
 		return symbol_directive_space(
 			tokenList, current_address, current_token);
 	}
+	if (strcasecmp(next->str, "equ") == 0 ||
+		strcasecmp(next->str, "define") == 0) {
+		return symbol_directive_equ(
+			tokenList, current_token, symbolTable);
+	}
 	printf("ERROR: unknown directive %s in line %d\n", next->str,
 		next->line);
 	return true;
@@ -206,8 +239,8 @@ bool symbol_build_table(
 			current_address += 2;
 		} else if (type == TOKEN_PERIOD &&
 			tokenList->count > current_token + 1) {
-			if (symbol_directives(tokenList, &current_address,
-				    &current_token)) {
+			if (symbol_directives(tokenList, symbolTable,
+				    &current_address, &current_token)) {
 				goto error;
 			}
 		} else if (type == TOKEN_COLON && current_token > 0) {
