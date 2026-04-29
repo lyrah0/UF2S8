@@ -1,4 +1,5 @@
 #include "debugger.h"
+#include "memory.h"
 #include "vm.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -111,7 +112,6 @@ void disassemble(uint16_t instruction)
 
 	if (instruction == 0x0000) {
 		printf("NOP");
-		;
 	} else if (instruction == 0x2000) {
 		printf("RET");
 	} else if (instruction == 0x4000) {
@@ -216,7 +216,7 @@ static void debug_prompt_m(struct VirtualMachine *viM, char *input)
 	int length = (int)strtol(endptr, nullptr, 10);
 	for (int i = 0; i < length; i++) {
 		printf("0x%04x: 0x%02x\n", (uint16_t)(address + i),
-			viM->memory[(uint16_t)(address + i)]);
+			memory_read(viM, (uint16_t)(address + i)));
 	}
 }
 
@@ -242,8 +242,8 @@ static void debug_prompt_l(struct VirtualMachine *viM, const char *input)
 		address = viM->pc - 2;
 	}
 	for (int i = 0; i < length; i++) {
-		uint16_t instruction = viM->memory[address + 1] << 8 |
-			viM->memory[address];
+		uint16_t instruction = memory_read(viM, address + 1) << 8 |
+			memory_read(viM, address);
 		printf("0x%04hx:  0x%04hx  ", address, instruction);
 		disassemble(instruction);
 		address += 2;
@@ -278,7 +278,7 @@ void debug_prompt(struct VirtualMachine *viM, uint16_t instruction)
 			char *endptr = nullptr;
 			address = (uint16_t)strtoul(input + 1, &endptr, 16);
 			value = (uint8_t)strtoul(endptr, nullptr, 16);
-			viM->memory[address] = value;
+			memory_write(viM, address, value);
 		} else if (*input == 'l') {
 			debug_prompt_l(viM, input);
 		} else if (*input == 'p') {

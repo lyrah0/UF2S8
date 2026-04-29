@@ -242,8 +242,8 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 	} else if (inst.branch.opcode == 0xE) { // BL reg
 		if (get_cond(viM, instruction)) {
 			temp = viM->csr[7] << 8 | viM->csr[6];
-			viM->memory[temp--] = viM->pc >> 8;
-			viM->memory[temp--] = viM->pc;
+			memory_write(viM, temp--, viM->pc >> 8);
+			memory_write(viM, temp--, viM->pc);
 			viM->pc = (uint16_t)((viM->gpr[reg_base] |
 						     viM->gpr[reg_base + 1]
 							     << 8) +
@@ -254,8 +254,8 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 	} else if (inst.branch.opcode == 0xF) { // BL
 		if (get_cond(viM, instruction)) {
 			temp = viM->csr[7] << 8 | viM->csr[6];
-			viM->memory[temp--] = viM->pc >> 8;
-			viM->memory[temp--] = viM->pc;
+			memory_write(viM, temp--, viM->pc >> 8);
+			memory_write(viM, temp--, viM->pc);
 			viM->pc += (int16_t)(sign_extend(inst.branch.offset, 9)
 				<< 1);
 			viM->csr[7] = temp >> 8;
@@ -291,7 +291,7 @@ bool decode_execute(struct VirtualMachine *viM, uint16_t instruction)
 		}
 	} else if (inst.reg1.opcode == 0x1C00) { // Push
 		temp = viM->csr[7] << 8 | viM->csr[6];
-		viM->memory[temp--] = viM->gpr[reg_dst];
+		memory_write(viM, temp--, viM->gpr[reg_dst]);
 		viM->csr[7] = temp >> 8;
 		viM->csr[6] = temp;
 	} else if (inst.reg2.opcode == 0x0090) { // MOV csr, reg

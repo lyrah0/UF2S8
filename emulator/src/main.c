@@ -26,12 +26,13 @@ static int cpu_thread_worker(void *data)
 	viM->wait_for_interrupt = false;
 	viM->pc = 0;
 	viM->bp_count = 0;
-	viM->memory[HW_HARDWARE_CONTROL] = 0;
+	viM->memory[HW_HW_CTRL] = 0;
 	// Default to RGB332 mode
-	viM->memory[HW_GFX_CONTROL] = 3;
+	viM->memory[HW_GFX_CTRL] = 3;
 	for (int i = 0; i < 8; i++) {
 		viM->csr[i] = 0;
 	}
+	viM->bank_select = 0;
 	uint16_t instruction = 0;
 	uint64_t instruction_count = 0;
 	uint64_t start_ticks = SDL_GetPerformanceCounter();
@@ -149,9 +150,13 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	if (!fread(&viM.memory, MAX_MEMORY, 1, finput)) {
-		// printf("ERROR: Failed to read file.\n");
-	}
+	// Read Window 0 banks
+	(void)fread(&viM.ext_memory_w0, EXT_MEMORY_W0_SIZE, 1, finput);
+	// Read Window 1 banks
+	(void)fread(&viM.ext_memory_w1, EXT_MEMORY_W1_SIZE, 1, finput);
+	// Read Fixed region into memory starting at 0xC000
+	(void)fread(&viM.memory[0xC000], 0x4000, 1, finput);
+
 	(void)fclose(finput);
 
 	if (viM.graphics) {

@@ -1,4 +1,5 @@
 #include "graphics.h"
+#include "memory.h"
 #include "vm.h"
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_events.h>
@@ -197,7 +198,7 @@ void render_graphics_frame(struct VirtualMachine *viM)
 {
 	if (!viM->graphics) { return; }
 
-	uint8_t mode = viM->memory[HW_GFX_CONTROL] & 0x0F;
+	uint8_t mode = memory_read(viM, HW_GFX_CTRL) & 0x0F;
 	if (mode > 13) { mode = 0; }
 	uint8_t *source_data = viM->vram;
 	int res = MODE_RES[mode];
@@ -283,7 +284,7 @@ static uint8_t get_source_pixel(struct VirtualMachine *viM, uint8_t mode,
 {
 	if (cmd <= 0x03) { // From Memory
 		uint16_t src_addr = src_x + (cur_y * src_stride) + cur_x;
-		return viM->memory[src_addr];
+		return memory_read(viM, src_addr);
 	}
 	// From VRAM
 	int in_x = src_x + cur_x;
@@ -339,29 +340,29 @@ void execute_blit(struct VirtualMachine *viM, uint8_t cmd)
 	if (cmd == 0) { return; }
 
 	// Read registers
-	uint16_t src_x = viM->memory[HW_BLIT_SRC_X_L] |
-		(viM->memory[HW_BLIT_SRC_X_H] << 8);
-	uint16_t src_y = viM->memory[HW_BLIT_SRC_Y_L] |
-		(viM->memory[HW_BLIT_SRC_Y_H] << 8);
-	int16_t dst_x = (int16_t)(viM->memory[HW_BLIT_DST_X_L] |
-		(viM->memory[HW_BLIT_DST_X_H] << 8));
-	int16_t dst_y = (int16_t)(viM->memory[HW_BLIT_DST_Y_L] |
-		(viM->memory[HW_BLIT_DST_Y_H] << 8));
+	uint16_t src_x = memory_read(viM, HW_BLIT_SRC_X_L) |
+		(memory_read(viM, HW_BLIT_SRC_X_H) << 8);
+	uint16_t src_y = memory_read(viM, HW_BLIT_SRC_Y_L) |
+		(memory_read(viM, HW_BLIT_SRC_Y_H) << 8);
+	int16_t dst_x = (int16_t)(memory_read(viM, HW_BLIT_DST_X_L) |
+		(memory_read(viM, HW_BLIT_DST_X_H) << 8));
+	int16_t dst_y = (int16_t)(memory_read(viM, HW_BLIT_DST_Y_L) |
+		(memory_read(viM, HW_BLIT_DST_Y_H) << 8));
 
-	uint16_t width = viM->memory[HW_BLIT_WIDTH_L] |
-		(viM->memory[HW_BLIT_WIDTH_H] << 8);
-	uint16_t height = viM->memory[HW_BLIT_HEIGHT_L] |
-		(viM->memory[HW_BLIT_HEIGHT_H] << 8);
-	uint16_t src_stride = viM->memory[HW_BLIT_SRC_STRIDE_L] |
-		(viM->memory[HW_BLIT_SRC_STRIDE_H] << 8);
-	uint16_t dst_stride = viM->memory[HW_BLIT_DST_STRIDE_L] |
-		(viM->memory[HW_BLIT_DST_STRIDE_H] << 8);
+	uint16_t width = memory_read(viM, HW_BLIT_WIDTH_L) |
+		(memory_read(viM, HW_BLIT_WIDTH_H) << 8);
+	uint16_t height = memory_read(viM, HW_BLIT_HEIGHT_L) |
+		(memory_read(viM, HW_BLIT_HEIGHT_H) << 8);
+	uint16_t src_stride = memory_read(viM, HW_BLIT_SRC_STRIDE_L) |
+		(memory_read(viM, HW_BLIT_SRC_STRIDE_H) << 8);
+	uint16_t dst_stride = memory_read(viM, HW_BLIT_DST_STRIDE_L) |
+		(memory_read(viM, HW_BLIT_DST_STRIDE_H) << 8);
 
-	uint8_t color = viM->memory[HW_BLIT_COLOR];
-	uint8_t alpha = viM->memory[HW_BLIT_ALPHA];
-	uint8_t flags = viM->memory[HW_BLIT_FLAGS];
+	uint8_t color = memory_read(viM, HW_BLIT_COLOR);
+	uint8_t alpha = memory_read(viM, HW_BLIT_ALPHA);
+	uint8_t flags = memory_read(viM, HW_BLIT_FLAGS);
 
-	uint8_t mode = viM->memory[HW_GFX_CONTROL] & 0x0F;
+	uint8_t mode = memory_read(viM, HW_GFX_CTRL) & 0x0F;
 	if (mode > 13) { mode = 0; }
 	int res = MODE_RES[mode];
 	int res_w = (int)(res * 1.6);
@@ -373,20 +374,20 @@ void execute_blit(struct VirtualMachine *viM, uint8_t cmd)
 
 	// Clipping bounds
 	int clip_x_min = (flags & 0x08) ?
-		(viM->memory[HW_BLIT_CLIP_X_MIN_L] |
-			(viM->memory[HW_BLIT_CLIP_X_MIN_H] << 8)) :
+		(memory_read(viM, HW_BLIT_CLIP_X_MIN_L) |
+			(memory_read(viM, HW_BLIT_CLIP_X_MIN_H) << 8)) :
 		0;
 	int clip_x_max = (flags & 0x08) ?
-		(viM->memory[HW_BLIT_CLIP_X_MAX_L] |
-			(viM->memory[HW_BLIT_CLIP_X_MAX_H] << 8)) :
+		(memory_read(viM, HW_BLIT_CLIP_X_MAX_L) |
+			(memory_read(viM, HW_BLIT_CLIP_X_MAX_H) << 8)) :
 		res_w - 1;
 	int clip_y_min = (flags & 0x08) ?
-		(viM->memory[HW_BLIT_CLIP_Y_MIN_L] |
-			(viM->memory[HW_BLIT_CLIP_Y_MIN_H] << 8)) :
+		(memory_read(viM, HW_BLIT_CLIP_Y_MIN_L) |
+			(memory_read(viM, HW_BLIT_CLIP_Y_MIN_H) << 8)) :
 		0;
 	int clip_y_max = (flags & 0x08) ?
-		(viM->memory[HW_BLIT_CLIP_Y_MAX_L] |
-			(viM->memory[HW_BLIT_CLIP_Y_MAX_H] << 8)) :
+		(memory_read(viM, HW_BLIT_CLIP_Y_MAX_L) |
+			(memory_read(viM, HW_BLIT_CLIP_Y_MAX_H) << 8)) :
 		res_h - 1;
 
 	if (cmd == 0x07) { // LINE DRAW

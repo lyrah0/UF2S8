@@ -237,6 +237,11 @@ static bool symbol_directives(struct TokenList *tokenList,
 		return symbol_directive_equ(
 			tokenList, current_token, symbolTable);
 	}
+	if (strcasecmp(next->str, "bankw0") == 0 ||
+		strcasecmp(next->str, "bankw1") == 0) {
+		*current_token += 2;
+		return false;
+	}
 	printf("ERROR: unknown directive %s in line %d\n", next->str,
 		next->line);
 	return true;

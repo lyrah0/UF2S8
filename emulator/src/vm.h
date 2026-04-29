@@ -50,19 +50,29 @@ enum {
 	HW_GFX_ADDR_L = 0xFEE0,
 	HW_GFX_ADDR_H = 0xFEE1,
 	HW_GFX_DATA = 0xFEEE,
-	HW_GFX_CONTROL = 0xFEEF,
+	HW_GFX_CTRL = 0xFEEF,
 	HW_PALETTE_START = 0xFFF0,
-	HW_TERMINAL_OUT = 0xFEF0,
-	HW_KEYBOARD_DATA = 0xFEF1,
-	HW_KEYBOARD_STATUS = 0xFEF2,
-	HW_TIMER_MULT = 0xFEFE,
-	HW_HARDWARE_CONTROL = 0xFEFF
+	HW_TERM_OUT = 0xFEF0,
+	HW_KBD_DATA = 0xFEF1,
+	HW_KBD_STATUS = 0xFEF2,
+	HW_TIMER_HZ = 0xFEFE,
+	HW_BANK_SEL = 0xFEFD,
+	HW_HW_CTRL = 0xFEFF
 };
 
-enum { MAX_MEMORY = 1 << 16, MAX_BREAKPOINTS = 1 << 4, VRAM_SIZE = 1 << 16 };
+enum {
+	MAX_MEMORY = 1 << 16,
+	MAX_BREAKPOINTS = 1 << 4,
+	VRAM_SIZE = 1 << 16,
+	EXT_MEMORY_W0_SIZE = 16 * 0x8000, // 16 banks of 32KB
+	EXT_MEMORY_W1_SIZE = 16 * 0x4000 // 16 banks of 16KB
+};
 
 struct VirtualMachine {
 	uint8_t memory[MAX_MEMORY];
+	uint8_t ext_memory_w0[EXT_MEMORY_W0_SIZE];
+	uint8_t ext_memory_w1[EXT_MEMORY_W1_SIZE];
+	uint8_t bank_select;
 	uint8_t gpr[8];
 	uint8_t csr[8];
 	uint16_t pc;

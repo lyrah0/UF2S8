@@ -14,16 +14,17 @@ interrupts:
 
 hardware registers:
 
-|Name	         |Address|Description|
-|----------------|------|-----------|
-|BLIT_SRC_X_L    |0xFEC0|Blitter source x coordinate / address low
-|BLIT_SRC_X_H    |0xFEC1|Blitter source x coordinate / address high
-|BLIT_SRC_Y_L    |0xFEC2|Blitter source y coordinate low
-|BLIT_SRC_Y_H    |0xFEC3|Blitter source y coordinate high
-|BLIT_DST_X_L    |0xFEC4|Blitter destination x coordinate low
-|BLIT_DST_X_H    |0xFEC5|Blitter destination x coordinate high
-|BLIT_DST_Y_L    |0xFEC6|Blitter destination y coordinate low
-|BLIT_DST_Y_H    |0xFEC7|Blitter destination y coordinate high
+|Name	          |Address|Description|
+|-----------------|------|-----------|
+|reserved         |0xFE00-0xFEBF|Reserved
+|BLIT_SRC_X_L     |0xFEC0|Blitter source x coordinate / address low
+|BLIT_SRC_X_H     |0xFEC1|Blitter source x coordinate / address high
+|BLIT_SRC_Y_L     |0xFEC2|Blitter source y coordinate low
+|BLIT_SRC_Y_H     |0xFEC3|Blitter source y coordinate high
+|BLIT_DST_X_L     |0xFEC4|Blitter destination x coordinate low
+|BLIT_DST_X_H     |0xFEC5|Blitter destination x coordinate high
+|BLIT_DST_Y_L     |0xFEC6|Blitter destination y coordinate low
+|BLIT_DST_Y_H     |0xFEC7|Blitter destination y coordinate high
 |BLIT_CLIP_X_MIN_L|0xFEC8|Blitter clip x coordinate minimum low
 |BLIT_CLIP_X_MIN_H|0xFEC9|Blitter clip x coordinate minimum high
 |BLIT_CLIP_Y_MIN_L|0xFECA|Blitter clip y coordinate minimum low
@@ -36,23 +37,37 @@ hardware registers:
 |BLIT_SRC_STRIDE_H|0xFED1|Blitter source stride high
 |BLIT_DST_STRIDE_L|0xFED2|Blitter destination stride low
 |BLIT_DST_STRIDE_H|0xFED3|Blitter destination stride high
-|BLIT_WIDTH_L      |0xFED4|Blitter width low
-|BLIT_WIDTH_H      |0xFED5|Blitter width high
-|BLIT_HEIGHT_L     |0xFED6|Blitter height low
-|BLIT_HEIGHT_H     |0xFED7|Blitter height high
-|BLIT_ALPHA      |0xFEDC|Blitter alpha level (0=transparent, 255=opaque)
-|BLIT_FLAGS      |0xFEDD|Blitter flags
-|BLIT_COLOR      |0xFEDE|Blitter color
-|BLIT_CMD        |0xFEDF|Blitter command
-|GFX_ADDR_L      |0xFEE0|Graphics VRAM address low
-|GFX_ADDR_H      |0xFEE1|Graphics VRAM address high
-|GFX_DATA        |0xFEEE|Graphics VRAM data
-|GFX_CTRL        |0xFEEF|graphics control
-|terminal_out    |0xFEF0|terminal output
-|keyboard_data   |0xFEF1|keyboard data
-|keyboard_status |0xFEF2|keyboard status
-|timer_mult      |0xFEFE|timer multiplier in hertz (1/hertz) 0=disabled
-|hardware_control|0xFEFF|hardware control
+|BLIT_WIDTH_L     |0xFED4|Blitter width low
+|BLIT_WIDTH_H     |0xFED5|Blitter width high
+|BLIT_HEIGHT_L    |0xFED6|Blitter height low
+|BLIT_HEIGHT_H    |0xFED7|Blitter height high
+|reserved         |0xFED8-0xFEDB|Reserved
+|BLIT_ALPHA       |0xFEDC|Blitter alpha level (0=transparent, 255=opaque)
+|BLIT_FLAGS       |0xFEDD|Blitter flags
+|BLIT_COLOR       |0xFEDE|Blitter color
+|BLIT_CMD         |0xFEDF|Blitter command
+|GFX_ADDR_L       |0xFEE0|Graphics VRAM address low
+|GFX_ADDR_H       |0xFEE1|Graphics VRAM address high
+|reserved         |0xFEE2-0xFEED|Reserved
+|GFX_DATA         |0xFEEE|Graphics VRAM data
+|GFX_CTRL         |0xFEEF|graphics control
+|TERM_OUT         |0xFEF0|terminal output
+|KBD_DATA         |0xFEF1|keyboard data
+|KBD_STATUS       |0xFEF2|keyboard status
+|reserved         |0xFEF3-0xFEFC|Reserved
+|BANK_SEL         |0xFEFD|Bank select register (Bits 0-3: Window 0, Bits 4-7: Window 1)
+|TIMER_HZ         |0xFEFE|timer multiplier in hertz (1/hertz) 0=disabled
+|HW_CTRL          |0xFEFF|hardware control
+
+Memory Map:
+
+|Address Range|Size|Type|Description|
+|-------------|----|----|-----------|
+|0x0000-0x7FFF|32KB|Banked|Window 0 (Mapped from 512KB pool, 16 banks)|
+|0x8000-0xBFFF|16KB|Banked|Window 1 (Mapped from 256KB pool, 16 banks)|
+|0xC000-0xFE00|15.5KB|Fixed|Fixed RAM (Stack, Heap, etc.)|
+|0xFE00-0xFEFF|256B|Fixed|Hardware Registers|
+|0xFF00-0xFFFF|256B|Fixed|Vector table|
 
 BLIT_FLAGS format:
 
@@ -108,7 +123,7 @@ GFX_CTRL format:
         - 14-15 - Reserved
 
 
-hardware control format:
+HW_CTRL format:
 
 |Bit	|Description|
 |-------|-----------|
@@ -117,7 +132,7 @@ hardware control format:
 |0	|Timer enable|
 
 
-keyboard_status format:
+KBD_STATUS format:
 
 |Bit	|Description|
 |-------|-----------|
