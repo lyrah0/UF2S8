@@ -16,6 +16,8 @@ static bool encode_instructions(struct TokenList *tokenList,
 		machine_code = 0x0000;
 	} else if (!strcasecmp(token->str, "RET")) {
 		machine_code = 0x2000;
+	} else if (!strcasecmp(token->str, "WFI")) {
+		machine_code = 0x4000;
 	} else if (!strcasecmp(token->str, "RETI")) {
 		machine_code = 0x0400;
 	} else if (!strcasecmp(token->str, "SWI")) {

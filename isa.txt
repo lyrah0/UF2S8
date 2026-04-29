@@ -67,6 +67,7 @@ Conditions:
 |--------|-------------------|-----------|
 |NOP     |000_000_000_000_0000|No operation
 |RET     |001_000_000_000_0000|Return
+|WFI     |010_000_000_000_0000|Wait for interrupt
 |RETI    |000_001_000_000_0000|Return from interrupt
 |INCC    |ddd_010_000_000_0000|Increment Carry
 |DECB    |ddd_011_000_000_0000|Decrement Borrow

@@ -170,7 +170,7 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 					   viM->gpr[reg_base + 1] << 8) +
 				sign_extend(inst.loadstore.offset, 7)));
 	} else {
-		return true;
+		return false;
 	}
 
 	if ((temp & 0xFF00) != 0) {
@@ -203,7 +203,7 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 	}
 	if (write) { viM->gpr[reg_dst] = (uint8_t)temp; }
 
-	return false;
+	return true;
 }
 
 static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
@@ -218,6 +218,8 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 		viM->pc |= memory_read(viM, ++temp) << 8;
 		viM->csr[7] = temp >> 8;
 		viM->csr[6] = temp;
+	} else if (instruction == 0x4000) { // WFI
+		viM->wait_for_interrupt = true;
 	} else if (instruction == 0x0400) { // RETI
 		temp = viM->csr[7] << 8 | viM->csr[6];
 		viM->csr[0] = memory_read(viM, ++temp);
@@ -260,10 +262,10 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 			viM->csr[6] = temp;
 		}
 	} else {
-		return true;
+		return false;
 	}
 
-	return false;
+	return true;
 }
 
 bool decode_execute(struct VirtualMachine *viM, uint16_t instruction)
@@ -275,8 +277,8 @@ bool decode_execute(struct VirtualMachine *viM, uint16_t instruction)
 	uint16_t temp = 0;
 
 	if (instruction == 0) { return false; }
-	if (!execute_branch(viM, instruction)) { return false; }
-	if (!execute_flags(viM, instruction)) { return false; }
+	if (execute_branch(viM, instruction)) { return false; }
+	if (execute_flags(viM, instruction)) { return false; }
 
 	if (inst.reg1.opcode == 0x1400) { // SWI
 		interrupt_pushtostack(viM);

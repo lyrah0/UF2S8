@@ -35,6 +35,7 @@ struct VirtualMachine {
 	bool memory_dump;
 	bool graphics;
 	bool print_stats;
+	bool wait_for_interrupt;
 	SDL_Thread *cpu_thread;
 	SDL_Window *window;
 	SDL_Renderer *renderer;

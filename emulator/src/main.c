@@ -23,6 +23,7 @@
 static int cpu_thread_worker(void *data)
 {
 	struct VirtualMachine *viM = (struct VirtualMachine *)data;
+	viM->wait_for_interrupt = false;
 	viM->pc = 0;
 	viM->bp_count = 0;
 	viM->memory[HW_HARDWARE_CONTROL] = 0;
@@ -43,8 +44,9 @@ static int cpu_thread_worker(void *data)
 			interrupt_timer(viM, ticks_ns);
 			interrupt_input(viM);
 		}
-
-		instruction = fetch_instruction(viM);
+		if (!viM->wait_for_interrupt) {
+			instruction = fetch_instruction(viM);
+		}
 		for (int i = 0; i < viM->bp_count; i++) {
 			if (viM->pc == viM->breakpoint[i]) {
 				printf("\nHit breakpoint at 0x%04x\n",
@@ -56,17 +58,18 @@ static int cpu_thread_worker(void *data)
 
 		if (viM->debug_mode) { debug_prompt(viM, instruction); }
 
-		if (decode_execute(viM, instruction)) {
-			printf("ERROR: execution failed\n");
-			viM->running = false;
-			break;
+		if (!viM->wait_for_interrupt) {
+			if (decode_execute(viM, instruction)) {
+				printf("ERROR: execution failed\n");
+				viM->running = false;
+				break;
+			}
+			viM->csr[0] &= 0x8F;
+			for (int i = 1; i < 6; i++) {
+				viM->csr[i] = 0;
+			}
+			instruction_count++;
 		}
-		viM->csr[0] &= 0x8F;
-		for (int i = 1; i < 6; i++) {
-			viM->csr[i] = 0;
-		}
-
-		instruction_count++;
 	}
 
 	uint64_t end_ticks = SDL_GetPerformanceCounter();
