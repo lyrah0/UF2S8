@@ -6,8 +6,11 @@ interrupts:
 |----|----------|-----------|
 |0x00|Halt	|Halt execution
 |0x01|Breakpoint|Breakpoint
-|0x02|Timer	|Timer interrupt
-|0x03|Keyboard  |Keyboard interrupt
+|0x02|Illegal instruction|Illegal instruction
+|0x03-0x0F|Reserved|Reserved
+|0x10|Timer	|Timer interrupt
+|0x11|Keyboard  |Keyboard interrupt
+|0x12-0x1F|Reserved|Reserved
 
 hardware registers:
 

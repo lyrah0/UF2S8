@@ -301,6 +301,9 @@ bool decode_execute(struct VirtualMachine *viM, uint16_t instruction)
 			sign_extend(inst.loadstore.offset, 7);
 		memory_write(viM, temp, viM->gpr[reg_dst]);
 	} else {
+		interrupt_pushtostack(viM);
+		viM->pc = 0xF04;
+		// end program anyways
 		printf("ERROR: illegal instruction: 0x%04x\n", instruction);
 		return true;
 	}
