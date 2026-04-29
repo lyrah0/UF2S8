@@ -212,7 +212,6 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 	Instruction inst = { .raw = instruction };
 	uint8_t reg_base = inst.loadstore.reg_base << 1;
 	uint16_t temp = 0;
-	bool cond = get_cond(viM, instruction);
 
 	if (instruction == 0x2000) {
 		temp = viM->csr[7] << 8 | viM->csr[6];
@@ -228,19 +227,19 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 		viM->csr[7] = temp >> 8;
 		viM->csr[6] = temp;
 	} else if ((instruction & 0xF) == 0xC) {
-		if (cond) {
+		if (get_cond(viM, instruction)) {
 			viM->pc = (uint16_t)((viM->gpr[reg_base] |
 						     viM->gpr[reg_base + 1]
 							     << 8) +
 				(sign_extend(inst.loadstore.offset, 7) << 1));
 		}
 	} else if ((instruction & 0xF) == 0xD) {
-		if (cond) {
+		if (get_cond(viM, instruction)) {
 			viM->pc += (int16_t)(sign_extend(inst.branch.offset, 9)
 				<< 1);
 		}
 	} else if ((instruction & 0xF) == 0xE) {
-		if (cond) {
+		if (get_cond(viM, instruction)) {
 			temp = viM->csr[7] << 8 | viM->csr[6];
 			viM->memory[temp--] = viM->pc >> 8;
 			viM->memory[temp--] = viM->pc;
@@ -252,7 +251,7 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 			viM->csr[6] = temp;
 		}
 	} else if ((instruction & 0xF) == 0xF) {
-		if (cond) {
+		if (get_cond(viM, instruction)) {
 			temp = viM->csr[7] << 8 | viM->csr[6];
 			viM->memory[temp--] = viM->pc >> 8;
 			viM->memory[temp--] = viM->pc;
