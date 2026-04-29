@@ -1,5 +1,6 @@
 #include "memory.h"
 #include "vm.h"
+#include "graphics.h"
 #include <stdint.h>
 #include <stdio.h>
 
@@ -44,6 +45,16 @@ void memory_write(struct VirtualMachine *viM, uint16_t address, uint8_t value)
 {
 	if (address == HW_TERMINAL_OUT) {
 		terminal_write(value);
+	} else if (address == HW_BLIT_CMD) {
+		execute_blit(viM, value);
+	} else if (address == HW_GFX_ADDR_L) {
+		viM->vram_ptr = (viM->vram_ptr & 0xFF00) | value;
+	} else if (address == HW_GFX_ADDR_H) {
+		viM->vram_ptr = (viM->vram_ptr & 0x00FF) |
+			((uint16_t)value << 8);
+	} else if (address == HW_GFX_DATA) {
+		viM->vram[viM->vram_ptr] = value;
+		if (viM->memory[HW_GFX_CONTROL] & 0x10) { viM->vram_ptr++; }
 	} else {
 		viM->memory[address] = value;
 	}
@@ -69,6 +80,15 @@ uint8_t memory_read(struct VirtualMachine *viM, uint16_t address)
 			}
 		}
 		return status;
+	}
+	if (address == HW_GFX_ADDR_L) {
+		return (uint8_t)(viM->vram_ptr & 0xFF);
+	}
+	if (address == HW_GFX_ADDR_H) { return (uint8_t)(viM->vram_ptr >> 8); }
+	if (address == HW_GFX_DATA) {
+		uint8_t value = viM->vram[viM->vram_ptr];
+		if (viM->memory[HW_GFX_CONTROL] & 0x20) { viM->vram_ptr++; }
+		return value;
 	}
 	return viM->memory[address];
 }
