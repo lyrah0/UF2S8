@@ -5,7 +5,25 @@ init_stack:
         MOV     sph, r7
         LI      r6, <STACK_TOP
         MOV     spl, r6
+init_timer:
+        LI      r7, >INT_VECTOR
+        LI      r6, <INT_VECTOR
+        LI      r0, >int_handler
+        SB      r0, [a3+5]
+        LI      r0, <int_handler
+        SB      r0, [a3+4]
+        
+        LI      r7, >REG_HARDWARE_CONTROL
+        LI      r6, <REG_HARDWARE_CONTROL
+        LI      r0, 0x01
+        SB      r0, [a3]
+        LI      r0, 20
+        SB      r0, [a3-1]
 
+        LI      r0, 0x80
+        MOV     flags, r0
+
+demos_start:
         BL      AL, clear_screen
         BL      AL, static_gradient
         BL      AL, moving_gradient
@@ -48,40 +66,16 @@ static_gradient_loop:
         B       ZC, static_gradient_loop
         CMA     r4, r4
         B       ZC, static_gradient_loop
-        LI      r4, 0x08
-        LI      r5, 0xFF
-        LI      r6, 0xFF
-        LI      r7, 0xFF
+        LI      r7, 30
 static_gradient_wait_loop:
+        WFI
         ADD     r7, r7, -1
-        DECB    r6
-        DECB    r5
-        DECB    r4
-        B       ZC, static_gradient_wait_loop
-        CMA     r5, r5
-        B       ZC, static_gradient_wait_loop
-        CMA     r6, r6
-        B       ZC, static_gradient_wait_loop
-        CMA     r7, r7
         B       ZC, static_gradient_wait_loop
         RET
 
 moving_gradient:
-        LI      r3, 0xFF
-        LI      r2, 0x00
-moving_gradient_loop_outerer:
-        LI      r7, 0xFF
-        LI      r6, 0xFF
-        LI      r5, 0x20
+        LI      r2, 0x50
 moving_gradient_loop_outer:
-        ADD     r7, r7, -1
-        DECB    r6
-        DECB    r5
-        B       ZC, moving_gradient_loop_outer
-        CMA     r6, r6
-        B       ZC, moving_gradient_loop_outer
-        CMA     r7, r7
-        B       ZC, moving_gradient_loop_outer
         LI      r7, >VRAM_START
         LI      r6, <VRAM_START
         LI      r5, >VRAM_SIZE_MODE3
@@ -97,41 +91,27 @@ moving_gradient_loop_inner:
         B       ZC, moving_gradient_loop_inner
         CMA     r4, r4
         B       ZC, moving_gradient_loop_inner
-        ADD     r2, r2, 1
-        INCC    r3
-        LI      r1, 0xFF
-        CMP     r1, r2
-        B       NE, moving_gradient_loop_outerer
-        CMP     r1, r3
-        B       NE, moving_gradient_loop_outerer
+        WFI
+        ADD     r2, r2, -1
+        B       ZC, moving_gradient_loop_outer
         RET
         
 moving_dot:
         BL      AL, clear_screen
         LI      r7, >VRAM_START
         LI      r6, <VRAM_START
+        LI      r5, 60
         LI      r0, 0x00
-moving_dot_loop_outer:
-        LI      r2, 0xFF
-        LI      r3, 0xFF
-        LI      r4, 0x01
+moving_dot_loop:
         SB      r0, [a3]
-        ADD     r6, r6, 1
+        ADD     r6, r6, 4
         INCC    r7
         ADD     r1, r1, 1
         SB      r1, [a3]
-moving_dot_loop_inner:
-        ADD     r2, r2, -1
-        DECB    r3
-        DECB    r4
-        B       ZC, moving_dot_loop_inner
-        CMA     r3, r3
-        B       ZC, moving_dot_loop_inner
-        CMA     r2, r2
-        B       ZC, moving_dot_loop_inner
-        LI      r2, 0xD0
-        CMP     r2, r7
-        B       NE, moving_dot_loop_outer
+
+        WFI
+        ADD     r5, r5, -1
+        B       ZC, moving_dot_loop
         RET
 
 static_color_gradient:
@@ -188,20 +168,10 @@ draw_sprites:
         LI      r4, 8           ; width
         LI      r5, 8           ; height
         BL      AL, draw_sprite
-        LI      r0, 0xFF
-        LI      r1, 0xFF
-        LI      r2, 0x80
+        LI      r0, 40
 draw_sprites_wait:
+        WFI
         ADD     r0, r0, -1
-        DECB    r1
-        DECB    r2
-        DECB    r3
-        B       ZC, draw_sprites_wait
-        CMA     r2, r2
-        B       ZC, draw_sprites_wait
-        CMA     r1, r1
-        B       ZC, draw_sprites_wait
-        CMA     r0, r0
         B       ZC, draw_sprites_wait
         RET
 
@@ -426,18 +396,8 @@ move_sprite_loop:
         ADD     r2, r2, r0      ; update y position
         ADD     r5, r5, -1      ; update number of steps
         SB      r5, [a3+5]      ; store back number of steps
-        LI      r0, 0xFF
-        LI      r1, 0xFF
-        LI      r4, 0x40
 move_sprite_wait:
-        ADD     r0, r0, -1
-        DECB    r1
-        DECB    r4
-        B       ZC, move_sprite_wait
-        CMA     r1, r1
-        B       ZC, move_sprite_wait
-        CMA     r0, r0
-        B       ZC, move_sprite_wait
+        WFI
         CMA     r5, r5          ; check if number of steps is 0
         B       ZC, move_sprite_loop
         RET
@@ -481,3 +441,6 @@ sprite3:
 .db 0x00, 0x00, 0xFF, 0x00, 0x00, 0xFF, 0x00, 0x00
 .db 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00
 .db 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF
+
+int_handler:
+        RETI
