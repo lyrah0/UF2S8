@@ -115,26 +115,13 @@ static bool handle_immediate(const struct TokenList *tokenList,
 		}
 		*immediate = symbolTable->symbols[symbol_num].address & 0xFF;
 	} else if (token->type == TOKEN_NUMBER) {
-		if (token->num_value > 127 && token->str[1] != 'x') {
-			printf("Warning: %d: value %d bigger than max "
-			       "immediate, will wrap around.\n",
+		if ((token->num_value > 127 || token->num_value < -128) &&
+			token->str[1] != 'x') {
+			printf("Warning: %d: value %lld outside valid 8-bit "
+			       "immediate range, will wrap around.\n",
 				token->line, token->num_value);
 		}
 		*immediate = token->num_value & 0xFF;
-	} else if (token->type == TOKEN_MINUS) {
-		if (next1->type != TOKEN_NUMBER) {
-			printf("ERROR: %d: expected number after minus "
-			       "sign.\n",
-				next1->line);
-			return true;
-		}
-		if (next1->num_value > 128 && next1->str[1] != 'x') {
-			printf("Warning: %d: value -%d smaller than min "
-			       "immediate, will wrap around.\n",
-				next1->line, next1->num_value);
-		}
-		*immediate = (~next1->num_value + 1) & 0xFF;
-		(*current_token)++;
 	} else {
 		printf("ERROR: %d: expected number or "
 		       "high/low label after comma.\n",
@@ -182,26 +169,18 @@ static bool handle_bracketparse(const struct TokenList *tokenList,
 		*immediate = 0;
 		return false;
 	}
-	if (next2->type != TOKEN_PLUS && next2->type != TOKEN_MINUS) {
-		printf("ERROR: %d: expected '+' or '-' after register.\n",
-			token->line);
-		return true;
-	}
-	(*current_token)++;
+	if (next2->type == TOKEN_PLUS) { (*current_token)++; }
 	if (handle_immediate(
 		    tokenList, symbolTable, current_token, immediate)) {
 		printf("ERROR: %d: failed to parse immediate.\n", token->line);
 		return true;
 	}
-	if (next2->type == TOKEN_MINUS) {
-		if (*immediate > 64) {
-			printf("Warning: %d: offset less than -64, "
-			       "truncated.\n",
-				token->line);
-		}
-		*immediate = (~*immediate) + 1;
-	} else if (*immediate > 63) {
+	int8_t signed_imm = (int8_t)*immediate;
+	if (signed_imm > 63) {
 		printf("Warning: %d: offset greater than 63, truncated.\n",
+			token->line);
+	} else if (signed_imm < -64) {
+		printf("Warning: %d: offset less than -64, truncated.\n",
 			token->line);
 	}
 	(*current_token)++;
@@ -214,7 +193,7 @@ static bool handle_bracketparse(const struct TokenList *tokenList,
 	return false;
 }
 
-bool handle_mov(const struct TokenList *tokenList, int *current_token,
+static bool handle_mov(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code)
 {
 	struct Token *token = &tokenList->tokens[*current_token];
@@ -261,7 +240,7 @@ bool handle_mov(const struct TokenList *tokenList, int *current_token,
 	return false;
 }
 
-bool handle_spp(const struct TokenList *tokenList, int *current_token,
+static bool handle_spp(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code, uint16_t base)
 {
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
@@ -272,7 +251,7 @@ bool handle_spp(const struct TokenList *tokenList, int *current_token,
 }
 
 // Handles compare register register instructions: CMP, CMN, CMA
-bool handle_crr(const struct TokenList *tokenList, int *current_token,
+static bool handle_crr(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code, uint16_t base)
 {
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
@@ -283,7 +262,7 @@ bool handle_crr(const struct TokenList *tokenList, int *current_token,
 	return false;
 }
 
-bool handle_rrr(const struct TokenList *tokenList, int *current_token,
+static bool handle_rrr(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code, uint16_t base)
 {
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
@@ -296,7 +275,7 @@ bool handle_rrr(const struct TokenList *tokenList, int *current_token,
 	return false;
 }
 
-bool handle_add(const struct TokenList *tokenList,
+static bool handle_add(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
 	uint16_t *machine_code)
 {
@@ -353,7 +332,7 @@ bool handle_add(const struct TokenList *tokenList,
 	return false;
 }
 
-bool handle_shift(const struct TokenList *tokenList, int *current_token,
+static bool handle_shift(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code, uint16_t base)
 {
 	struct Token *token = &tokenList->tokens[*current_token];
@@ -408,7 +387,7 @@ bool handle_shift(const struct TokenList *tokenList, int *current_token,
 	return false;
 }
 
-bool handle_li(const struct TokenList *tokenList,
+static bool handle_li(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
 	uint16_t *machine_code)
 {
@@ -432,7 +411,7 @@ bool handle_li(const struct TokenList *tokenList,
 }
 
 // Handles SB and LB
-bool handle_loadstore(const struct TokenList *tokenList,
+static bool handle_loadstore(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
 	uint16_t *machine_code, uint16_t base)
 {
@@ -468,7 +447,7 @@ bool handle_loadstore(const struct TokenList *tokenList,
 
 // Handles B, BL
 // NOLINTBEGIN(readability-function-cognitive-complexity)
-bool handle_branch_cond(const struct TokenList *tokenList,
+static bool handle_branch_cond(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
 	uint16_t *machine_code, uint16_t base, uint16_t current_address)
 {
@@ -476,7 +455,6 @@ bool handle_branch_cond(const struct TokenList *tokenList,
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
 	struct Token *next2 = &tokenList->tokens[*current_token + 2];
 	struct Token *next3 = &tokenList->tokens[*current_token + 3];
-	struct Token *next4 = &tokenList->tokens[*current_token + 4];
 	uint8_t base_reg = 0;
 	uint16_t offset = 0;
 	*current_token += 3;
@@ -502,54 +480,24 @@ bool handle_branch_cond(const struct TokenList *tokenList,
 			1;
 		base++;
 	} else if (next3->type == TOKEN_NUMBER) {
-		if (next3->num_value > 511 && next3->str[1] != 'x') {
-			printf("Warning: %d: value %d bigger than max "
+		if ((next3->num_value > 511 || next3->num_value < -512) &&
+			next3->str[1] != 'x') {
+			printf("Warning: %d: value %lld outside max "
 			       "offset, will wrap around.\n",
 				next3->line, next3->num_value);
 		}
 		if (next3->num_value % 2) {
-			printf("Warning: %d: odd value %d will be rounded "
-			       "down.\n",
+			printf("Warning: %d: odd value %lld will be "
+			       "rounded.\n",
 				next3->line, next3->num_value);
 		}
 		offset = next3->num_value >> 1;
-		base++;
-	} else if (next3->type == TOKEN_MINUS) {
-		if (next4->type != TOKEN_NUMBER) {
-			printf("ERROR: %d: expected number after minus "
-			       "sign.\n",
-				next4->line);
-			return true;
-		}
-		if (next4->num_value > 512 && next4->str[1] != 'x') {
-			printf("Warning: %d: value -%d smaller than min "
-			       "offset, will wrap around.\n",
-				next4->line, next4->num_value);
-		}
-		if (next4->num_value % 2) {
-			printf("Warning: %d: odd value -%d will be rounded "
-			       "up.\n",
-				next4->line, next4->num_value);
-		}
-		offset = (~next4->num_value + 1) >> 1;
-		(*current_token)++;
 		base++;
 	} else if (next3->type == TOKEN_BRACKET_OPEN) {
 		if (handle_bracketparse(tokenList, symbolTable, current_token,
 			    &base_reg, &offset)) {
 			return true;
 		}
-		if (next3->num_value > 511 && next3->str[1] != 'x') {
-			printf("Warning: %d: value %d bigger than max "
-			       "offset, will wrap around.\n",
-				next3->line, next3->num_value);
-		}
-		if (next3->num_value % 2) {
-			printf("Warning: %d: odd value %d will be rounded "
-			       "down.\n",
-				next3->line, next3->num_value);
-		}
-		offset = next3->num_value >> 1;
 	} else if (next3->type == TOKEN_REGISTER) {
 		if (next3->num_value < 10 || next3->num_value > 19) {
 			printf("ERROR: %d: only a0-3 are valid in %s.\n",

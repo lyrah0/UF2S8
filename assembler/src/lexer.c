@@ -386,6 +386,30 @@ bool lexer(const char *filepath, struct TokenList *tokenList)
 		return true;
 	}
 
+	int dst = 0;
+	for (int src = 0; src < tokenList->count; src++) {
+		if (tokenList->tokens[src].type == TOKEN_MINUS &&
+			src + 1 < tokenList->count &&
+			tokenList->tokens[src + 1].type == TOKEN_NUMBER) {
+			tokenList->tokens[src + 1].num_value =
+				-tokenList->tokens[src + 1].num_value;
+			size_t len = strlen(tokenList->tokens[src + 1].str);
+			if (len + 1 < MAX_TOKEN_LEN) {
+				memmove(tokenList->tokens[src + 1].str + 1,
+					tokenList->tokens[src + 1].str,
+					len + 1);
+				tokenList->tokens[src + 1].str[0] = '-';
+			}
+
+			continue;
+		}
+		if (dst != src) {
+			tokenList->tokens[dst] = tokenList->tokens[src];
+		}
+		dst++;
+	}
+	tokenList->count = dst;
+
 	for (int i = 0; i < 7; i++) {
 		tokenList->tokens[tokenList->count].type = TOKEN_NONE;
 		tokenList->count++;
