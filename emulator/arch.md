@@ -17,7 +17,7 @@ hardware registers:
 |terminal_out    |0xFEF0|terminal output
 |keyboard_data   |0xFEF1|keyboard data
 |keyboard_status |0xFEF2|keyboard status
-|graphics_mode   |0xFEFD|graphics control
+|graphics_control|0xFEFD|graphics control
 |timer_mult      |0xFEFE|timer multiplier
 |hardware_control|0xFEFF|hardware control
 
@@ -35,3 +35,11 @@ graphics_control format:
 |-------|-----------|
 |7-2	|Reserved|
 |1-0	|Graphics mode (0=1bpp, 1=2bpp, 2=4bpp, 3=8bpp (RGB332))|
+
+keyboard_status format:
+
+|Bit	|Description|
+|-------|-----------|
+|7-2	|Reserved|
+|1	|Press-Release (0=Press, 1=Release)|
+|0	|Keyboard ready (0=Not ready, 1=Ready)|
