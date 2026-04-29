@@ -36,10 +36,11 @@ static int cpu_thread_worker(void *data)
 	uint64_t instruction_count = 0;
 	uint64_t start_ticks = SDL_GetPerformanceCounter();
 	uint64_t ticks_ns = 0;
+	uint64_t loop_count = 0;
 
 	while (viM->running) {
 		// Get ticks only once every 1000 instructions to reduce overhead
-		if (instruction_count % 1000 == 0) {
+		if (loop_count % 1000 == 0) {
 			ticks_ns = SDL_GetTicksNS();
 			interrupt_timer(viM, ticks_ns);
 			interrupt_input(viM);
@@ -68,8 +69,9 @@ static int cpu_thread_worker(void *data)
 			for (int i = 1; i < 6; i++) {
 				viM->csr[i] = 0;
 			}
+			instruction_count++;
 		}
-		instruction_count++;
+		loop_count++;
 	}
 
 	uint64_t end_ticks = SDL_GetPerformanceCounter();

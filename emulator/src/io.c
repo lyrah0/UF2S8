@@ -1,7 +1,6 @@
 #include "io.h"
 #include "vm.h"
 #include <stdint.h>
-#include <stdio.h>
 
 void interrupt_pushtostack(struct VirtualMachine *viM)
 {
