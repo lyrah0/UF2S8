@@ -23,10 +23,12 @@ init_timer:
         LI      r0, 0x80
         MOV     flags, r0
 init_graphics:
-        LI      r0, 40
+        LI      r0, 40                  ; 320
         SB      r0, [a3+OFS_GFX_WIDTH]
-        LI      r0, 25
+        LI      r0, 25                  ; 200
         SB      r0, [a3+OFS_GFX_HEIGHT]
+        ;LI      r0, 0x00                ; mode 0
+        ;SB      r0, [a3+OFS_GFX_CTRL]
 
 demos_start:
         BL      AL, clear_screen
@@ -38,6 +40,7 @@ demos_start:
         LI      r3, 0x01                ; skip wait
         BL      AL, draw_rects
 idle_loop:
+        WFI
         B       AL, idle_loop
 
 clear_screen:
