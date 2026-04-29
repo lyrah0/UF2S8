@@ -1,0 +1,13 @@
+---
+Checks: 'clang-diagnostic-*,clang-analyzer-*,bugprone-*,cppcoreguidelines-*,misc-*,modernize-*,performance-*,portability-*,readability-*,cert*,hicpp-*,-portability-avoid-pragma-once,-hicpp-signed-bitwise,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-bugprone-easily-swappable-parameters'
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+#AnalyzeTemporaryDtors: false
+FormatStyle: none
+User: laura
+CheckOptions:
+  readability-function-cognitive-complexity.IgnoreMacros: 'true'
+  hicpp-signed-bitwise.IgnorePositiveIntegerLiterals: 'true'
+  bugprone-easily-swappable-parameters.MinimumLength: '2'
+...
+

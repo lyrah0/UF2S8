@@ -1,0 +1,102 @@
+# Unnamed fixed 2-byte simple 8
+# Design principles
+
+* 8 GPRs
+* Load/store
+* 16-bit/2-byte fixed instructions
+* 8-bit data
+* 16-bit addresses in register pairs
+* Memory is byte addressable
+* Little-endian
+* Interrupt support
+* Flags
+* Stack grows downwards
+
+## interrupts
+
+* Interrupts jump to the address at 0xFF00 + (interrupt ID << 1)
+	- Interrupts push PC and flags to the stack.
+128 interrupt IDs
+
+|ID  |Name	|Description|
+|----|----------|-----------|
+|0x00|Halt	|Halt execution
+|0x01|Breakpoint|Breakpoint
+
+## Registers
+
+|Name		|Description|
+|---------------|-----------|
+|r0-7		|Registers
+|a0-3		|Address registers
+
+address registers are virtual and mapped to the normal registers in pairs
+
+Control&status registers(i.e csr):
+
+|Name	|Number	|Description|
+|-------|-------|-----------|
+|flags	|0x0	|flags register
+|spl	|0x6	|Stack register low
+|sph	|0x7	|Stack register high
+
+* flags format:
+    - 7: Interrupt
+    - 6-4: Reserved
+    - 3: signed oVerflow
+    - 2: Negative
+    - 1: Zero
+    - 0: Carry
+
+Conditions:
+
+|Mnemonic|Opcode|Flags        |Description|
+|--------|------|-------------|-----------|
+|ZS/EQ   |0     |z==1         |Equal, zero|
+|ZC/NE   |1     |z==0         |Not equal, not zero|
+|CS/HS   |2     |c==1         |Carry set, unsigned higher or same|
+|CC/LO   |3     |c==0         |Carry clear, unsigned lower|
+|NS/MI   |4     |n==1         |Negative set|
+|NC/PL   |5     |n==0         |Negative clear|
+|VS      |6	|v==1         |Overflow set|
+|AL      |7	|none         |Always|
+
+## instructions
+
+|Mnemonic|OPCODE             |Description|
+|--------|-------------------|-----------|
+|NOP     |000_000_000_000_0000|No operation
+|RET     |001_000_000_000_0000|Return
+|RETI    |000_001_000_000_0000|Return from interrupt
+|SWI     |sss_101_000_000_0000|Software interrupt from register
+|POP     |ddd_110_000_000_0000|pop register from stack
+|PUSH    |sss_111_000_000_0000|push register to stack
+|MOV     |ddd_sss_001_000_0000|Move register to register
+|MOV     |ddd_sss_010_000_0000|Move csr to register
+|MOV     |ddd_sss_011_000_0000|Move register to csr
+|CMP     |sss_sss_000_001_0000|Compare subtraction
+|CMN     |sss_sss_001_001_0000|Compare addition
+|CMA     |sss_sss_010_001_0000|Compare And
+|SUB     |ddd_sss_sss_000_0001|Subtract
+|SBC     |ddd_sss_sss_001_0001|Subtract with carry
+|ADD     |ddd_sss_sss_010_0001|Add
+|ADC     |ddd_sss_sss_011_0001|Add with carry
+|AND     |ddd_sss_sss_100_0001|And
+|OR      |ddd_sss_sss_101_0001|Or
+|NOR     |ddd_sss_sss_110_0001|Not Or
+|XOR     |ddd_sss_sss_111_0001|Exclusive or
+|SLL     |ddd_sss_sss_000_0010|Shift Left Logical
+|SRL     |ddd_sss_sss_001_0010|Shift Right Logical
+|SRA     |ddd_sss_sss_010_0010|Shift Right Arithmetic
+|SLL     |ddd_sss_iii_100_0010|Shift Left Logical immediate
+|SRL     |ddd_sss_iii_101_0010|Shift Right Logical immediate
+|SRA     |ddd_sss_iii_110_0010|Shift Right Arithmetic immediate
+|LI      |ddd_iii_iii_ii0_1001|Load Immediate
+|ADD     |ddd_sss_iii_ii1_1001|Add signed immediate
+|SB      |sss_bbo_ooo_ooo_1010|Store byte with offset
+|LB      |ddd_bbo_ooo_ooo_1011|Load byte with offset
+|B       |ccc_bbo_ooo_ooo_1100|Branch register (COND)
+|B       |ccc_ooo_ooo_ooo_1101|Branch relative (COND)
+|BL      |ccc_bbo_ooo_ooo_1110|Branch register and push return address to stack (COND)
+|BL      |ccc_ooo_ooo_ooo_1111|Branch relative and push return address to stack (COND)
+

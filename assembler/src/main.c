@@ -1,0 +1,771 @@
+#define GNU_SOURCE
+#define _XOPEN_SOURCE 1 //NOLINT
+#include <unistd.h> //NOLINT
+#include <bits/getopt_core.h> //NOLINT
+#include <ctype.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include "structures.h"
+#include "globals.h"
+#include "handle.h"
+
+static void get_instr_reg_cond_sym(struct TokenList *tokenList)
+{
+	for (int i = 0; i < INSTRUCTION_NUM; i++) {
+		if (!strcasecmp(tokenList->tokens[tokenList->count].str,
+			    instr_list[i])) {
+			tokenList->tokens[tokenList->count].type =
+				TOKEN_INSTRUCTION;
+			return;
+		}
+	}
+	if (tokenList->tokens[tokenList->count].type == TOKEN_NONE) {
+		for (int i = 0; i < REGISTER_NUM; i++) {
+			if (!strcasecmp(
+				    tokenList->tokens[tokenList->count].str,
+				    registers[i].name)) {
+				tokenList->tokens[tokenList->count].type =
+					TOKEN_REGISTER;
+				tokenList->tokens[tokenList->count].num_value =
+					registers[i].number;
+				return;
+			}
+		}
+	}
+	if (tokenList->tokens[tokenList->count].type == TOKEN_NONE) {
+		for (int i = 0; i < CONDITION_NUM; i++) {
+			if (!strcasecmp(
+				    tokenList->tokens[tokenList->count].str,
+				    conditions[i].name)) {
+				tokenList->tokens[tokenList->count].type =
+					TOKEN_CONDITION;
+				tokenList->tokens[tokenList->count].num_value =
+					conditions[i].number;
+				return;
+			}
+		}
+	}
+	if (tokenList->tokens[tokenList->count].type == TOKEN_NONE) {
+		tokenList->tokens[tokenList->count].type = TOKEN_SYMBOL;
+	}
+}
+
+static bool get_token_complex(
+	struct TokenList *tokenList, char **cursor, int line_num)
+{
+	if (**cursor == '"') {
+		tokenList->tokens[tokenList->count].type = TOKEN_STRING;
+		tokenList->tokens[tokenList->count].line = line_num;
+		(*cursor)++;
+		int iter = 0;
+		while ((iter < MAX_TOKEN_LEN - 2) && (**cursor != '"')) {
+			tokenList->tokens[tokenList->count].str[iter++] =
+				**cursor;
+			(*cursor)++;
+		}
+		(*cursor)++;
+		tokenList->tokens[tokenList->count].str[iter] = '\0';
+		tokenList->count++;
+	} else if (isalpha(**cursor) || **cursor == '_') {
+		tokenList->tokens[tokenList->count].type = TOKEN_NONE;
+		tokenList->tokens[tokenList->count].line = line_num;
+		int iter = 0;
+		while ((iter < MAX_TOKEN_LEN - 2) &&
+			(isalnum(**cursor) || **cursor == '_')) {
+			tokenList->tokens[tokenList->count].str[iter++] =
+				**cursor;
+			(*cursor)++;
+		}
+		tokenList->tokens[tokenList->count].str[iter] = '\0';
+
+		get_instr_reg_cond_sym(tokenList);
+
+		tokenList->count++;
+	} else if (isdigit(**cursor)) {
+		tokenList->tokens[tokenList->count].type = TOKEN_NUMBER;
+		tokenList->tokens[tokenList->count].line = line_num;
+		int iter = 0;
+		while ((iter < MAX_TOKEN_LEN - 2) && (isalnum(**cursor))) {
+			tokenList->tokens[tokenList->count].str[iter++] =
+				**cursor;
+			(*cursor)++;
+		}
+		tokenList->tokens[tokenList->count].str[iter] = '\0';
+		tokenList->tokens[tokenList->count].num_value = (int)strtol(
+			tokenList->tokens[tokenList->count].str, nullptr, 0);
+		tokenList->count++;
+	} else {
+		return false;
+	}
+	return true;
+}
+
+static bool get_token(struct TokenList *tokenList, char **cursor, int line_num)
+{
+	if (**cursor == '(') {
+		tokenList->tokens[tokenList->count].type =
+			TOKEN_PARENTHESIS_OPEN;
+		tokenList->tokens[tokenList->count].line = line_num;
+		tokenList->count++;
+		(*cursor)++;
+	} else if (**cursor == ')') {
+		tokenList->tokens[tokenList->count].type =
+			TOKEN_PARENTHESIS_CLOSE;
+		tokenList->tokens[tokenList->count].line = line_num;
+		tokenList->count++;
+		(*cursor)++;
+	} else if (**cursor == '[') {
+		tokenList->tokens[tokenList->count].type = TOKEN_BRACKET_OPEN;
+		tokenList->tokens[tokenList->count].line = line_num;
+		tokenList->count++;
+		(*cursor)++;
+	} else if (**cursor == ']') {
+		tokenList->tokens[tokenList->count].type = TOKEN_BRACKET_CLOSE;
+		tokenList->tokens[tokenList->count].line = line_num;
+		tokenList->count++;
+		(*cursor)++;
+	} else if (**cursor == '{') {
+		tokenList->tokens[tokenList->count].type =
+			TOKEN_CURLY_BRACKET_OPEN;
+		tokenList->tokens[tokenList->count].line = line_num;
+		tokenList->count++;
+		(*cursor)++;
+	} else if (**cursor == '}') {
+		tokenList->tokens[tokenList->count].type =
+			TOKEN_CURLY_BRACKET_CLOSE;
+		tokenList->tokens[tokenList->count].line = line_num;
+		tokenList->count++;
+		(*cursor)++;
+	} else if (**cursor == ',') {
+		tokenList->tokens[tokenList->count].type = TOKEN_COMMA;
+		tokenList->tokens[tokenList->count].line = line_num;
+		tokenList->count++;
+		(*cursor)++;
+	} else if (**cursor == '.') {
+		tokenList->tokens[tokenList->count].type = TOKEN_PERIOD;
+		tokenList->tokens[tokenList->count].line = line_num;
+		tokenList->count++;
+		(*cursor)++;
+	} else if (**cursor == ':') {
+		tokenList->tokens[tokenList->count].type = TOKEN_COLON;
+		tokenList->tokens[tokenList->count].line = line_num;
+		tokenList->count++;
+		(*cursor)++;
+	} else if (**cursor == '+') {
+		tokenList->tokens[tokenList->count].type = TOKEN_PLUS;
+		tokenList->tokens[tokenList->count].line = line_num;
+		tokenList->count++;
+		(*cursor)++;
+	} else if (**cursor == '-') {
+		tokenList->tokens[tokenList->count].type = TOKEN_MINUS;
+		tokenList->tokens[tokenList->count].line = line_num;
+		tokenList->count++;
+		(*cursor)++;
+	} else if (**cursor == '<') {
+		tokenList->tokens[tokenList->count].type = TOKEN_LT_SIGN;
+		tokenList->tokens[tokenList->count].line = line_num;
+		tokenList->count++;
+		(*cursor)++;
+	} else if (**cursor == '>') {
+		tokenList->tokens[tokenList->count].type = TOKEN_GT_SIGN;
+		tokenList->tokens[tokenList->count].line = line_num;
+		tokenList->count++;
+		(*cursor)++;
+	} else if (get_token_complex(tokenList, cursor, line_num)) {
+	} else {
+		printf("ERROR: %d: unknown charactr %c\n", line_num, **cursor);
+		goto error;
+	}
+
+	return false;
+error:
+	return true;
+}
+
+static bool lexer(FILE *finput, struct TokenList *tokenList)
+{
+	char line[MAX_LINE_LEN];
+	char *cursor = nullptr;
+	int line_num = 1;
+
+	for (int i = 0; i < MAX_LINES; i++, line_num++) {
+		if (!fgets(line, MAX_LINE_LEN, finput)) { break; }
+		char *comment = strchr(line, ';');
+		if (comment) {
+			*comment = '\0';
+		} else {
+			line[MAX_LINE_LEN - 1] = '\0';
+		}
+		cursor = &line;
+		while (*cursor != '\0') {
+			if (isspace(*cursor)) { //NOLINT
+				cursor++;
+				continue;
+			}
+			if (get_token(tokenList, &cursor, line_num)) {
+				goto error;
+			}
+		}
+	}
+
+	for (int i = 0; i < 7; i++) {
+		tokenList->tokens[tokenList->count].type = TOKEN_NONE;
+		tokenList->count++;
+		if (tokenList->count >= MAX_TOKENS) { break; }
+	}
+
+	return false;
+error:
+	return true;
+}
+
+static bool symbol_construct(struct SymbolTable *symbolTable,
+	int current_address, struct Token *prev)
+{
+	bool defined = false;
+	for (int i = 0; i < symbolTable->count; i++) {
+		if (!strcmp(symbolTable->symbols[i].name, prev->str)) {
+			defined = true;
+		}
+	}
+	if (!defined) {
+		symbolTable->symbols[symbolTable->count].address =
+			current_address;
+		(void)strcpy(symbolTable->symbols[symbolTable->count].name,
+			prev->str);
+		symbolTable->count++;
+	} else {
+		printf("ERROR: %d: label %s already exists, redefinition not "
+		       "allowed.\n",
+			prev->line, prev->str);
+		return true;
+	}
+	return false;
+}
+
+static bool symbol_directive_asciz(
+	struct TokenList *tokenList, int *current_address, int *current_token)
+{
+	*current_token += 2;
+	while (*current_token < tokenList->count) {
+		struct Token *token = &tokenList->tokens[*current_token];
+		if (token->type == TOKEN_STRING) {
+			(*current_address) += (int)strlen(token->str) + 1;
+		} else if (token->type == TOKEN_COMMA) {
+		} else {
+			(*current_token)--;
+			break;
+		}
+		(*current_token)++;
+	}
+	return false;
+}
+
+static bool symbol_directive_ascii(
+	struct TokenList *tokenList, int *current_address, int *current_token)
+{
+	*current_token += 2;
+	while (*current_token < tokenList->count) {
+		struct Token *token = &tokenList->tokens[*current_token];
+		if (token->type == TOKEN_STRING) {
+			(*current_address) += (int)strlen(token->str);
+		} else if (token->type == TOKEN_COMMA) {
+		} else {
+			(*current_token)--;
+			break;
+		}
+		(*current_token)++;
+	}
+	return false;
+}
+
+static bool symbol_directive_dsize(struct TokenList *tokenList,
+	int *current_address, int *current_token, int size)
+{
+	*current_token += 2;
+	while (*current_token < tokenList->count) {
+		struct Token *token = &tokenList->tokens[*current_token];
+		if (token->type == TOKEN_NUMBER) {
+			(*current_address) += size;
+		} else if (token->type == TOKEN_STRING) {
+			(*current_address) += (int)strlen(token->str);
+		} else if (token->type == TOKEN_COMMA) {
+		} else {
+			(*current_token)--;
+			break;
+		}
+		(*current_token)++;
+	}
+	return false;
+}
+
+static bool symbol_directives(
+	struct TokenList *tokenList, int *current_address, int *current_token)
+{
+	struct Token *next = &tokenList->tokens[*current_token + 1];
+	struct Token *nextnext = &tokenList->tokens[*current_token + 2];
+	if (next->type == TOKEN_SYMBOL && nextnext->type == TOKEN_NUMBER) {
+		if (strcasecmp(next->str, "origin") == 0) {
+			if (nextnext->num_value % 2) {
+				printf("ERROR: origin not aligned in line "
+				       "%d\n",
+					next->line);
+				goto error;
+			}
+			*current_address = (int)nextnext->num_value;
+			*current_token += 2;
+		} else if (strcasecmp(next->str, "db") == 0 ||
+			strcasecmp(next->str, "byte") == 0) {
+			return symbol_directive_dsize(
+				tokenList, current_address, current_token, 1);
+		} else if (strcasecmp(next->str, "dh") == 0 ||
+			strcasecmp(next->str, "half") == 0) {
+			return symbol_directive_dsize(
+				tokenList, current_address, current_token, 2);
+		} else if (strcasecmp(next->str, "dw") == 0 ||
+			strcasecmp(next->str, "word") == 0) {
+			return symbol_directive_dsize(
+				tokenList, current_address, current_token, 4);
+		} else if (strcasecmp(next->str, "ascii") == 0) {
+			return symbol_directive_ascii(
+				tokenList, current_address, current_token);
+		} else if (strcasecmp(next->str, "asciz") == 0) {
+			return symbol_directive_asciz(
+				tokenList, current_address, current_token);
+		} else {
+			printf("ERROR: unknown directive %s in line %d\n",
+				next->str, next->line);
+			goto error;
+		}
+	}
+
+	return false;
+error:
+	return true;
+}
+
+static bool symbol_build_table(
+	struct TokenList *tokenList, struct SymbolTable *symbolTable)
+{
+	int current_address = 0;
+
+	for (int current_token = 0; current_token < tokenList->count;
+		current_token++) {
+		enum TokenType type = tokenList->tokens[current_token].type;
+		if (type == TOKEN_INSTRUCTION) {
+			current_address += 2;
+		} else if (type == TOKEN_PERIOD &&
+			tokenList->count > current_token + 1) {
+			if (symbol_directives(tokenList, &current_address,
+				    &current_token)) {
+				goto error;
+			}
+		} else if (type == TOKEN_COLON && current_token > 0) {
+			struct Token *prev =
+				&tokenList->tokens[current_token - 1];
+			if (prev->type == TOKEN_SYMBOL) {
+				if (current_address % 2) {
+					printf("Warning: %d: label is at an "
+					       "odd address.\n",
+						prev->line);
+				}
+				symbol_construct(
+					symbolTable, current_address, prev);
+			}
+		}
+	}
+	return false;
+error:
+	return true;
+}
+
+// NOLINTBEGIN(readability-function-cognitive-complexity)
+static bool encode_instructions(struct TokenList *tokenList,
+	struct SymbolTable *symbolTable, FILE *foutput, int *current_address,
+	int *current_token)
+{
+	struct Token *token = &tokenList->tokens[*current_token];
+	uint16_t machine_code = 0;
+	if (!strcasecmp(token->str, "NOP")) {
+		machine_code = 0x0000;
+	} else if (!strcasecmp(token->str, "RET")) {
+		machine_code = 0x2000;
+	} else if (!strcasecmp(token->str, "RETI")) {
+		machine_code = 0x0400;
+	} else if (!strcasecmp(token->str, "SWI")) {
+		if (handle_spp(
+			    tokenList, current_token, &machine_code, 0x1400)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "POP")) {
+		printf("Pop!\n");
+		if (handle_spp(
+			    tokenList, current_token, &machine_code, 0x1800)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "PUSH")) {
+		printf("Push!\n");
+		if (handle_spp(
+			    tokenList, current_token, &machine_code, 0x1C00)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "MOV")) {
+		if (handle_mov(tokenList, current_token, &machine_code)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "CMP")) {
+		if (handle_crr(
+			    tokenList, current_token, &machine_code, 0x0010)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "CMN")) {
+		if (handle_crr(
+			    tokenList, current_token, &machine_code, 0x0090)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "CMA")) {
+		if (handle_crr(
+			    tokenList, current_token, &machine_code, 0x0110)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "SUB")) {
+		if (handle_rrr(
+			    tokenList, current_token, &machine_code, 0x0001)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "SBC")) {
+		if (handle_rrr(
+			    tokenList, current_token, &machine_code, 0x0011)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "ADD")) {
+		if (handle_add(tokenList, symbolTable, current_token,
+			    &machine_code)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "ADC")) {
+		if (handle_rrr(
+			    tokenList, current_token, &machine_code, 0x0031)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "AND")) {
+		if (handle_rrr(
+			    tokenList, current_token, &machine_code, 0x0041)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "OR")) {
+		if (handle_rrr(
+			    tokenList, current_token, &machine_code, 0x0051)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "NOR")) {
+		if (handle_rrr(
+			    tokenList, current_token, &machine_code, 0x0061)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "XOR")) {
+		if (handle_rrr(
+			    tokenList, current_token, &machine_code, 0x0071)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "SLL")) {
+		if (handle_shift(
+			    tokenList, current_token, &machine_code, 0x0002)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "SRL")) {
+		if (handle_shift(
+			    tokenList, current_token, &machine_code, 0x0012)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "SRA")) {
+		if (handle_shift(
+			    tokenList, current_token, &machine_code, 0x0022)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "LI")) {
+		if (handle_li(tokenList, symbolTable, current_token,
+			    &machine_code)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "SB")) {
+		if (handle_loadstore(tokenList, symbolTable, current_token,
+			    &machine_code, 0x000A)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "LB")) {
+		if (handle_loadstore(tokenList, symbolTable, current_token,
+			    &machine_code, 0x000B)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "B")) {
+		if (handle_branch_cond(tokenList, symbolTable, current_token,
+			    &machine_code, 0x000C, *current_address)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "BL")) {
+		if (handle_branch_cond(tokenList, symbolTable, current_token,
+			    &machine_code, 0x000E, *current_address)) {
+			goto error;
+		}
+	} else {
+		printf("ERROR: %d: unknown instruction %s\n", token->line,
+			token->str);
+		return true;
+	}
+	if (*current_address % 2) {
+		char empty = 0;
+		if (!fwrite(&empty, 1, 1, foutput)) {
+			printf("ERROR: Failed to write output\n");
+			return true;
+		}
+	}
+	if (!fwrite(&machine_code, 2, 1, foutput)) {
+		printf("ERROR: Failed to write output\n");
+		return true;
+	}
+	*current_address += 2;
+	return false;
+error:
+	printf("ERROR: %d: failed to encode %s\n", token->line, token->str);
+	return true;
+} // NOLINTEND(readability-function-cognitive-complexity)
+
+static bool encode_directive_asciz(struct TokenList *tokenList, FILE *foutput,
+	int *current_address, int *current_token)
+{
+	*current_token += 2;
+	while (*current_token < tokenList->count) {
+		struct Token *token = &tokenList->tokens[*current_token];
+		if (token->type == TOKEN_STRING) {
+			(*current_address) += (int)strlen(token->str) + 1;
+			for (int i = 0; 0 < (int)strlen(token->str) + 1; i++) {
+				if (!fwrite(&token->str[i], 1, 1, foutput)) {
+					printf("ERROR: failed to write "
+					       "output\n");
+					return true;
+				}
+			}
+		} else if (token->type == TOKEN_COMMA) {
+		} else {
+			(*current_token)--;
+			break;
+		}
+		(*current_token)++;
+	}
+	return false;
+}
+
+static bool encode_directive_ascii(struct TokenList *tokenList, FILE *foutput,
+	int *current_address, int *current_token)
+{
+	*current_token += 2;
+	while (*current_token < tokenList->count) {
+		struct Token *token = &tokenList->tokens[*current_token];
+		if (token->type == TOKEN_STRING) {
+			(*current_address) += (int)strlen(token->str);
+			for (int i = 0; 0 < (int)strlen(token->str); i++) {
+				if (!fwrite(&token->str[i], 1, 1, foutput)) {
+					printf("ERROR: failed to write "
+					       "output\n");
+					return true;
+				}
+			}
+		} else if (token->type == TOKEN_COMMA) {
+		} else {
+			(*current_token)--;
+			break;
+		}
+		(*current_token)++;
+	}
+	return false;
+}
+
+static bool encode_directive_dsize(struct TokenList *tokenList, FILE *foutput,
+	int *current_address, int *current_token, int size)
+{
+	*current_token += 2;
+	while (*current_token < tokenList->count) {
+		struct Token *token = &tokenList->tokens[*current_token];
+		if (token->type == TOKEN_NUMBER) {
+			(*current_address) += size;
+			if (token->num_value > (1 << (8 * size)) - 1) {
+				printf("Warning: %d: value %lld truncated",
+					token->line, token->num_value);
+			}
+			if (!fwrite(&token->num_value, size, 1, foutput)) {
+				printf("ERROR: failed to write output\n");
+				return true;
+			}
+		} else if (token->type == TOKEN_STRING) {
+			(*current_address) += (int)strlen(token->str);
+			for (int i = 0; 0 < (int)strlen(token->str); i++) {
+				if (!fwrite(&token->str[i], 1, 1, foutput)) {
+					printf("ERROR: failed to write "
+					       "output\n");
+					return true;
+				}
+			}
+		} else if (token->type == TOKEN_COMMA) {
+		} else {
+			(*current_token)--;
+			break;
+		}
+		(*current_token)++;
+	}
+	return false;
+}
+
+static bool encode_directives(struct TokenList *tokenList,
+	struct SymbolTable *symbolTable, FILE *foutput, int *current_address,
+	int *current_token)
+{
+	struct Token *next = &tokenList->tokens[*current_token + 1];
+	struct Token *nextnext = &tokenList->tokens[*current_token + 2];
+	if (next->type == TOKEN_SYMBOL && nextnext->type == TOKEN_NUMBER) {
+		if (strcasecmp(next->str, "origin") == 0) {
+			const int empty = 0;
+			for (; *current_address < nextnext->num_value;
+				(*current_address)++) {
+				if (!fwrite(&empty, 1, 1, foutput)) {
+					printf("ERROR: failed to write "
+					       "output\n");
+					goto error;
+				}
+			}
+			*current_token += 2;
+		} else if (strcasecmp(next->str, "db") == 0 ||
+			strcasecmp(next->str, "byte") == 0) {
+			return encode_directive_dsize(tokenList, foutput,
+				current_address, current_token, 1);
+		} else if (strcasecmp(next->str, "dh") == 0 ||
+			strcasecmp(next->str, "half") == 0) {
+			return encode_directive_dsize(tokenList, foutput,
+				current_address, current_token, 2);
+		} else if (strcasecmp(next->str, "dw") == 0 ||
+			strcasecmp(next->str, "word") == 0) {
+			return encode_directive_dsize(tokenList, foutput,
+				current_address, current_token, 4);
+		} else if (strcasecmp(next->str, "ascii") == 0) {
+			return encode_directive_ascii(tokenList, foutput,
+				current_address, current_token);
+		} else if (strcasecmp(next->str, "asciz") == 0) {
+			return encode_directive_asciz(tokenList, foutput,
+				current_address, current_token);
+		}
+	}
+	return false;
+error:
+	return true;
+}
+
+static bool encode_and_write(struct TokenList *tokenList,
+	struct SymbolTable *symbolTable, FILE *foutput)
+{
+	int current_address = 0;
+	for (int current_token = 0; current_token < tokenList->count;
+		current_token++) {
+		struct Token *token = &tokenList->tokens[current_token];
+		if (token->type == TOKEN_PERIOD &&
+			tokenList->count > current_token + 1) {
+			if (encode_directives(tokenList, symbolTable, foutput,
+				    &current_address, &current_token)) {
+				printf("ERROR: directive encoding "
+				       "failed!\n");
+				goto error;
+			}
+		} else if (token->type == TOKEN_INSTRUCTION) {
+			if (encode_instructions(tokenList, symbolTable,
+				    foutput, &current_address,
+				    &current_token)) {
+				printf("ERROR: instruction encoding "
+				       "failed!\n");
+				goto error;
+			}
+		} /*else {
+			printf("ERROR: %d: Unexpected token.\n", token->line);
+			return true;
+		}*/
+	}
+	return false;
+error:
+	return true;
+}
+
+int main(int argc, char *argv[])
+{
+	if (argc < 2) {
+		printf("ERROR: no argument given.\n");
+		return 1;
+	}
+
+	FILE *finput = nullptr;
+	char *ifilepath = nullptr;
+	FILE *foutput = nullptr;
+	char *ofilepath = nullptr;
+
+	int opt = 0;
+
+	while ((opt = getopt(argc, argv, "i:o:")) != -1) {
+		switch (opt) {
+		case 'i':
+			ifilepath = optarg;
+			break;
+		case 'o':
+			ofilepath = optarg;
+			break;
+		default:
+			printf("Usage: %s [-i assembly file] [-o output "
+			       "file]\n",
+				argv[0]);
+		}
+	}
+
+	if (ifilepath) {
+		finput = fopen(ifilepath, "r");
+	} else {
+		printf("ERROR: no input file\n");
+		goto error;
+	}
+	if (finput == nullptr) {
+		printf("ERROR: failed to open input file\n");
+		goto error;
+	}
+	if (ofilepath) {
+		foutput = fopen(ofilepath, "w");
+	} else {
+		foutput = fopen("a.out", "w");
+	}
+	if (foutput == nullptr) {
+		printf("ERROR: failed to open output file\n");
+		goto error;
+	}
+
+	struct TokenList *tokenList = malloc(sizeof(struct TokenList));
+	if (!tokenList) { goto error; }
+	tokenList->count = 0;
+	if (lexer(finput, tokenList)) { goto error; }
+
+	(void)fclose(finput);
+	finput = nullptr;
+
+	struct SymbolTable *symbolTable = malloc(sizeof(struct SymbolTable));
+	if (!symbolTable) { goto error; }
+	symbolTable->count = 0;
+	if (symbol_build_table(tokenList, symbolTable)) { goto error; }
+
+	if (encode_and_write(tokenList, symbolTable, foutput)) { goto error; }
+
+	(void)fclose(foutput);
+	free(symbolTable);
+	free(tokenList);
+
+	exit(0);
+error:
+	if (finput) { (void)fclose(finput); }
+	if (foutput) { (void)fclose(foutput); }
+	exit(1);
+}
