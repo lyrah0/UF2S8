@@ -1,6 +1,7 @@
 #include "io.h"
 #include "vm.h"
 #include <stdint.h>
+#include <stdio.h>
 
 void interrupt_pushtostack(struct VirtualMachine *viM)
 {
@@ -30,6 +31,8 @@ void interrupt_timer(struct VirtualMachine *viM, const uint64_t ticks_ns)
 	if (ticks_ns - last_ticks < period_ns) { return; }
 	last_ticks = ticks_ns;
 
+	viM->wait_for_interrupt = false;
+
 	interrupt_pushtostack(viM);
 
 	uint16_t vector_addr = 0xFF04;
@@ -42,6 +45,7 @@ void interrupt_input(struct VirtualMachine *viM)
 	if ((viM->csr[0] >> 7) == 1 &&
 		(viM->memory[HW_HARDWARE_CONTROL] & 0x02) &&
 		viM->key_head != viM->key_tail) {
+		viM->wait_for_interrupt = false;
 		interrupt_pushtostack(viM);
 
 		uint16_t vector_addr = 0xFF06;

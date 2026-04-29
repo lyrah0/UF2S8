@@ -110,9 +110,11 @@ void disassemble(uint16_t instruction)
 	int8_t imm_add = (int8_t)sign_extend(inst.addi.imm, 5);
 
 	if (instruction == 0x0000) {
-		printf("NOP");
+		printf("NOP");;
 	} else if (instruction == 0x2000) {
 		printf("RET");
+	} else if (instruction == 0x4000) {
+		printf("WFI");
 	} else if (instruction == 0x0400) {
 		printf("RETI");
 	} else if (inst.reg1.opcode == 0x1400) {

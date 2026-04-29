@@ -68,8 +68,8 @@ static int cpu_thread_worker(void *data)
 			for (int i = 1; i < 6; i++) {
 				viM->csr[i] = 0;
 			}
-			instruction_count++;
 		}
+		instruction_count++;
 	}
 
 	uint64_t end_ticks = SDL_GetPerformanceCounter();
