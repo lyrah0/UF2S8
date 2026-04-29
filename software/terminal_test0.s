@@ -2,33 +2,30 @@ setupstack:
 	LI	r0, 0xFD
 	MOV	sph, r0
 	LI	r0, 0xFF
-	MOV	SPL, r0
+	MOV	spl, r0
 
 welcomeprint:
-	LI	r0, 0
-	LI	r1, 0x80
+	LI	r0, 0x80
+	MOV	flags, r0
 	LI	r5, 0xFE
 	LI	r4, 0xF0
 	LI	r7, >welcome_message
 	LI	r6, <welcome_message
-	MOV	flags, r1
 wprintloop:
-	LB	r1, [a3+1]
+	LB	r0, [a3]
 	B	ZS, wprintend
 	ADD	r6, r6, 1
-	ADC	r7, r7, r0
-	SB	r1, [a2]
+	INCC	r7
+	SB	r0, [a2]
 	B	AL, wprintloop
 wprintend:
+	LI	r0, 0
+;	SWI	r0
 	B	AL, wprintend
 
 
 welcome_message:
-.ascii	"\033[2J"
-.ascii	"\033[H"
-.ascii	"Welcome to the UF2S8v0 terminal! (v0)"
-.ascii "\033[3;1H"
-.db	0x00
+.asciz	"\033[2J\033[HWelcome to the UF2S8 terminal! (v0)\033[3;1H"
 
 .origin 0xfe00
 	RETI
