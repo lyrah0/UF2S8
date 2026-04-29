@@ -84,49 +84,87 @@ static bool symbol_directive_dsize(struct TokenList *tokenList,
 	return false;
 }
 
+static bool symbol_directive_align(
+	struct TokenList *tokenList, int *current_address, int *current_token)
+{
+	*current_token += 2;
+	if (*current_token >= tokenList->count) { return false; }
+	struct Token *token = &tokenList->tokens[*current_token];
+	if (token->type != TOKEN_NUMBER) {
+		printf("ERROR: %d: align expects a number\n", token->line);
+		return true;
+	}
+	int align = (int)token->num_value;
+	if (align <= 0) {
+		printf("ERROR: %d: align must be positive\n", token->line);
+		return true;
+	}
+	if (align % 2) {
+		printf("ERROR: %d: align must be a power of 2\n", token->line);
+		return true;
+	}
+	*current_address += (align - (*current_address % align)) % align;
+
+	return false;
+}
+
+static bool symbol_directive_origin(
+	struct TokenList *tokenList, int *current_address, int *current_token)
+{
+	if (*current_token + 2 >= tokenList->count) { return false; }
+
+	struct Token *next2 = &tokenList->tokens[*current_token + 2];
+
+	if (next2->type != TOKEN_NUMBER) { return false; }
+	if (next2->num_value % 2) {
+		printf("ERROR: origin not aligned in line %d\n", next2->line);
+		return true;
+	}
+	*current_address = (int)next2->num_value;
+	*current_token += 2;
+
+	return false;
+}
+
 static bool symbol_directives(
 	struct TokenList *tokenList, int *current_address, int *current_token)
 {
 	struct Token *next = &tokenList->tokens[*current_token + 1];
 	if (next->type == TOKEN_SYMBOL) {
 		if (strcasecmp(next->str, "origin") == 0) {
-			if (*current_token + 2 >= tokenList->count) {
-				return false;
-			}
-			struct Token *nextnext =
-				&tokenList->tokens[*current_token + 2];
-			if (nextnext->type != TOKEN_NUMBER) { return false; }
-			if (nextnext->num_value % 2) {
-				printf("ERROR: origin not aligned in line "
-				       "%d\n",
-					next->line);
-				goto error;
-			}
-			*current_address = (int)nextnext->num_value;
-			*current_token += 2;
-		} else if (strcasecmp(next->str, "db") == 0 ||
+			return symbol_directive_origin(
+				tokenList, current_address, current_token);
+		}
+		if (strcasecmp(next->str, "db") == 0 ||
 			strcasecmp(next->str, "byte") == 0) {
 			return symbol_directive_dsize(
 				tokenList, current_address, current_token, 1);
-		} else if (strcasecmp(next->str, "dh") == 0 ||
+		}
+		if (strcasecmp(next->str, "dh") == 0 ||
 			strcasecmp(next->str, "half") == 0) {
 			return symbol_directive_dsize(
 				tokenList, current_address, current_token, 2);
-		} else if (strcasecmp(next->str, "dw") == 0 ||
+		}
+		if (strcasecmp(next->str, "dw") == 0 ||
 			strcasecmp(next->str, "word") == 0) {
 			return symbol_directive_dsize(
 				tokenList, current_address, current_token, 4);
-		} else if (strcasecmp(next->str, "ascii") == 0) {
+		}
+		if (strcasecmp(next->str, "ascii") == 0) {
 			return symbol_directive_ascii(
 				tokenList, current_address, current_token);
-		} else if (strcasecmp(next->str, "asciz") == 0) {
+		}
+		if (strcasecmp(next->str, "asciz") == 0) {
 			return symbol_directive_asciz(
 				tokenList, current_address, current_token);
-		} else {
-			printf("ERROR: unknown directive %s in line %d\n",
-				next->str, next->line);
-			goto error;
 		}
+		if (strcasecmp(next->str, "align") == 0) {
+			return symbol_directive_align(
+				tokenList, current_address, current_token);
+		}
+		printf("ERROR: unknown directive %s in line %d\n", next->str,
+			next->line);
+		goto error;
 	}
 
 	return false;
