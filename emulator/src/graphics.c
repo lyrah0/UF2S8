@@ -14,10 +14,10 @@
 
 static const int MODE_RES[4] = { MODE0_RES, MODE1_RES, MODE2_RES, MODE3_RES };
 static const int MODE_VRAM_BYTES[4] = {
-	MODE0_RES * MODE0_RES / 8, // 1-bpp: 16200
-	MODE1_RES *MODE1_RES / 4, // 2-bpp: 16384
-	MODE2_RES *MODE2_RES / 2, // 4-bpp: 16200
-	MODE3_RES *MODE3_RES, // 8-bpp: 16384
+	MODE0_RES * MODE0_RES / 8, // 1-bpp: 8192
+	MODE1_RES *MODE1_RES / 4, // 2-bpp: 8100
+	MODE2_RES *MODE2_RES / 2, // 4-bpp: 8192
+	MODE3_RES *MODE3_RES, // 8-bpp: 8100
 };
 
 void handle_graphics_events(struct VirtualMachine *viM)
