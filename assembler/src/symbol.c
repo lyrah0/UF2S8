@@ -5,26 +5,30 @@
 #include <strings.h>
 
 static bool symbol_construct(struct SymbolTable *symbolTable,
-	int current_address, struct Token *prev)
+	int current_address, struct Token *prev, bool allow_redef)
 {
-	bool defined = false;
 	for (int i = 0; i < symbolTable->count; i++) {
 		if (!strcmp(symbolTable->symbols[i].name, prev->str)) {
-			defined = true;
+			if (allow_redef) {
+				printf("INFO: redefinition of label %s, value "
+				       "0x%X, was 0x%X\n",
+					prev->str, current_address,
+					symbolTable->symbols[i].address);
+				symbolTable->symbols[i].address =
+					current_address;
+				return false;
+			}
+			printf("ERROR: %d: label %s already exists, "
+			       "redefinition not allowed.\n",
+				prev->line, prev->str);
+			return true;
 		}
 	}
-	if (!defined) {
-		symbolTable->symbols[symbolTable->count].address =
-			current_address;
-		(void)strcpy(symbolTable->symbols[symbolTable->count].name,
-			prev->str);
-		symbolTable->count++;
-	} else {
-		printf("ERROR: %d: label %s already exists, redefinition not "
-		       "allowed.\n",
-			prev->line, prev->str);
-		return true;
-	}
+
+	symbolTable->symbols[symbolTable->count].address = current_address;
+	(void)strcpy(symbolTable->symbols[symbolTable->count].name, prev->str);
+	symbolTable->count++;
+
 	return false;
 }
 
@@ -174,7 +178,7 @@ static bool symbol_directive_equ(struct TokenList *tokenList,
 	}
 
 	if (symbol_construct(
-		    symbolTable, (int)num_token->num_value, sym_token)) {
+		    symbolTable, (int)num_token->num_value, sym_token, true)) {
 		return true;
 	}
 
@@ -254,7 +258,7 @@ bool symbol_build_table(
 			tokenList->count > current_token + 1) {
 			if (symbol_directives(tokenList, symbolTable,
 				    &current_address, &current_token)) {
-				goto error;
+				return true;
 			}
 		} else if (type == TOKEN_COLON && current_token > 0) {
 			struct Token *prev =
@@ -265,12 +269,12 @@ bool symbol_build_table(
 					       "odd address.\n",
 						prev->line);
 				}
-				symbol_construct(
-					symbolTable, current_address, prev);
+				if (symbol_construct(symbolTable,
+					    current_address, prev, false)) {
+					return true;
+				}
 			}
 		}
 	}
 	return false;
-error:
-	return true;
 }
