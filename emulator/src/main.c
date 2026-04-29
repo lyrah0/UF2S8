@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <termios.h>
+#include <inttypes.h>
 
 #include "vm.h"
 #include "cpu.h"
@@ -33,6 +34,8 @@ static int cpu_thread_worker(void *data)
 	}
 	uint16_t instruction = 0;
 	unsigned int timer = 0;
+	uint64_t instruction_count = 0;
+	uint64_t start_ticks = SDL_GetPerformanceCounter();
 
 	while (viM->running) {
 		interrupt_timer(viM, &timer);
@@ -53,15 +56,32 @@ static int cpu_thread_worker(void *data)
 		if (decode_execute(viM, instruction)) {
 			printf("ERROR: execution failed\n");
 			viM->running = false;
-			return 1;
+			break;
 		}
 		viM->csr[0] &= 0x8F;
 		for (int i = 1; i < 6; i++) {
 			viM->csr[i] = 0;
 		}
 
+		instruction_count++;
 		timer++;
 	}
+
+	uint64_t end_ticks = SDL_GetPerformanceCounter();
+	uint64_t raw_freq = SDL_GetPerformanceFrequency();
+	double freq = (double)raw_freq;
+	double duration = (double)(end_ticks - start_ticks) / freq;
+
+	if (duration > 0 && instruction_count > 0 && viM->print_stats) {
+		printf("\n--- Performance Statistics ---\n");
+		printf("Instructions executed: %" PRIu64 "\n",
+			instruction_count);
+		printf("Elapsed time:          %.4f seconds\n", duration);
+		printf("Average speed:         %.3f MIPS\n",
+			((double)instruction_count / duration) / 1000000.0);
+		printf("------------------------------\n");
+	}
+
 	memory_dump(viM);
 	print_state(viM, instruction);
 	return 0;
@@ -82,12 +102,16 @@ int main(int argc, char *argv[])
 	viM.debug_mode = false;
 	viM.memory_dump = false;
 	viM.graphics = false;
+	viM.print_stats = false;
 	viM.running = false;
 	viM.key_head = 0;
 	viM.key_tail = 0;
 
-	while ((opt = getopt(argc, argv, "gmdi:o:")) != -1) {
+	while ((opt = getopt(argc, argv, "pgmdi:o:")) != -1) {
 		switch (opt) {
+		case 'p':
+			viM.print_stats = true;
+			break;
 		case 'g':
 			viM.graphics = true;
 			break;

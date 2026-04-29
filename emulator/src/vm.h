@@ -31,6 +31,7 @@ struct VirtualMachine {
 	bool debug_mode;
 	bool memory_dump;
 	bool graphics;
+	bool print_stats;
 	SDL_Thread *cpu_thread;
 	SDL_Window *window;
 	SDL_Renderer *renderer;

@@ -35,7 +35,9 @@ void interrupt_timer(struct VirtualMachine *viM, const unsigned int *timer)
 void interrupt_input(struct VirtualMachine *viM)
 {
 	// Only interrupt if interrupts are enabled, the keyboard interrupt is enabled, and there are keys in the buffer.
-	if ((viM->csr[0] >> 7) == 1 && (viM->memory[HW_HARDWARE_CONTROL] & 0x02) && viM->key_head != viM->key_tail) {
+	if ((viM->csr[0] >> 7) == 1 &&
+		(viM->memory[HW_HARDWARE_CONTROL] & 0x02) &&
+		viM->key_head != viM->key_tail) {
 		interrupt_pushtostack(viM);
 
 		uint16_t vector_addr = 0xFF06;
