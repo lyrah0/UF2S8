@@ -38,10 +38,10 @@ graphics_control format:
 |1-0	|Graphics mode
 
 * graphics modes:
-        - 0 = 1bpp 360x360
-        - 1 = 2bpp 256x256
-        - 2 = 4bpp 180x180
-        - 3 = 8bpp (RGB332) 128x128
+        - 0 = 1bpp 256x256
+        - 1 = 2bpp 180x180
+        - 2 = 4bpp 128x128
+        - 3 = 8bpp (RGB332) 90x90
 
 keyboard_status format:
 
