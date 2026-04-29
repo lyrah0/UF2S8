@@ -32,11 +32,6 @@ static int cpu_thread_worker(void *data)
 	unsigned int timer = 0;
 
 	while (viM->running) {
-		if (instruction == 0x0000 && viM->pc > 0x1f) {
-			viM->running = false;
-			break;
-		}
-
 		interrupt_timer(viM, &timer);
 		interrupt_input(viM, &timer);
 
