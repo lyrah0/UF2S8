@@ -17,7 +17,6 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	FILE *finput = nullptr;
 	char *ifilepath = nullptr;
 	FILE *foutput = nullptr;
 	char *ofilepath = nullptr;
@@ -36,36 +35,30 @@ int main(int argc, char *argv[])
 			printf("Usage: %s [-i assembly file] [-o output "
 			       "file]\n",
 				argv[0]);
+			return 1;
 		}
 	}
 
-	if (ifilepath) {
-		finput = fopen(ifilepath, "r");
-	} else {
-		printf("ERROR: no input file\n");
-		goto error;
+	if (!ifilepath) {
+		printf("ERROR: no input file provided\n");
+		return 1;
 	}
-	if (finput == nullptr) {
-		printf("ERROR: failed to open input file\n");
-		goto error;
-	}
+
 	if (ofilepath) {
-		foutput = fopen(ofilepath, "w");
+		foutput = fopen(ofilepath, "wb");
 	} else {
-		foutput = fopen("a.out", "w");
+		foutput = fopen("a.out", "wb");
 	}
+
 	if (foutput == nullptr) {
 		printf("ERROR: failed to open output file\n");
-		goto error;
+		return 1;
 	}
 
 	struct TokenList *tokenList = malloc(sizeof(struct TokenList));
 	if (!tokenList) { goto error; }
 	tokenList->count = 0;
-	if (lexer(finput, tokenList)) { goto error; }
-
-	(void)fclose(finput);
-	finput = nullptr;
+	if (lexer(ifilepath, tokenList)) { goto error; }
 
 	struct SymbolTable *symbolTable = malloc(sizeof(struct SymbolTable));
 	if (!symbolTable) { goto error; }
@@ -80,7 +73,6 @@ int main(int argc, char *argv[])
 
 	exit(0);
 error:
-	if (finput) { (void)fclose(finput); }
 	if (foutput) { (void)fclose(foutput); }
 	exit(1);
 }

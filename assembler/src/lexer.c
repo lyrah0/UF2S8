@@ -7,6 +7,18 @@
 #include <strings.h>
 #include "globals.h"
 
+static void get_dir(const char *filepath, char *dir)
+{
+	const char *last_slash = strrchr(filepath, '/');
+	if (last_slash) {
+		size_t len = last_slash - filepath + 1;
+		strncpy(dir, filepath, len);
+		dir[len] = '\0';
+	} else {
+		dir[0] = '\0';
+	}
+}
+
 static void get_instr_reg_cond_sym(struct TokenList *tokenList)
 {
 	for (int i = 0; i < INSTRUCTION_NUM; i++) {
@@ -274,17 +286,39 @@ static bool get_token(struct TokenList *tokenList, char **cursor, int line_num)
 		(*cursor)++;
 	} else if (get_token_complex(tokenList, cursor, line_num)) {
 	} else {
-		printf("ERROR: %d: unknown charactr %c\n", line_num, **cursor);
-		goto error;
+		printf("ERROR: %d: unknown character %c\n", line_num,
+			**cursor);
+		return true;
 	}
 
 	return false;
-error:
-	return true;
 }
 
-bool lexer(FILE *finput, struct TokenList *tokenList)
+static bool lexer_recursive(const char *filepath, struct TokenList *tokenList,
+	int depth, const char **include_stack)
 {
+	if (depth >= 10) {
+		printf("ERROR: maximum include depth exceeded\n");
+		return true;
+	}
+	for (int i = 0; i < depth; i++) {
+		if (strcmp(include_stack[i], filepath) == 0) {
+			printf("ERROR: circular include detected: %s\n",
+				filepath);
+			return true;
+		}
+	}
+	include_stack[depth] = filepath;
+
+	FILE *finput = fopen(filepath, "r");
+	if (!finput) {
+		printf("ERROR: failed to open file: %s\n", filepath);
+		return true;
+	}
+
+	char dir[MAX_LINE_LEN];
+	get_dir(filepath, dir);
+
 	char line[MAX_LINE_LEN];
 	char *cursor = nullptr;
 	int line_num = 1;
@@ -297,16 +331,59 @@ bool lexer(FILE *finput, struct TokenList *tokenList)
 		} else {
 			line[MAX_LINE_LEN - 1] = '\0';
 		}
-		cursor = &line;
+		cursor = line;
+		int tokens_before_line = tokenList->count;
 		while (*cursor != '\0') {
 			if (isspace(*cursor)) { //NOLINT
 				cursor++;
 				continue;
 			}
 			if (get_token(tokenList, &cursor, line_num)) {
-				goto error;
+				(void)fclose(finput);
+				return true;
 			}
 		}
+		int tokens_after_line = tokenList->count;
+
+		if (tokens_after_line - tokens_before_line == 3) {
+			struct Token *token =
+				&tokenList->tokens[tokens_before_line];
+			struct Token *next =
+				&tokenList->tokens[tokens_before_line + 1];
+			struct Token *next2 =
+				&tokenList->tokens[tokens_before_line + 2];
+			if (token->type == TOKEN_PERIOD &&
+				next->type == TOKEN_SYMBOL &&
+				strcasecmp(next->str, "include") == 0 &&
+				next2->type == TOKEN_STRING) {
+				char inc_path[MAX_LINE_LEN];
+				if (next2->str[0] == '/') {
+					strncpy(inc_path, next2->str,
+						MAX_LINE_LEN);
+				} else {
+					(void)snprintf(inc_path, MAX_LINE_LEN,
+						"%s%s", dir, next2->str);
+				}
+				tokenList->count = tokens_before_line;
+				if (lexer_recursive(inc_path, tokenList,
+					    depth + 1, include_stack)) {
+					(void)fclose(finput);
+					return true;
+				}
+			}
+		}
+	}
+
+	(void)fclose(finput);
+	return false;
+}
+
+bool lexer(const char *filepath, struct TokenList *tokenList)
+{
+	const char *include_stack[10];
+
+	if (lexer_recursive(filepath, tokenList, 0, include_stack)) {
+		return true;
 	}
 
 	for (int i = 0; i < 7; i++) {
@@ -316,6 +393,4 @@ bool lexer(FILE *finput, struct TokenList *tokenList)
 	}
 
 	return false;
-error:
-	return true;
 }
