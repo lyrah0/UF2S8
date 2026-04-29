@@ -1,6 +1,7 @@
-; Bouncing Square Graphics Test for uf2s8
+; Dynamic Bouncing Square Graphics Test for uf2s8
 ; Resolution: 128x128
 ; VRAM: 0x8000 - 0xBFFF
+; This version changes the bounce angle on every collision.
 
 .origin 0x0000
 
@@ -23,7 +24,7 @@ main_loop:
     POP  r0
 
     ; 2. Delay (approx 16ms to target ~60fps)
-    LI   r5, 0x40           ; Adjust delay
+    LI   r5, 0x30           ; Speed up the simulation slightly
 delay_outer:
     LI   r6, 0xFF
 delay_inner:
@@ -46,36 +47,89 @@ delay_inner:
     ADD  r0, r0, r2
     ADD  r1, r1, r3
 
-    ; 5. Collision Check X (0 to 124 for 4x4 square)
-    LI   r5, 0
-    CMP  r0, r5
-    B    EQ, bounce_x
+    ; 5. Collision Check X (Right Wall: >= 124, Left Wall: < 0 [>=128 unsigned])
     LI   r5, 124
     CMP  r0, r5
-    B    EQ, bounce_x
-    B    AL, check_y
+    B    CC, check_y        ; x < 124, check Y
+
+    ; We hit an X wall! Determine if it was Left or Right for clamping
+    LI   r5, 0x80
+    CMP  r0, r5
+    B    CS, hit_left
+hit_right:
+    LI   r0, 124            ; Clamp to right edge
+    B    AL, bounce_x
+hit_left:
+    LI   r0, 0              ; Clamp to left edge
 
 bounce_x:
+    LI   r5, 0              ; Flip dx
+    SUB  r2, r5, r2
+    
+    ; Change Angle: Modify dy magnitude (cycle 1-3)
     LI   r5, 0
-    SUB  r2, r5, r2         ; dx = -dx
+    CMP  r3, r5
+    B    NS, dy_neg
+dy_pos:
+    ADD  r3, r3, 1          ; 1->2, 2->3, 3->4
+    LI   r5, 4
+    CMP  r3, r5
+    B    NE, bounce_x_done
+    LI   r3, 1              ; Wrap to 1
+    B    AL, bounce_x_done
+dy_neg:
+    ADD  r3, r3, -1         ; -1->-2, -2->-3, -3->-4
+    LI   r5, -4
+    CMP  r3, r5
+    B    NE, bounce_x_done
+    LI   r3, -1             ; Wrap to -1
+bounce_x_done:
     LI   r5, 0x25
     ADD  r4, r4, r5         ; Change color
+    ; Fall through to check_y
 
 check_y:
-    ; 6. Collision Check Y (0 to 124)
-    LI   r5, 0
-    CMP  r1, r5
-    B    EQ, bounce_y
+    ; 6. Collision Check Y (Bottom: >= 124, Top: < 0 [>= 128 unsigned])
     LI   r5, 124
     CMP  r1, r5
-    B    EQ, bounce_y
-    B    AL, main_loop
+    B    CC, jump_back      ; y < 124, jump to loop
+
+    ; We hit a Y wall! Determine if it was Top or Bottom for clamping
+    LI   r5, 0x80
+    CMP  r1, r5
+    B    CS, hit_top
+hit_bottom:
+    LI   r1, 124            ; Clamp to bottom edge
+    B    AL, bounce_y
+hit_top:
+    LI   r1, 0              ; Clamp to top edge
 
 bounce_y:
+    LI   r5, 0              ; Flip dy
+    SUB  r3, r5, r3
+    
+    ; Change Angle: Modify dx magnitude (cycle 1-3)
     LI   r5, 0
-    SUB  r3, r5, r3         ; dy = -dy
+    CMP  r2, r5
+    B    NS, dx_neg
+dx_pos:
+    ADD  r2, r2, 1
+    LI   r5, 4
+    CMP  r2, r5
+    B    NE, bounce_y_done
+    LI   r2, 1
+    B    AL, bounce_y_done
+dx_neg:
+    ADD  r2, r2, -1
+    LI   r5, -4
+    CMP  r2, r5
+    B    NE, bounce_y_done
+    LI   r2, -1
+bounce_y_done:
     LI   r5, 0x42
     ADD  r4, r4, r5         ; Change color
+
+jump_back:
     B    AL, main_loop
 
 ; --- Helper: Draw 4x4 Square ---
