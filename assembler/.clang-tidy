@@ -1,5 +1,5 @@
 ---
-Checks: 'clang-diagnostic-*,clang-analyzer-*,bugprone-*,cppcoreguidelines-*,misc-*,modernize-*,performance-*,portability-*,readability-*,cert*,hicpp-*,-portability-avoid-pragma-once,-clang-analyzer-unix.Errno,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-hicpp-signed-bitwise,-clang-diagnostic-unused-parameter,-misc-unused-parameters,-clang-analyzer-security.insecureAPI.*,-misc-use-internal-linkage,-bugprone-branch-clone'
+Checks: 'clang-diagnostic-*,clang-analyzer-*,bugprone-*,cppcoreguidelines-*,misc-*,modernize-*,performance-*,portability-*,readability-*,cert*,hicpp-*,-portability-avoid-pragma-once,-clang-analyzer-unix.Errno,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-hicpp-signed-bitwise,-misc-use-internal-linkage'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 #AnalyzeTemporaryDtors: false
