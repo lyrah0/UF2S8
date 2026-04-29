@@ -61,7 +61,7 @@ void interrupt_input(struct VirtualMachine *viM, const unsigned int *timer)
 
 		interrupt_pushtostack(viM);
 
-		uint16_t vector_addr = 0xFF04;
+		uint16_t vector_addr = 0xFF06;
 		viM->pc = viM->memory[vector_addr] |
 			viM->memory[vector_addr + 1] << 8;
 	}

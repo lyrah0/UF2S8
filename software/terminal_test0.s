@@ -25,7 +25,7 @@ wprintend:
 
 
 welcome_message:
-.asciz	"\033[2J\033[HWelcome to the UF2S8 terminal! (v0)\033[3;1H"
+.asciz	"\033[2J\033[HWelcome to the UF2S8 terminal! (v0)\n\n" ; \033[3;1H"
 
 .origin 0xfe00
 	RETI
@@ -35,8 +35,8 @@ kbd_isr:
 	PUSH	r5
 	LI	r7, 0xFE
 	LI	r6, 0xF0
-	LB	r5, [a3]
-	SB	r5, [a3+1]
+	LB	r5, [a3+1]
+	SB	r5, [a3]
 	POP	r5
 	POP	r6
 	POP	r7
