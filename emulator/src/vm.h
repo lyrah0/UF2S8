@@ -8,7 +8,13 @@ enum {
 	VRAM_SIZE = 0x4000,
 	VRAM_END = VRAM_START + VRAM_SIZE - 1,
 	SCREEN_WIDTH = 128,
-	SCREEN_HEIGHT = 128
+	SCREEN_HEIGHT = 128,
+	HW_PALETTE_START = 0xFEE0,
+	HW_TERMINAL_OUT = 0xFEF0,
+	HW_KEYBOARD_IN = 0xFEF1,
+	HW_GFX_CONTROL = 0xFEFD,
+	HW_TIMER_MULT = 0xFEFE,
+	HW_HARDWARE_CONTROL = 0xFEFF
 };
 
 enum { MAX_MEMORY = 1 << 16, MAX_BREAKPOINTS = 1 << 4 };
@@ -28,6 +34,8 @@ struct VirtualMachine {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	SDL_Texture *texture;
+	SDL_Palette *sdl_palette;
+	uint8_t processed_vram[16384];
 	uint8_t sdl_input_buffer[16];
 	int sdl_buf_head;
 	int sdl_buf_tail;

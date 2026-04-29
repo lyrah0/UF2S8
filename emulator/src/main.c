@@ -1,5 +1,6 @@
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_pixels.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_video.h>
@@ -24,7 +25,9 @@ static int cpu_thread_worker(void *data)
 	struct VirtualMachine *viM = (struct VirtualMachine *)data;
 	viM->pc = 0;
 	viM->bp_count = 0;
-	viM->memory[0xFEFF] = 0;
+	viM->memory[HW_HARDWARE_CONTROL] = 0;
+	// Default to RGB332 mode
+	viM->memory[HW_GFX_CONTROL] = 3;
 	for (int i = 0; i < 8; i++) {
 		viM->csr[i] = 0;
 	}
@@ -155,6 +158,7 @@ int main(int argc, char *argv[])
 
 	if (viM.graphics) {
 		SDL_DestroyTexture(viM.texture);
+		SDL_DestroyPalette(viM.sdl_palette);
 		SDL_DestroyRenderer(viM.renderer);
 		SDL_DestroyWindow(viM.window);
 		SDL_Quit();
