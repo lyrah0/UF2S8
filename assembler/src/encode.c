@@ -302,42 +302,43 @@ static bool encode_directives(struct TokenList *tokenList, FILE *foutput,
 	int *current_address, int *current_token)
 {
 	struct Token *next = &tokenList->tokens[*current_token + 1];
-	if (next->type == TOKEN_SYMBOL) {
-		if (strcasecmp(next->str, "origin") == 0) {
-			return encode_directive_origin(tokenList, foutput,
-				current_address, current_token);
-		}
-		if (strcasecmp(next->str, "db") == 0 ||
-			strcasecmp(next->str, "byte") == 0) {
-			return encode_directive_dsize(tokenList, foutput,
-				current_address, current_token, 1);
-		}
-		if (strcasecmp(next->str, "dh") == 0 ||
-			strcasecmp(next->str, "half") == 0) {
-			return encode_directive_dsize(tokenList, foutput,
-				current_address, current_token, 2);
-		}
-		if (strcasecmp(next->str, "dw") == 0 ||
-			strcasecmp(next->str, "word") == 0) {
-			return encode_directive_dsize(tokenList, foutput,
-				current_address, current_token, 4);
-		}
-		if (strcasecmp(next->str, "ascii") == 0) {
-			return encode_directive_ascii(tokenList, foutput,
-				current_address, current_token);
-		}
-		if (strcasecmp(next->str, "asciz") == 0) {
-			return encode_directive_asciz(tokenList, foutput,
-				current_address, current_token);
-		}
-		if (strcasecmp(next->str, "align") == 0) {
-			return encode_directive_align(tokenList, foutput,
-				current_address, current_token);
-		}
+	if (next->type != TOKEN_SYMBOL) {
+		printf("ERROR: %d: directive expects a symbol\n", next->line);
+		return true;
 	}
-	return false;
+	if (strcasecmp(next->str, "origin") == 0) {
+		return encode_directive_origin(
+			tokenList, foutput, current_address, current_token);
+	}
+	if (strcasecmp(next->str, "db") == 0 ||
+		strcasecmp(next->str, "byte") == 0) {
+		return encode_directive_dsize(
+			tokenList, foutput, current_address, current_token, 1);
+	}
+	if (strcasecmp(next->str, "dh") == 0 ||
+		strcasecmp(next->str, "half") == 0) {
+		return encode_directive_dsize(
+			tokenList, foutput, current_address, current_token, 2);
+	}
+	if (strcasecmp(next->str, "dw") == 0 ||
+		strcasecmp(next->str, "word") == 0) {
+		return encode_directive_dsize(
+			tokenList, foutput, current_address, current_token, 4);
+	}
+	if (strcasecmp(next->str, "ascii") == 0) {
+		return encode_directive_ascii(
+			tokenList, foutput, current_address, current_token);
+	}
+	if (strcasecmp(next->str, "asciz") == 0) {
+		return encode_directive_asciz(
+			tokenList, foutput, current_address, current_token);
+	}
+	if (strcasecmp(next->str, "align") == 0) {
+		return encode_directive_align(
+			tokenList, foutput, current_address, current_token);
+	}
 
-	return true;
+	return false;
 }
 
 bool encode_and_write(struct TokenList *tokenList,

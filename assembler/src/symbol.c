@@ -130,46 +130,46 @@ static bool symbol_directives(
 	struct TokenList *tokenList, int *current_address, int *current_token)
 {
 	struct Token *next = &tokenList->tokens[*current_token + 1];
-	if (next->type == TOKEN_SYMBOL) {
-		if (strcasecmp(next->str, "origin") == 0) {
-			return symbol_directive_origin(
-				tokenList, current_address, current_token);
-		}
-		if (strcasecmp(next->str, "db") == 0 ||
-			strcasecmp(next->str, "byte") == 0) {
-			return symbol_directive_dsize(
-				tokenList, current_address, current_token, 1);
-		}
-		if (strcasecmp(next->str, "dh") == 0 ||
-			strcasecmp(next->str, "half") == 0) {
-			return symbol_directive_dsize(
-				tokenList, current_address, current_token, 2);
-		}
-		if (strcasecmp(next->str, "dw") == 0 ||
-			strcasecmp(next->str, "word") == 0) {
-			return symbol_directive_dsize(
-				tokenList, current_address, current_token, 4);
-		}
-		if (strcasecmp(next->str, "ascii") == 0) {
-			return symbol_directive_ascii(
-				tokenList, current_address, current_token);
-		}
-		if (strcasecmp(next->str, "asciz") == 0) {
-			return symbol_directive_asciz(
-				tokenList, current_address, current_token);
-		}
-		if (strcasecmp(next->str, "align") == 0) {
-			return symbol_directive_align(
-				tokenList, current_address, current_token);
-		}
-		printf("ERROR: unknown directive %s in line %d\n", next->str,
-			next->line);
-		goto error;
+	if (next->type != TOKEN_SYMBOL) {
+		printf("ERROR: %d: directive expects a symbol\n", next->line);
+		return true;
 	}
+	if (strcasecmp(next->str, "origin") == 0) {
+		return symbol_directive_origin(
+			tokenList, current_address, current_token);
+	}
+	if (strcasecmp(next->str, "db") == 0 ||
+		strcasecmp(next->str, "byte") == 0) {
+		return symbol_directive_dsize(
+			tokenList, current_address, current_token, 1);
+	}
+	if (strcasecmp(next->str, "dh") == 0 ||
+		strcasecmp(next->str, "half") == 0) {
+		return symbol_directive_dsize(
+			tokenList, current_address, current_token, 2);
+	}
+	if (strcasecmp(next->str, "dw") == 0 ||
+		strcasecmp(next->str, "word") == 0) {
+		return symbol_directive_dsize(
+			tokenList, current_address, current_token, 4);
+	}
+	if (strcasecmp(next->str, "ascii") == 0) {
+		return symbol_directive_ascii(
+			tokenList, current_address, current_token);
+	}
+	if (strcasecmp(next->str, "asciz") == 0) {
+		return symbol_directive_asciz(
+			tokenList, current_address, current_token);
+	}
+	if (strcasecmp(next->str, "align") == 0) {
+		return symbol_directive_align(
+			tokenList, current_address, current_token);
+	}
+	printf("ERROR: unknown directive %s in line %d\n", next->str,
+		next->line);
+	return true;
 
 	return false;
-error:
-	return true;
 }
 
 bool symbol_build_table(
