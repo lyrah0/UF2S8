@@ -5,6 +5,7 @@
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_pixels.h>
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL_surface.h>
 #include <SDL3/SDL_video.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -59,6 +60,15 @@ bool init_sdl(struct VirtualMachine *viM) // NOLINT
 		SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
 	if (!viM->texture) {
 		printf("SDL_CreateTexture Error: %s\n", SDL_GetError());
+		SDL_DestroyRenderer(viM->renderer);
+		SDL_DestroyWindow(viM->window);
+		SDL_Quit();
+		return true;
+	}
+
+	if (!SDL_SetTextureScaleMode(viM->texture, SDL_SCALEMODE_NEAREST)) {
+		printf("SDL_SetTextureScaleMode Error: %s\n", SDL_GetError());
+		SDL_DestroyTexture(viM->texture);
 		SDL_DestroyRenderer(viM->renderer);
 		SDL_DestroyWindow(viM->window);
 		SDL_Quit();
