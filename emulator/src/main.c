@@ -11,7 +11,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <termios.h>
 #include <inttypes.h>
 
 #include "vm.h"
@@ -154,20 +153,12 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	struct termios oldt;
-	struct termios newt;
-	tcgetattr(STDIN_FILENO, &oldt);
-	newt = oldt;
-	newt.c_lflag &= ~(ICANON | ECHO);
-	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-
 	viM.running = true;
 	viM.cpu_thread =
 		SDL_CreateThread(cpu_thread_worker, "CPUThread", &viM);
 	if (!viM.cpu_thread) {
 		printf("ERROR: Failed to create CPU thread: %s\n",
 			SDL_GetError());
-		tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 		return 1;
 	}
 
@@ -178,7 +169,6 @@ int main(int argc, char *argv[])
 	}
 
 	SDL_WaitThread(viM.cpu_thread, nullptr);
-	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 
 	if (viM.graphics) {
 		SDL_DestroyTexture(viM.texture);
