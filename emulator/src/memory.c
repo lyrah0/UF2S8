@@ -5,7 +5,7 @@
 
 static void terminal_write(uint8_t value)
 {
-	printf("put char!\n");
+	//printf("put char!\n");
 	putchar(value);
 	(void)fflush(stdout);
 }

@@ -119,6 +119,10 @@ void disassemble(uint16_t instruction)
 		printf("RETI");
 	} else if (inst.reg1.opcode == 0x1400) {
 		printf("SWI r%hhu", reg_dst);
+	} else if (inst.reg1.opcode == 0x0800) {
+		printf("INCC r%hhu", reg_dst);
+	} else if (inst.reg1.opcode == 0x0C00) {
+		printf("DECC r%hhu", reg_dst);
 	} else if (inst.reg1.opcode == 0x1800) {
 		printf("POP r%hhu", reg_dst);
 	} else if (inst.reg1.opcode == 0x1C00) {

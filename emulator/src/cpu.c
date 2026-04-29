@@ -117,7 +117,7 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 	uint8_t reg_dst = inst.reg_dst;
 	uint8_t reg_src = inst.reg_src;
 	uint8_t reg_mod = inst.reg_mod;
-	uint8_t reg_base = inst.loadstore.reg_base;
+	uint8_t reg_base = inst.loadstore.reg_base << 1;
 	uint8_t imm_li = sign_extend(inst.load_imm.imm, 8);
 	int8_t imm_add = (int8_t)sign_extend(inst.addi.imm, 5);
 	int16_t imm_ls = sign_extend(inst.loadstore.offset, 7);
@@ -130,6 +130,10 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 		temp = viM->gpr[reg_src];
 	} else if ((instruction & 0x03FF) == 0x0100) {
 		temp = viM->csr[reg_src];
+	} else if ((instruction & 0x1FFF) == 0x0800) {
+		temp = viM->gpr[reg_dst] + (viM->csr[0] & 1);
+	} else if ((instruction & 0x1FFF) == 0x0C00) {
+		temp = viM->gpr[reg_dst] - (viM->csr[0] & 1);
 	} else if ((instruction & 0x1FFF) == 0x1800) {
 		uint16_t stackp = viM->csr[7] << 8 | viM->csr[6];
 		temp = viM->memory[++stackp];
@@ -206,10 +210,10 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 
 static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 {
-	uint8_t reg_base = (instruction >> 10) & 0x6;
-	int16_t imm_ls = sign_extend((instruction >> 4) & 0x7F, 7);
-	int16_t imm_brel =
-		(int16_t)(sign_extend((instruction >> 4) & 0x1FF, 9) << 1);
+	Instruction inst = { .raw = instruction };
+	uint8_t reg_base = inst.loadstore.reg_base << 1;
+	int16_t imm_ls = sign_extend(inst.loadstore.offset, 7);
+	int16_t imm_brel = (int16_t)(sign_extend(inst.branch.offset, 9) << 1);
 	uint16_t temp = 0;
 	bool cond = get_cond(viM, instruction);
 
@@ -277,8 +281,10 @@ bool decode_execute(struct VirtualMachine *viM, uint16_t instruction)
 
 	if ((instruction & 0x1FFF) == 0x1400) {
 		interrupt_pushtostack(viM);
-		viM->pc = viM->memory[0xFF00 +
-			((viM->gpr[reg_dst] & 0x7F) << 1)];
+		uint16_t vec_addr = 0xFF00 + ((viM->gpr[reg_dst] & 0x7F) << 1);
+		viM->pc = viM->memory[vec_addr] |
+			(viM->memory[vec_addr + 1] << 8);
+		if ((viM->gpr[reg_dst] & 0x7F) == 0) { viM->running = false; }
 		if ((viM->gpr[reg_dst] & 0x7F) == 1) {
 			viM->debug_mode = true;
 		}
