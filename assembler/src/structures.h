@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 enum {
 	MAX_LINES = 1 << 16,
 	MAX_TOKENS = 1 << 16,
@@ -38,6 +40,7 @@ enum TokenType {
 struct Token {
 	enum TokenType type;
 	int line;
+	int len;
 	long long num_value;
 	char str[MAX_TOKEN_LEN];
 };

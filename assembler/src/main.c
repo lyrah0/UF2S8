@@ -10,7 +10,7 @@
 #include <strings.h>
 #include "structures.h"
 #include "globals.h"
-#include "handle.h"
+#include "encode.h"
 
 static void get_instr_reg_cond_sym(struct TokenList *tokenList)
 {
@@ -61,13 +61,114 @@ static bool get_token_complex(
 		tokenList->tokens[tokenList->count].line = line_num;
 		(*cursor)++;
 		int iter = 0;
-		while ((iter < MAX_TOKEN_LEN - 2) && (**cursor != '"')) {
-			tokenList->tokens[tokenList->count].str[iter++] =
-				**cursor;
+		while ((iter < MAX_TOKEN_LEN - 1) && (**cursor != '"') &&
+			(**cursor != '\0')) {
+			if (**cursor == '\\') {
+				(*cursor)++;
+				if (**cursor == '\0') { break; }
+				switch (**cursor) {
+				case 'n':
+					tokenList->tokens[tokenList->count]
+						.str[iter++] = '\n';
+					break;
+				case 't':
+					tokenList->tokens[tokenList->count]
+						.str[iter++] = '\t';
+					break;
+				case 'r':
+					tokenList->tokens[tokenList->count]
+						.str[iter++] = '\r';
+					break;
+				case 'v':
+					tokenList->tokens[tokenList->count]
+						.str[iter++] = '\v';
+					break;
+				case 'f':
+					tokenList->tokens[tokenList->count]
+						.str[iter++] = '\f';
+					break;
+				case 'b':
+					tokenList->tokens[tokenList->count]
+						.str[iter++] = '\b';
+					break;
+				case 'a':
+					tokenList->tokens[tokenList->count]
+						.str[iter++] = '\a';
+					break;
+				case '\\':
+					tokenList->tokens[tokenList->count]
+						.str[iter++] = '\\';
+					break;
+				case '\'':
+					tokenList->tokens[tokenList->count]
+						.str[iter++] = '\'';
+					break;
+				case '"':
+					tokenList->tokens[tokenList->count]
+						.str[iter++] = '\"';
+					break;
+				case '?':
+					tokenList->tokens[tokenList->count]
+						.str[iter++] = '\?';
+					break;
+				case 'x': {
+					(*cursor)++;
+					int val = 0;
+					while (isxdigit(
+						(unsigned char)**cursor)) {
+						int digit =
+							isdigit((
+								unsigned char)**cursor) ?
+							(**cursor - '0') :
+							(tolower((
+								 unsigned char)**cursor) -
+								'a' + 10);
+						val = (val << 4) | digit;
+						(*cursor)++;
+					}
+					tokenList->tokens[tokenList->count]
+						.str[iter++] =
+						(char)(val & 0xFF);
+					(*cursor)--;
+					break;
+				}
+				case '0':
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+				case '7': {
+					int val = 0;
+					int count = 0;
+					while (count < 3 && **cursor >= '0' &&
+						**cursor <= '7') {
+						val = (val << 3) |
+							(**cursor - '0');
+						(*cursor)++;
+						count++;
+					}
+					tokenList->tokens[tokenList->count]
+						.str[iter++] =
+						(char)(val & 0xFF);
+					(*cursor)--;
+					break;
+				}
+				default:
+					tokenList->tokens[tokenList->count]
+						.str[iter++] = **cursor;
+					break;
+				}
+			} else {
+				tokenList->tokens[tokenList->count]
+					.str[iter++] = **cursor;
+			}
 			(*cursor)++;
 		}
-		(*cursor)++;
+		if (**cursor == '"') { (*cursor)++; }
 		tokenList->tokens[tokenList->count].str[iter] = '\0';
+		tokenList->tokens[tokenList->count].len = iter;
 		tokenList->count++;
 	} else if (isalpha(**cursor) || **cursor == '_') {
 		tokenList->tokens[tokenList->count].type = TOKEN_NONE;
@@ -253,7 +354,7 @@ static bool symbol_directive_asciz(
 	while (*current_token < tokenList->count) {
 		struct Token *token = &tokenList->tokens[*current_token];
 		if (token->type == TOKEN_STRING) {
-			(*current_address) += (int)strlen(token->str) + 1;
+			(*current_address) += token->len + 1;
 		} else if (token->type == TOKEN_COMMA) {
 		} else {
 			(*current_token)--;
@@ -271,7 +372,7 @@ static bool symbol_directive_ascii(
 	while (*current_token < tokenList->count) {
 		struct Token *token = &tokenList->tokens[*current_token];
 		if (token->type == TOKEN_STRING) {
-			(*current_address) += (int)strlen(token->str);
+			(*current_address) += token->len;
 		} else if (token->type == TOKEN_COMMA) {
 		} else {
 			(*current_token)--;
@@ -291,7 +392,7 @@ static bool symbol_directive_dsize(struct TokenList *tokenList,
 		if (token->type == TOKEN_NUMBER) {
 			(*current_address) += size;
 		} else if (token->type == TOKEN_STRING) {
-			(*current_address) += (int)strlen(token->str);
+			(*current_address) += token->len;
 		} else if (token->type == TOKEN_COMMA) {
 		} else {
 			(*current_token)--;
@@ -306,9 +407,14 @@ static bool symbol_directives(
 	struct TokenList *tokenList, int *current_address, int *current_token)
 {
 	struct Token *next = &tokenList->tokens[*current_token + 1];
-	struct Token *nextnext = &tokenList->tokens[*current_token + 2];
-	if (next->type == TOKEN_SYMBOL && nextnext->type == TOKEN_NUMBER) {
+	if (next->type == TOKEN_SYMBOL) {
 		if (strcasecmp(next->str, "origin") == 0) {
+			if (*current_token + 2 >= tokenList->count) {
+				return false;
+			}
+			struct Token *nextnext =
+				&tokenList->tokens[*current_token + 2];
+			if (nextnext->type != TOKEN_NUMBER) { return false; }
 			if (nextnext->num_value % 2) {
 				printf("ERROR: origin not aligned in line "
 				       "%d\n",
@@ -376,319 +482,6 @@ static bool symbol_build_table(
 					symbolTable, current_address, prev);
 			}
 		}
-	}
-	return false;
-error:
-	return true;
-}
-
-// NOLINTBEGIN(readability-function-cognitive-complexity)
-static bool encode_instructions(struct TokenList *tokenList,
-	struct SymbolTable *symbolTable, FILE *foutput, int *current_address,
-	int *current_token)
-{
-	struct Token *token = &tokenList->tokens[*current_token];
-	uint16_t machine_code = 0;
-	if (!strcasecmp(token->str, "NOP")) {
-		machine_code = 0x0000;
-	} else if (!strcasecmp(token->str, "RET")) {
-		machine_code = 0x2000;
-	} else if (!strcasecmp(token->str, "RETI")) {
-		machine_code = 0x0400;
-	} else if (!strcasecmp(token->str, "SWI")) {
-		if (handle_spp(
-			    tokenList, current_token, &machine_code, 0x1400)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "POP")) {
-		printf("Pop!\n");
-		if (handle_spp(
-			    tokenList, current_token, &machine_code, 0x1800)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "PUSH")) {
-		printf("Push!\n");
-		if (handle_spp(
-			    tokenList, current_token, &machine_code, 0x1C00)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "MOV")) {
-		if (handle_mov(tokenList, current_token, &machine_code)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "CMP")) {
-		if (handle_crr(
-			    tokenList, current_token, &machine_code, 0x0010)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "CMN")) {
-		if (handle_crr(
-			    tokenList, current_token, &machine_code, 0x0090)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "CMA")) {
-		if (handle_crr(
-			    tokenList, current_token, &machine_code, 0x0110)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "SUB")) {
-		if (handle_rrr(
-			    tokenList, current_token, &machine_code, 0x0001)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "SBC")) {
-		if (handle_rrr(
-			    tokenList, current_token, &machine_code, 0x0011)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "ADD")) {
-		if (handle_add(tokenList, symbolTable, current_token,
-			    &machine_code)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "ADC")) {
-		if (handle_rrr(
-			    tokenList, current_token, &machine_code, 0x0031)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "AND")) {
-		if (handle_rrr(
-			    tokenList, current_token, &machine_code, 0x0041)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "OR")) {
-		if (handle_rrr(
-			    tokenList, current_token, &machine_code, 0x0051)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "NOR")) {
-		if (handle_rrr(
-			    tokenList, current_token, &machine_code, 0x0061)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "XOR")) {
-		if (handle_rrr(
-			    tokenList, current_token, &machine_code, 0x0071)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "SLL")) {
-		if (handle_shift(
-			    tokenList, current_token, &machine_code, 0x0002)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "SRL")) {
-		if (handle_shift(
-			    tokenList, current_token, &machine_code, 0x0012)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "SRA")) {
-		if (handle_shift(
-			    tokenList, current_token, &machine_code, 0x0022)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "LI")) {
-		if (handle_li(tokenList, symbolTable, current_token,
-			    &machine_code)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "SB")) {
-		if (handle_loadstore(tokenList, symbolTable, current_token,
-			    &machine_code, 0x000A)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "LB")) {
-		if (handle_loadstore(tokenList, symbolTable, current_token,
-			    &machine_code, 0x000B)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "B")) {
-		if (handle_branch_cond(tokenList, symbolTable, current_token,
-			    &machine_code, 0x000C, *current_address)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "BL")) {
-		if (handle_branch_cond(tokenList, symbolTable, current_token,
-			    &machine_code, 0x000E, *current_address)) {
-			goto error;
-		}
-	} else {
-		printf("ERROR: %d: unknown instruction %s\n", token->line,
-			token->str);
-		return true;
-	}
-	if (*current_address % 2) {
-		char empty = 0;
-		if (!fwrite(&empty, 1, 1, foutput)) {
-			printf("ERROR: Failed to write output\n");
-			return true;
-		}
-	}
-	if (!fwrite(&machine_code, 2, 1, foutput)) {
-		printf("ERROR: Failed to write output\n");
-		return true;
-	}
-	*current_address += 2;
-	return false;
-error:
-	printf("ERROR: %d: failed to encode %s\n", token->line, token->str);
-	return true;
-} // NOLINTEND(readability-function-cognitive-complexity)
-
-static bool encode_directive_asciz(struct TokenList *tokenList, FILE *foutput,
-	int *current_address, int *current_token)
-{
-	*current_token += 2;
-	while (*current_token < tokenList->count) {
-		struct Token *token = &tokenList->tokens[*current_token];
-		if (token->type == TOKEN_STRING) {
-			(*current_address) += (int)strlen(token->str) + 1;
-			for (int i = 0; 0 < (int)strlen(token->str) + 1; i++) {
-				if (!fwrite(&token->str[i], 1, 1, foutput)) {
-					printf("ERROR: failed to write "
-					       "output\n");
-					return true;
-				}
-			}
-		} else if (token->type == TOKEN_COMMA) {
-		} else {
-			(*current_token)--;
-			break;
-		}
-		(*current_token)++;
-	}
-	return false;
-}
-
-static bool encode_directive_ascii(struct TokenList *tokenList, FILE *foutput,
-	int *current_address, int *current_token)
-{
-	*current_token += 2;
-	while (*current_token < tokenList->count) {
-		struct Token *token = &tokenList->tokens[*current_token];
-		if (token->type == TOKEN_STRING) {
-			(*current_address) += (int)strlen(token->str);
-			for (int i = 0; 0 < (int)strlen(token->str); i++) {
-				if (!fwrite(&token->str[i], 1, 1, foutput)) {
-					printf("ERROR: failed to write "
-					       "output\n");
-					return true;
-				}
-			}
-		} else if (token->type == TOKEN_COMMA) {
-		} else {
-			(*current_token)--;
-			break;
-		}
-		(*current_token)++;
-	}
-	return false;
-}
-
-static bool encode_directive_dsize(struct TokenList *tokenList, FILE *foutput,
-	int *current_address, int *current_token, int size)
-{
-	*current_token += 2;
-	while (*current_token < tokenList->count) {
-		struct Token *token = &tokenList->tokens[*current_token];
-		if (token->type == TOKEN_NUMBER) {
-			(*current_address) += size;
-			if (token->num_value > (1 << (8 * size)) - 1) {
-				printf("Warning: %d: value %lld truncated",
-					token->line, token->num_value);
-			}
-			if (!fwrite(&token->num_value, size, 1, foutput)) {
-				printf("ERROR: failed to write output\n");
-				return true;
-			}
-		} else if (token->type == TOKEN_STRING) {
-			(*current_address) += (int)strlen(token->str);
-			for (int i = 0; 0 < (int)strlen(token->str); i++) {
-				if (!fwrite(&token->str[i], 1, 1, foutput)) {
-					printf("ERROR: failed to write "
-					       "output\n");
-					return true;
-				}
-			}
-		} else if (token->type == TOKEN_COMMA) {
-		} else {
-			(*current_token)--;
-			break;
-		}
-		(*current_token)++;
-	}
-	return false;
-}
-
-static bool encode_directives(struct TokenList *tokenList,
-	struct SymbolTable *symbolTable, FILE *foutput, int *current_address,
-	int *current_token)
-{
-	struct Token *next = &tokenList->tokens[*current_token + 1];
-	struct Token *nextnext = &tokenList->tokens[*current_token + 2];
-	if (next->type == TOKEN_SYMBOL && nextnext->type == TOKEN_NUMBER) {
-		if (strcasecmp(next->str, "origin") == 0) {
-			const int empty = 0;
-			for (; *current_address < nextnext->num_value;
-				(*current_address)++) {
-				if (!fwrite(&empty, 1, 1, foutput)) {
-					printf("ERROR: failed to write "
-					       "output\n");
-					goto error;
-				}
-			}
-			*current_token += 2;
-		} else if (strcasecmp(next->str, "db") == 0 ||
-			strcasecmp(next->str, "byte") == 0) {
-			return encode_directive_dsize(tokenList, foutput,
-				current_address, current_token, 1);
-		} else if (strcasecmp(next->str, "dh") == 0 ||
-			strcasecmp(next->str, "half") == 0) {
-			return encode_directive_dsize(tokenList, foutput,
-				current_address, current_token, 2);
-		} else if (strcasecmp(next->str, "dw") == 0 ||
-			strcasecmp(next->str, "word") == 0) {
-			return encode_directive_dsize(tokenList, foutput,
-				current_address, current_token, 4);
-		} else if (strcasecmp(next->str, "ascii") == 0) {
-			return encode_directive_ascii(tokenList, foutput,
-				current_address, current_token);
-		} else if (strcasecmp(next->str, "asciz") == 0) {
-			return encode_directive_asciz(tokenList, foutput,
-				current_address, current_token);
-		}
-	}
-	return false;
-error:
-	return true;
-}
-
-static bool encode_and_write(struct TokenList *tokenList,
-	struct SymbolTable *symbolTable, FILE *foutput)
-{
-	int current_address = 0;
-	for (int current_token = 0; current_token < tokenList->count;
-		current_token++) {
-		struct Token *token = &tokenList->tokens[current_token];
-		if (token->type == TOKEN_PERIOD &&
-			tokenList->count > current_token + 1) {
-			if (encode_directives(tokenList, symbolTable, foutput,
-				    &current_address, &current_token)) {
-				printf("ERROR: directive encoding "
-				       "failed!\n");
-				goto error;
-			}
-		} else if (token->type == TOKEN_INSTRUCTION) {
-			if (encode_instructions(tokenList, symbolTable,
-				    foutput, &current_address,
-				    &current_token)) {
-				printf("ERROR: instruction encoding "
-				       "failed!\n");
-				goto error;
-			}
-		} /*else {
-			printf("ERROR: %d: Unexpected token.\n", token->line);
-			return true;
-		}*/
 	}
 	return false;
 error:

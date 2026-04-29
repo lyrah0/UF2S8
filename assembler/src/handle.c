@@ -115,7 +115,7 @@ static bool handle_immediate(const struct TokenList *tokenList,
 		}
 		*immediate = symbolTable->symbols[symbol_num].address & 0xFF;
 	} else if (token->type == TOKEN_NUMBER) {
-		if (token->num_value > 127) {
+		if (token->num_value > 127 && token->str[1] != 'x') {
 			printf("Warning: %d: value %d bigger than max "
 			       "immediate, will wrap around.\n",
 				token->line, token->num_value);
@@ -128,7 +128,7 @@ static bool handle_immediate(const struct TokenList *tokenList,
 				next1->line);
 			return true;
 		}
-		if (next1->num_value > 128) {
+		if (next1->num_value > 128 && next1->str[1] != 'x') {
 			printf("Warning: %d: value -%d smaller than min "
 			       "immediate, will wrap around.\n",
 				next1->line, next1->num_value);
@@ -502,7 +502,7 @@ bool handle_branch_cond(const struct TokenList *tokenList,
 			1;
 		base++;
 	} else if (next3->type == TOKEN_NUMBER) {
-		if (next3->num_value > 511) {
+		if (next3->num_value > 511 && next3->str[1] != 'x') {
 			printf("Warning: %d: value %d bigger than max "
 			       "offset, will wrap around.\n",
 				next3->line, next3->num_value);
@@ -521,7 +521,7 @@ bool handle_branch_cond(const struct TokenList *tokenList,
 				next4->line);
 			return true;
 		}
-		if (next4->num_value > 512) {
+		if (next4->num_value > 512 && next4->str[1] != 'x') {
 			printf("Warning: %d: value -%d smaller than min "
 			       "offset, will wrap around.\n",
 				next4->line, next4->num_value);
@@ -539,7 +539,7 @@ bool handle_branch_cond(const struct TokenList *tokenList,
 			    &base_reg, &offset)) {
 			return true;
 		}
-		if (next3->num_value > 511) {
+		if (next3->num_value > 511 && next3->str[1] != 'x') {
 			printf("Warning: %d: value %d bigger than max "
 			       "offset, will wrap around.\n",
 				next3->line, next3->num_value);
