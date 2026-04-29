@@ -34,9 +34,13 @@ static int cpu_thread_worker(void *data)
 	uint16_t instruction = 0;
 	uint64_t instruction_count = 0;
 	uint64_t start_ticks = SDL_GetPerformanceCounter();
+	uint64_t ticks_ns = 0;
 
 	while (viM->running) {
-		uint64_t ticks_ns = SDL_GetTicksNS();
+		// Get ticks only once every 1000 instructions to reduce overhead
+		if (instruction_count % 1000 == 0) {
+			ticks_ns = SDL_GetTicksNS();
+		}
 		interrupt_timer(viM, ticks_ns);
 		interrupt_input(viM);
 
@@ -96,7 +100,7 @@ int main(int argc, char *argv[])
 	char *ifilepath = nullptr;
 
 	int opt = 0;
-	struct VirtualMachine viM;
+	static struct VirtualMachine viM;
 	viM.debug_mode = false;
 	viM.memory_dump = false;
 	viM.graphics = false;
@@ -170,7 +174,9 @@ int main(int argc, char *argv[])
 	SDL_WaitThread(viM.cpu_thread, nullptr);
 
 	if (viM.graphics) {
-		SDL_DestroyTexture(viM.texture);
+		for (int i = 0; i < 4; i++) {
+			SDL_DestroyTexture(viM.textures[i]);
+		}
 		SDL_DestroyPalette(viM.sdl_palette);
 		SDL_DestroyRenderer(viM.renderer);
 		SDL_DestroyWindow(viM.window);

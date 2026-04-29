@@ -35,7 +35,13 @@ graphics_control format:
 |Bit	|Description|
 |-------|-----------|
 |7-2	|Reserved|
-|1-0	|Graphics mode (0=1bpp, 1=2bpp, 2=4bpp, 3=8bpp (RGB332))|
+|1-0	|Graphics mode
+
+* graphics modes:
+        - 0 = 1bpp 360x360
+        - 1 = 2bpp 256x256
+        - 2 = 4bpp 180x180
+        - 3 = 8bpp (RGB332) 128x128
 
 keyboard_status format:
 

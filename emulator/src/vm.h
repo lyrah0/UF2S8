@@ -7,8 +7,11 @@ enum {
 	VRAM_START = 0x8000,
 	VRAM_SIZE = 0x4000,
 	VRAM_END = VRAM_START + VRAM_SIZE - 1,
-	SCREEN_WIDTH = 128,
-	SCREEN_HEIGHT = 128,
+	MODE0_RES = 360, // 1-bpp
+	MODE1_RES = 256, // 2-bpp
+	MODE2_RES = 180, // 4-bpp
+	MODE3_RES = 128, // 8-bpp (RGB332)
+	DISPLAY_SIZE = 1024,
 	HW_PALETTE_START = 0xFEE0,
 	HW_TERMINAL_OUT = 0xFEF0,
 	HW_KEYBOARD_DATA = 0xFEF1,
@@ -35,9 +38,9 @@ struct VirtualMachine {
 	SDL_Thread *cpu_thread;
 	SDL_Window *window;
 	SDL_Renderer *renderer;
-	SDL_Texture *texture;
+	SDL_Texture *textures[4];
 	SDL_Palette *sdl_palette;
-	uint8_t processed_vram[16384];
+	uint8_t processed_vram[MODE0_RES * MODE0_RES];
 	uint16_t key_buffer[64];
 	int key_head;
 	int key_tail;
