@@ -70,10 +70,23 @@ static bool symbol_directive_dsize(struct TokenList *tokenList,
 	*current_token += 2;
 	while (*current_token < tokenList->count) {
 		struct Token *token = &tokenList->tokens[*current_token];
-		if (token->type == TOKEN_NUMBER) {
+
+		if (token->type == TOKEN_SYMBOL &&
+			*current_token + 1 < tokenList->count &&
+			tokenList->tokens[*current_token + 1].type ==
+				TOKEN_COLON) {
+			(*current_token)--;
+			break;
+		}
+		if (token->type == TOKEN_NUMBER ||
+			token->type == TOKEN_SYMBOL) {
 			(*current_address) += size;
 		} else if (token->type == TOKEN_STRING) {
 			(*current_address) += token->len;
+		} else if (token->type == TOKEN_GT_SIGN ||
+			token->type == TOKEN_LT_SIGN) {
+			(*current_address) += 1;
+			(*current_token)++;
 		} else if (token->type == TOKEN_COMMA) {
 		} else {
 			(*current_token)--;

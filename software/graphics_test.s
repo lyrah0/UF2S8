@@ -2,9 +2,12 @@
 ; Resolution: 128x128
 ; VRAM: 0x8000 - 0xBFFF
 
+.equ VRAM_START, 0x8000
+.equ VRAM_SIZE, 0x4000
+
 start:
-        LI   r7, 0x80    ; VRAM Start High Byte
-        LI   r6, 0x00    ; VRAM Start Low Byte
+        LI   r7, >VRAM_START
+        LI   r6, <VRAM_START
         LI   r0, 0x00    ; Current Color / Pixel Counter Low
         LI   r1, 0x00    ; Pixel Counter High
 
@@ -21,7 +24,7 @@ fill_loop:
         INCC r1
 
         ; Check if we hit 16384 (0x4000)
-        LI   r2, 0x40
+        LI   r2, >VRAM_SIZE
         CMP  r1, r2
         B    NE, fill_loop
 

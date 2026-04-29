@@ -1,23 +1,33 @@
+.equ STACK_TOP, 0xFDFF
+.equ VRAM_START, 0x8000
+.equ VRAM_SIZE, 0x0800
+.equ KBD_INT_VECTOR, 0xFF06
+.equ KBD_STATUS, 0xFEF2
+.equ KBD_DATA, 0xFEF1
+.equ HW_CONTROL, 0xFEFF
+.equ GRAPHICS_CONTROL, 0xFEFD
+.equ INITIAL_POS, 0x4040
+
 init_stack:
-        LI      r0, 0xFD
+        LI      r0, >STACK_TOP
         MOV     sph, r0
-        LI      r0, 0xFF
+        LI      r0, <STACK_TOP
         MOV     spl, r0
 init_interrupts:
         LI	r7, >kbd_isr
         LI	r6, <kbd_isr
-        LI      r5, 0xFF
-        LI      r4, 0x06
+        LI      r5, >KBD_INT_VECTOR
+        LI      r4, <KBD_INT_VECTOR
         SB      r6, [a2]
         ADD     r4, r4, 1
         SB      r7, [a2]
-        LI      r7, 0xFE
-        LI      r6, 0xFF
+        LI      r7, >HW_CONTROL
+        LI      r6, <HW_CONTROL
         LI      r0, 0x02        ; enable keyboard interrupts
         SB      r0, [a3]
 init_graphics:
-        LI      r7, 0xFE
-        LI      r6, 0xFD
+        LI      r7, >GRAPHICS_CONTROL
+        LI      r6, <GRAPHICS_CONTROL
         LI      r0, 0x00        ; mode 0 = 1bpp
         SB      r0, [a3]
         LI      r6, 0xE0
@@ -32,10 +42,10 @@ init_flags:
 
 
 clear_screen:
-        LI      r7, 0x80
-        LI      r6, 0x00
-        LI      r5, 0x08        ; 2048 iterations
-        LI      r4, 0x00
+        LI      r7, >VRAM_START
+        LI      r6, <VRAM_START
+        LI      r5, >VRAM_SIZE
+        LI      r4, <VRAM_SIZE
         LI      r0, 0x00
 clear_loop:
         SB      r0, [a3]
@@ -49,8 +59,8 @@ clear_loop:
 
 game_loop:
         ; Draw initial dot
-        LI      r2, 0x40        ; x
-        LI      r3, 0x40        ; y
+        LI      r2, >INITIAL_POS       ; x
+        LI      r3, <INITIAL_POS       ; y
         LI      r0, 1           ; mode 1=set
         BL      AL, draw_pixel
 
@@ -156,12 +166,12 @@ kbd_isr:
         PUSH    r7
         
         ; Switch to hardware registers address
-        LI      r7, 0xFE
-        LI      r6, 0xF2        ; keyboard_status
+        LI      r7, >KBD_STATUS
+        LI      r6, <KBD_STATUS
         LB      r0, [a3]        ; Get status
         PUSH    r0              ; Save status for later
         
-        LI      r6, 0xF1        ; keyboard_data
+        LI      r6, <KBD_DATA
         LB      r0, [a3]        ; READ DATA (This consumes the event!)
         
         POP     r1              ; Get status back into r1
@@ -248,8 +258,8 @@ isr_done:
         RETI
 
 ; --- Data Section ---
-player_x: .db 0x40
-player_y: .db 0x40
+player_x: .db >INITIAL_POS
+player_y: .db <INITIAL_POS
 next_dx:  .db 0x00
 next_dy:  .db 0x00
 moved:    .db 0x00

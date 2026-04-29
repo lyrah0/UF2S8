@@ -2,6 +2,7 @@
 #include "handle.h"
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <strings.h>
 
 // NOLINTBEGIN(readability-function-cognitive-complexity)
@@ -214,12 +215,78 @@ static bool encode_directive_ascii(struct TokenList *tokenList, FILE *foutput,
 	return false;
 }
 
-static bool encode_directive_dsize(struct TokenList *tokenList, FILE *foutput,
-	int *current_address, int *current_token, int size)
+static bool encode_directive_symbol(struct TokenList *tokenList,
+	struct SymbolTable *symbolTable, FILE *foutput, int *current_address,
+	int *current_token, int size)
+{
+	struct Token *token = &tokenList->tokens[*current_token];
+	struct Token *next = &tokenList->tokens[*current_token + 1];
+
+	if (token->type == TOKEN_GT_SIGN || token->type == TOKEN_LT_SIGN) {
+		(*current_address) += 1;
+		(*current_token)++;
+		if (next->type != TOKEN_SYMBOL) {
+			printf("ERROR: %d: expected a symbol\n", next->line);
+			return true;
+		}
+	} else if (token->type == TOKEN_SYMBOL) {
+		(*current_address) += size;
+	} else {
+		return false;
+	}
+
+	struct Token *sym = (token->type == TOKEN_SYMBOL) ? token : next;
+
+	long long sym_value = 0;
+	bool found = false;
+	for (int j = 0; j < symbolTable->count; j++) {
+		if (strcmp(symbolTable->symbols[j].name, sym->str) == 0) {
+			sym_value = symbolTable->symbols[j].address;
+			found = true;
+			break;
+		}
+	}
+	if (!found) {
+		printf("ERROR: %d: undefined symbol %s\n", sym->line,
+			sym->str);
+		return true;
+	}
+
+	if (token->type == TOKEN_GT_SIGN) {
+		uint8_t temp = (sym_value >> 8) & 0xFF;
+		if (!fwrite(&temp, 1, 1, foutput)) {
+			printf("ERROR: failed to write output\n");
+			return true;
+		}
+	} else if (token->type == TOKEN_LT_SIGN) {
+		uint8_t temp = sym_value & 0xFF;
+		if (!fwrite(&temp, 1, 1, foutput)) {
+			printf("ERROR: failed to write output\n");
+			return true;
+		}
+	} else {
+		if (!fwrite(&sym_value, size, 1, foutput)) {
+			printf("ERROR: failed to write output\n");
+			return true;
+		}
+	}
+	return false;
+}
+
+static bool encode_directive_dsize(struct TokenList *tokenList,
+	struct SymbolTable *symbolTable, FILE *foutput, int *current_address,
+	int *current_token, int size)
 {
 	*current_token += 2;
 	while (*current_token < tokenList->count) {
 		struct Token *token = &tokenList->tokens[*current_token];
+		if (token->type == TOKEN_SYMBOL &&
+			*current_token + 1 < tokenList->count &&
+			tokenList->tokens[*current_token + 1].type ==
+				TOKEN_COLON) {
+			(*current_token)--;
+			break;
+		}
 		if (token->type == TOKEN_NUMBER) {
 			(*current_address) += size;
 			if (token->num_value > (1LL << (8 * size)) - 1) {
@@ -238,6 +305,14 @@ static bool encode_directive_dsize(struct TokenList *tokenList, FILE *foutput,
 					       "output\n");
 					return true;
 				}
+			}
+		} else if (token->type == TOKEN_SYMBOL ||
+			token->type == TOKEN_GT_SIGN ||
+			token->type == TOKEN_LT_SIGN) {
+			if (encode_directive_symbol(tokenList, symbolTable,
+				    foutput, current_address, current_token,
+				    size)) {
+				return true;
 			}
 		} else if (token->type == TOKEN_COMMA) {
 		} else {
@@ -329,8 +404,9 @@ static bool encode_directive_equ(
 	return false;
 }
 
-static bool encode_directives(struct TokenList *tokenList, FILE *foutput,
-	int *current_address, int *current_token)
+static bool encode_directives(struct TokenList *tokenList,
+	struct SymbolTable *symbolTable, FILE *foutput, int *current_address,
+	int *current_token)
 {
 	struct Token *next = &tokenList->tokens[*current_token + 1];
 	if (next->type != TOKEN_SYMBOL) {
@@ -343,18 +419,18 @@ static bool encode_directives(struct TokenList *tokenList, FILE *foutput,
 	}
 	if (strcasecmp(next->str, "db") == 0 ||
 		strcasecmp(next->str, "byte") == 0) {
-		return encode_directive_dsize(
-			tokenList, foutput, current_address, current_token, 1);
+		return encode_directive_dsize(tokenList, symbolTable, foutput,
+			current_address, current_token, 1);
 	}
 	if (strcasecmp(next->str, "dh") == 0 ||
 		strcasecmp(next->str, "half") == 0) {
-		return encode_directive_dsize(
-			tokenList, foutput, current_address, current_token, 2);
+		return encode_directive_dsize(tokenList, symbolTable, foutput,
+			current_address, current_token, 2);
 	}
 	if (strcasecmp(next->str, "dw") == 0 ||
 		strcasecmp(next->str, "word") == 0) {
-		return encode_directive_dsize(
-			tokenList, foutput, current_address, current_token, 4);
+		return encode_directive_dsize(tokenList, symbolTable, foutput,
+			current_address, current_token, 4);
 	}
 	if (strcasecmp(next->str, "ascii") == 0) {
 		return encode_directive_ascii(
@@ -391,7 +467,7 @@ bool encode_and_write(struct TokenList *tokenList,
 		struct Token *token = &tokenList->tokens[current_token];
 		if (token->type == TOKEN_PERIOD &&
 			tokenList->count > current_token + 1) {
-			if (encode_directives(tokenList, foutput,
+			if (encode_directives(tokenList, symbolTable, foutput,
 				    &current_address, &current_token)) {
 				printf("ERROR: directive encoding failed!\n");
 				goto error;
