@@ -472,7 +472,7 @@ static bool encode_directives(struct TokenList *tokenList,
 	return false;
 }
 
-static bool encode_and_write(struct TokenList *tokenList,
+bool encode_and_write(struct TokenList *tokenList,
 	struct SymbolTable *symbolTable, FILE *foutput)
 {
 	int current_address = 0;

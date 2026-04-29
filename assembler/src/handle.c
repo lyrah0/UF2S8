@@ -193,7 +193,7 @@ static bool handle_bracketparse(const struct TokenList *tokenList,
 	return false;
 }
 
-static bool handle_mov(const struct TokenList *tokenList, int *current_token,
+bool handle_mov(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code)
 {
 	struct Token *token = &tokenList->tokens[*current_token];
@@ -240,7 +240,7 @@ static bool handle_mov(const struct TokenList *tokenList, int *current_token,
 	return false;
 }
 
-static bool handle_spp(const struct TokenList *tokenList, int *current_token,
+bool handle_spp(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code, uint16_t base)
 {
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
@@ -251,7 +251,7 @@ static bool handle_spp(const struct TokenList *tokenList, int *current_token,
 }
 
 // Handles compare register register instructions: CMP, CMN, CMA
-static bool handle_crr(const struct TokenList *tokenList, int *current_token,
+bool handle_crr(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code, uint16_t base)
 {
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
@@ -262,7 +262,7 @@ static bool handle_crr(const struct TokenList *tokenList, int *current_token,
 	return false;
 }
 
-static bool handle_rrr(const struct TokenList *tokenList, int *current_token,
+bool handle_rrr(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code, uint16_t base)
 {
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
@@ -275,7 +275,7 @@ static bool handle_rrr(const struct TokenList *tokenList, int *current_token,
 	return false;
 }
 
-static bool handle_add(const struct TokenList *tokenList,
+bool handle_add(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
 	uint16_t *machine_code)
 {
@@ -332,7 +332,7 @@ static bool handle_add(const struct TokenList *tokenList,
 	return false;
 }
 
-static bool handle_shift(const struct TokenList *tokenList, int *current_token,
+bool handle_shift(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code, uint16_t base)
 {
 	struct Token *token = &tokenList->tokens[*current_token];
@@ -387,7 +387,7 @@ static bool handle_shift(const struct TokenList *tokenList, int *current_token,
 	return false;
 }
 
-static bool handle_li(const struct TokenList *tokenList,
+bool handle_li(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
 	uint16_t *machine_code)
 {
@@ -411,7 +411,7 @@ static bool handle_li(const struct TokenList *tokenList,
 }
 
 // Handles SB and LB
-static bool handle_loadstore(const struct TokenList *tokenList,
+bool handle_loadstore(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
 	uint16_t *machine_code, uint16_t base)
 {
@@ -446,8 +446,7 @@ static bool handle_loadstore(const struct TokenList *tokenList,
 }
 
 // Handles B, BL
-// NOLINTBEGIN(readability-function-cognitive-complexity)
-static bool handle_branch_cond(const struct TokenList *tokenList,
+bool handle_branch_cond(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
 	uint16_t *machine_code, uint16_t base, uint16_t current_address)
 {
@@ -478,6 +477,10 @@ static bool handle_branch_cond(const struct TokenList *tokenList,
 		offset = (symbolTable->symbols[symbol_num].address -
 				 current_address - 2) >>
 			1;
+		if (offset > 511 || (int16_t)offset < -512) {
+			printf("Warning: %d: Branch target too far away from %s.\n",
+				next3->line, next3->str);
+		}
 		base++;
 	} else if (next3->type == TOKEN_NUMBER) {
 		if ((next3->num_value > 511 || next3->num_value < -512) &&
@@ -521,4 +524,3 @@ static bool handle_branch_cond(const struct TokenList *tokenList,
 	}
 	return false;
 }
-// NOLINTEND(readability-function-cognitive-complexity)
