@@ -1,4 +1,5 @@
 #include "structures.h"
+#include "symbol.h"
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
