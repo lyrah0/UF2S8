@@ -43,7 +43,7 @@ void memory_dump(struct VirtualMachine *viM)
 
 void memory_write(struct VirtualMachine *viM, uint16_t address, uint8_t value)
 {
-	if (address == 0xFEF0) {
+	if (address == HW_TERMINAL_OUT) {
 		terminal_write(value);
 	} else {
 		viM->memory[address] = value;

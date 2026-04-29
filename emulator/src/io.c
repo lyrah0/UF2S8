@@ -66,7 +66,7 @@ void interrupt_input(struct VirtualMachine *viM, const unsigned int *timer)
 	}
 
 	if (character != -1) {
-		viM->memory[0xFEF1] = (uint8_t)character;
+		viM->memory[HW_KEYBOARD_DATA] = (uint8_t)character;
 
 		interrupt_pushtostack(viM);
 

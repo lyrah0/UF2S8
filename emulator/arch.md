@@ -15,7 +15,8 @@ hardware registers:
 |----------------|------|-----------|
 |palette         |0xFEE0|16 bytes of RGB332 palette entries (modes 0-2)
 |terminal_out    |0xFEF0|terminal output
-|keyboard_in     |0xFEF1|keyboard input
+|keyboard_data   |0xFEF1|keyboard data
+|keyboard_status |0xFEF2|keyboard status
 |graphics_mode   |0xFEFD|graphics control
 |timer_mult      |0xFEFE|timer multiplier
 |hardware_control|0xFEFF|hardware control
