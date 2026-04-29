@@ -25,7 +25,8 @@ hardware control format:
 
 |Bit	|Description|
 |-------|-----------|
-|7-1	|Reserved|
+|7-2	|Reserved|
+|1	|keyboard interrupt enable|
 |0	|Timer enable|
 
 
