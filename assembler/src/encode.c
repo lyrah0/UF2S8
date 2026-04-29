@@ -222,7 +222,7 @@ static bool encode_directive_dsize(struct TokenList *tokenList, FILE *foutput,
 		struct Token *token = &tokenList->tokens[*current_token];
 		if (token->type == TOKEN_NUMBER) {
 			(*current_address) += size;
-			if (token->num_value > (1 << (8 * size)) - 1) {
+			if (token->num_value > (1LL << (8 * size)) - 1) {
 				printf("Warning: %d: value %lld truncated",
 					token->line, token->num_value);
 			}
