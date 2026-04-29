@@ -133,7 +133,7 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 	} else if ((instruction & 0x1FFF) == 0x0800) {
 		temp = viM->gpr[reg_dst] + (viM->csr[0] & 1);
 	} else if ((instruction & 0x1FFF) == 0x0C00) {
-		temp = viM->gpr[reg_dst] - (viM->csr[0] & 1);
+		temp = viM->gpr[reg_dst] - (~viM->csr[0] & 1);
 	} else if ((instruction & 0x1FFF) == 0x1800) {
 		uint16_t stackp = viM->csr[7] << 8 | viM->csr[6];
 		temp = viM->memory[++stackp];

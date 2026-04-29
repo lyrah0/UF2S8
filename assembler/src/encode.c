@@ -27,7 +27,7 @@ static bool encode_instructions(struct TokenList *tokenList,
 			    tokenList, current_token, &machine_code, 0x0800)) {
 			goto error;
 		}
-	} else if (!strcasecmp(token->str, "DECC")) {
+	} else if (!strcasecmp(token->str, "DECB")) {
 		if (handle_spp(
 			    tokenList, current_token, &machine_code, 0x0C00)) {
 			goto error;
