@@ -10,6 +10,7 @@ init_stack:
         BL      AL, static_gradient
         BL      AL, moving_gradient
         BL      AL, moving_dot
+        BL      AL, static_gradient
         BL      AL, draw_sprites
 wait_loop:
         B       AL, wait_loop
@@ -193,7 +194,11 @@ draw_sprite_blitter:
 draw_sprite_blitter_loop:
         PUSH    r0
         LB      r0, [a1]
+draw_sprite_check_if_transparent:
+        CMA     r0, r0          ; treat 0 as transparent
+        B       ZS, draw_sprite_skip_pixel
         SB      r0, [a3]
+draw_sprite_skip_pixel:
         POP     r0
         ADD     r6, r6, 1
         INCC    r7
