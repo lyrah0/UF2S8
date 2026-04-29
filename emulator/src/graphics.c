@@ -1,3 +1,4 @@
+#include "graphics.h"
 #include "vm.h"
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_events.h>
@@ -8,7 +9,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-void update_graphics(struct VirtualMachine *viM) // NOLINT
+void handle_graphics_events(struct VirtualMachine *viM)
 {
 	if (!viM->graphics) { return; }
 
@@ -16,6 +17,11 @@ void update_graphics(struct VirtualMachine *viM) // NOLINT
 	while (SDL_PollEvent(&event)) {
 		if (event.type == SDL_EVENT_QUIT) { viM->running = false; }
 	}
+}
+
+void render_graphics_frame(struct VirtualMachine *viM)
+{
+	if (!viM->graphics) { return; }
 
 	SDL_UpdateTexture(
 		viM->texture, nullptr, viM->memory + VRAM_START, SCREEN_WIDTH);

@@ -20,10 +20,11 @@ struct VirtualMachine {
 	uint16_t pc;
 	uint16_t breakpoint[MAX_BREAKPOINTS];
 	int bp_count;
-	bool running;
+	volatile bool running;
 	bool debug_mode;
 	bool memory_dump;
 	bool graphics;
+	SDL_Thread *cpu_thread;
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	SDL_Texture *texture;

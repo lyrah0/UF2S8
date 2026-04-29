@@ -1,6 +1,9 @@
+#include <SDL3/SDL_error.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_video.h>
+#include <SDL3/SDL_thread.h>
 #include <unistd.h> //NOLINT
 #include <bits/getopt_core.h> //NOLINT
 #define XOPEN_SOURCE 700
@@ -16,9 +19,9 @@
 #include "debugger.h"
 #include "graphics.h"
 
-static bool main_loop(struct VirtualMachine *viM)
+static int cpu_thread_worker(void *data)
 {
-	viM->running = true;
+	struct VirtualMachine *viM = (struct VirtualMachine *)data;
 	viM->pc = 0;
 	viM->bp_count = 0;
 	viM->memory[0xFEFF] = 0;
@@ -31,6 +34,7 @@ static bool main_loop(struct VirtualMachine *viM)
 	while (viM->running) {
 		if (instruction == 0x0000 && viM->pc > 0x1f) {
 			viM->running = false;
+			break;
 		}
 
 		interrupt_timer(viM, &timer);
@@ -50,20 +54,19 @@ static bool main_loop(struct VirtualMachine *viM)
 
 		if (decode_execute(viM, instruction)) {
 			printf("ERROR: execution failed\n");
-			return true;
+			viM->running = false;
+			return 1;
 		}
 		viM->csr[0] &= 0x8F;
 		for (int i = 1; i < 6; i++) {
 			viM->csr[i] = 0;
 		}
 
-		if (timer % 10000 == 0) { update_graphics(viM); }
-
 		timer++;
 	}
 	memory_dump(viM);
 	print_state(viM, instruction);
-	return false;
+	return 0;
 }
 
 int main(int argc, char *argv[])
@@ -81,6 +84,7 @@ int main(int argc, char *argv[])
 	viM.debug_mode = false;
 	viM.memory_dump = false;
 	viM.graphics = false;
+	viM.running = false;
 
 	while ((opt = getopt(argc, argv, "gmdi:o:")) != -1) {
 		switch (opt) {
@@ -97,8 +101,9 @@ int main(int argc, char *argv[])
 			ifilepath = optarg;
 			break;
 		default:
-			printf("Usage: %s [-i input file] [-m] [-d]\n",
+			printf("Usage: %s [-i input file] [-m] [-d] [-g]\n",
 				argv[0]);
+			return 1;
 		}
 	}
 
@@ -116,6 +121,7 @@ int main(int argc, char *argv[])
 	if (!fread(&viM.memory, MAX_MEMORY, 1, finput)) {
 		// printf("ERROR: Failed to read file.\n");
 	}
+	(void)fclose(finput);
 
 	if (viM.graphics) {
 		if (init_sdl(&viM)) {
@@ -124,8 +130,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	(void)fclose(finput);
-
 	struct termios oldt;
 	struct termios newt;
 	tcgetattr(STDIN_FILENO, &oldt);
@@ -133,12 +137,23 @@ int main(int argc, char *argv[])
 	newt.c_lflag &= ~(ICANON | ECHO);
 	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
-	if (main_loop(&viM)) {
-		printf("ERROR: execution failed\n");
+	viM.running = true;
+	viM.cpu_thread =
+		SDL_CreateThread(cpu_thread_worker, "CPUThread", &viM);
+	if (!viM.cpu_thread) {
+		printf("ERROR: Failed to create CPU thread: %s\n",
+			SDL_GetError());
 		tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 		return 1;
 	}
 
+	while (viM.running) {
+		handle_graphics_events(&viM);
+		render_graphics_frame(&viM);
+		SDL_Delay(1);
+	}
+
+	SDL_WaitThread(viM.cpu_thread, nullptr);
 	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 
 	if (viM.graphics) {
