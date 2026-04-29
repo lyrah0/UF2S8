@@ -80,6 +80,8 @@ int main(int argc, char *argv[])
 	viM.memory_dump = false;
 	viM.graphics = false;
 	viM.running = false;
+	viM.sdl_buf_head = 0;
+	viM.sdl_buf_tail = 0;
 
 	while ((opt = getopt(argc, argv, "gmdi:o:")) != -1) {
 		switch (opt) {

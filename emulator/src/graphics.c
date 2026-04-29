@@ -3,6 +3,8 @@
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_keyboard.h>
+#include <SDL3/SDL_keycode.h>
 #include <SDL3/SDL_pixels.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_surface.h>
@@ -17,6 +19,42 @@ void handle_graphics_events(struct VirtualMachine *viM)
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		if (event.type == SDL_EVENT_QUIT) { viM->running = false; }
+		if (event.type == SDL_EVENT_TEXT_INPUT) {
+			for (const char *p = event.text.text; *p != '\0';
+				p++) {
+				int next = (viM->sdl_buf_tail + 1) % 16;
+				if (next != viM->sdl_buf_head) {
+					viM->sdl_input_buffer[viM
+							->sdl_buf_tail] =
+						(uint8_t)*p;
+					viM->sdl_buf_tail = next;
+				}
+			}
+		} else if (event.type == SDL_EVENT_KEY_DOWN) {
+			uint8_t c = 0;
+			switch (event.key.key) {
+			case SDLK_RETURN:
+				c = '\n';
+				break;
+			case SDLK_BACKSPACE:
+				c = '\b';
+				break;
+			case SDLK_TAB:
+				c = '\t';
+				break;
+			case SDLK_ESCAPE:
+				c = '\x1b';
+				break;
+			}
+			if (c != 0) {
+				int next = (viM->sdl_buf_tail + 1) % 16;
+				if (next != viM->sdl_buf_head) {
+					viM->sdl_input_buffer[viM
+							->sdl_buf_tail] = c;
+					viM->sdl_buf_tail = next;
+				}
+			}
+		}
 	}
 }
 
@@ -75,5 +113,6 @@ bool init_sdl(struct VirtualMachine *viM) // NOLINT
 		return true;
 	}
 
+	SDL_StartTextInput(viM->window);
 	return false;
 }

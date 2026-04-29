@@ -28,6 +28,9 @@ struct VirtualMachine {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	SDL_Texture *texture;
+	uint8_t sdl_input_buffer[16];
+	int sdl_buf_head;
+	int sdl_buf_tail;
 };
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 static inline int16_t sign_extend(uint16_t value, uint8_t bits)

@@ -54,7 +54,16 @@ void interrupt_input(struct VirtualMachine *viM, const unsigned int *timer)
 {
 	if (!(*timer % 1000 == 0 && (viM->csr[0] >> 7) == 1)) { return; }
 
-	int character = get_keypress_nonblocking();
+	int character = -1;
+
+	// Check SDL buffer first
+	if (viM->sdl_buf_head != viM->sdl_buf_tail) {
+		character = viM->sdl_input_buffer[viM->sdl_buf_head];
+		viM->sdl_buf_head = (viM->sdl_buf_head + 1) % 16;
+	} else {
+		// Fallback to terminal
+		character = get_keypress_nonblocking();
+	}
 
 	if (character != -1) {
 		viM->memory[0xFEF1] = (uint8_t)character;
