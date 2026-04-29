@@ -1,3 +1,5 @@
 *.bin
 */build
 */bin
+compile_commands.json
+tags
