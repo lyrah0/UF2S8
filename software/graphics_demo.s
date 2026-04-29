@@ -9,9 +9,9 @@ init_timer:
         LI      r7, >INT_VECTOR
         LI      r6, <INT_VECTOR
         LI      r0, >int_handler
-        SB      r0, [a3+5]
+        SB      r0, [a3+0x21]
         LI      r0, <int_handler
-        SB      r0, [a3+4]
+        SB      r0, [a3+0x20]
         
         LI      r7, >REG_HARDWARE_CONTROL
         LI      r6, <REG_HARDWARE_CONTROL
