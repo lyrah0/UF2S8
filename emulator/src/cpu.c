@@ -108,7 +108,7 @@ static uint32_t execute_logic(struct VirtualMachine *viM, uint16_t instruction)
 		return (int8_t)viM->gpr[reg_src] >> reg_mod;
 	}
 
-	return 99999999;
+	return 9999;
 }
 
 static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
@@ -121,11 +121,11 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 	uint8_t imm_li = sign_extend(inst.load_imm.imm, 8);
 	int8_t imm_add = (int8_t)sign_extend(inst.addi.imm, 5);
 	int16_t imm_ls = sign_extend(inst.loadstore.offset, 7);
-	uint32_t temp = execute_logic(viM, instruction);
+	uint16_t temp = execute_logic(viM, instruction);
 	char sub_add = -1;
 	bool write = true;
 
-	if (temp != 99999999) {
+	if (temp != 9999) {
 	} else if ((instruction & 0x03FF) == 0x0080) {
 		temp = viM->gpr[reg_src];
 	} else if ((instruction & 0x03FF) == 0x0100) {
@@ -175,7 +175,7 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 		return true;
 	}
 
-	if ((temp & 0xFFFF0000) != 0) {
+	if ((temp & 0xFF00) != 0) {
 		viM->csr[0] |= 0x01;
 	} else {
 		viM->csr[0] &= 0xFE;
