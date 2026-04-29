@@ -115,9 +115,6 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 	uint8_t reg_src = inst.reg_src;
 	uint8_t reg_mod = inst.reg_mod;
 	uint8_t reg_base = inst.loadstore.reg_base << 1;
-	uint8_t imm_li = sign_extend(inst.load_imm.imm, 8);
-	int8_t imm_add = (int8_t)sign_extend(inst.addi.imm, 5);
-	int16_t imm_ls = sign_extend(inst.loadstore.offset, 7);
 	uint16_t temp = execute_logic(viM, instruction);
 	char sub_add = -1;
 	bool write = true;
@@ -164,15 +161,15 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 			(uint16_t)viM->gpr[reg_mod] + (viM->csr[0] & 0x01);
 		sub_add = 1;
 	} else if ((instruction & 0x1F) == 0x09) {
-		temp = imm_li;
+		temp = sign_extend(inst.load_imm.imm, 8);
 	} else if ((instruction & 0x1F) == 0x19) {
 		temp = (uint16_t)viM->gpr[reg_src] +
-			(uint16_t)(uint8_t)imm_add;
+			(uint16_t)(uint8_t)sign_extend(inst.addi.imm, 5);
 	} else if ((instruction & 0xF) == 0xB) {
 		temp = memory_read(viM,
 			(uint16_t)((viM->gpr[reg_base] |
 					   viM->gpr[reg_base + 1] << 8) +
-				imm_ls));
+				sign_extend(inst.loadstore.offset, 7)));
 	} else {
 		return true;
 	}
@@ -214,8 +211,6 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 {
 	Instruction inst = { .raw = instruction };
 	uint8_t reg_base = inst.loadstore.reg_base << 1;
-	int16_t imm_ls = sign_extend(inst.loadstore.offset, 7);
-	int16_t imm_brel = (int16_t)(sign_extend(inst.branch.offset, 9) << 1);
 	uint16_t temp = 0;
 	bool cond = get_cond(viM, instruction);
 
@@ -237,10 +232,13 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 			viM->pc = (uint16_t)((viM->gpr[reg_base] |
 						     viM->gpr[reg_base + 1]
 							     << 8) +
-				(imm_ls << 1));
+				(sign_extend(inst.loadstore.offset, 7) << 1));
 		}
 	} else if ((instruction & 0xF) == 0xD) {
-		if (cond) { viM->pc += imm_brel; }
+		if (cond) {
+			viM->pc += (int16_t)(sign_extend(inst.branch.offset, 9)
+				<< 1);
+		}
 	} else if ((instruction & 0xF) == 0xE) {
 		if (cond) {
 			temp = viM->csr[7] << 8 | viM->csr[6];
@@ -249,7 +247,7 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 			viM->pc = (uint16_t)((viM->gpr[reg_base] |
 						     viM->gpr[reg_base + 1]
 							     << 8) +
-				(imm_ls << 1));
+				(sign_extend(inst.loadstore.offset, 7) << 1));
 			viM->csr[7] = temp >> 8;
 			viM->csr[6] = temp;
 		}
@@ -258,7 +256,8 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 			temp = viM->csr[7] << 8 | viM->csr[6];
 			viM->memory[temp--] = viM->pc >> 8;
 			viM->memory[temp--] = viM->pc;
-			viM->pc += imm_brel;
+			viM->pc += (int16_t)(sign_extend(inst.branch.offset, 9)
+				<< 1);
 			viM->csr[7] = temp >> 8;
 			viM->csr[6] = temp;
 		}
@@ -271,10 +270,10 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 
 bool decode_execute(struct VirtualMachine *viM, uint16_t instruction)
 {
-	uint8_t reg_dst = (instruction >> 13) & 0x7;
-	uint8_t reg_src = (instruction >> 10) & 0x7;
-	uint8_t reg_base = (instruction >> 10) & 0x6;
-	int16_t imm_ls = sign_extend((instruction >> 4) & 0x7F, 7);
+	Instruction inst = { .raw = instruction };
+	uint8_t reg_dst = inst.reg3.reg_dst;
+	uint8_t reg_src = inst.reg3.reg_src;
+	uint8_t reg_base = inst.loadstore.reg_base << 1;
 	uint16_t temp = 0;
 
 	if (instruction == 0) { return false; }
@@ -299,7 +298,7 @@ bool decode_execute(struct VirtualMachine *viM, uint16_t instruction)
 		viM->csr[reg_dst] = viM->gpr[reg_src];
 	} else if ((instruction & 0xF) == 0xA) {
 		temp = (viM->gpr[reg_base] | viM->gpr[reg_base + 1] << 8) +
-			imm_ls;
+			sign_extend(inst.loadstore.offset, 7);
 		memory_write(viM, temp, viM->gpr[reg_dst]);
 	} else {
 		printf("ERROR: illegal instruction: 0x%04x\n", instruction);

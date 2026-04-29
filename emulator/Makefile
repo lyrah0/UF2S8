@@ -63,7 +63,7 @@ TARGET_LIB_SHARED :=  $(BIN_DIR)/lib$(TARGET).so
 
 
 ifeq ($(debug),1)
-	CFLAGS := $(filter-out -g0, $(CFLAGS)) -ggdb3
+	CFLAGS := $(filter-out -g0, $(CFLAGS)) $(FLAGS_DEBUG)
 	CPPFLAGS := $(filter-out -DNDEBUG, $(CPPFLAGS))
 	LDFLAGS := $(filter-out -s, $(LDFLAGS))
 endif
