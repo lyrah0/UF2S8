@@ -27,7 +27,7 @@ void print_state(const struct VirtualMachine *viM, uint16_t instruction)
 static void flags_overflow_add(
 	struct VirtualMachine *viM, uint16_t src, uint16_t mod, uint16_t res)
 {
-	if (((src ^ res) & (mod ^ res)) >> 15) {
+	if (((src ^ res) & (mod ^ res)) & 0x80) {
 		viM->csr[0] |= 1 << 3;
 	} else {
 		viM->csr[0] &= ~(1 << 3);
@@ -37,7 +37,7 @@ static void flags_overflow_add(
 static void flags_overflow_sub(
 	struct VirtualMachine *viM, uint16_t src, uint16_t mod, uint16_t res)
 {
-	if (((src ^ mod) & (src ^ res)) >> 15) {
+	if (((src ^ mod) & (src ^ res)) & 0x80) {
 		viM->csr[0] |= 1 << 3;
 	} else {
 		viM->csr[0] &= ~(1 << 3);
@@ -130,14 +130,16 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 	} else if ((instruction & 0x1FFF) == 0x0800) {
 		temp = viM->gpr[reg_dst] + (viM->csr[0] & 1);
 	} else if ((instruction & 0x1FFF) == 0x0C00) {
-		temp = viM->gpr[reg_dst] - (~viM->csr[0] & 1);
+		temp = (uint16_t)viM->gpr[reg_dst] + 0xFF +
+			(viM->csr[0] & 0x01);
 	} else if ((instruction & 0x1FFF) == 0x1800) {
 		uint16_t stackp = viM->csr[7] << 8 | viM->csr[6];
 		temp = viM->memory[++stackp];
 		viM->csr[7] = stackp >> 8;
 		viM->csr[6] = stackp;
 	} else if ((instruction & 0x03FF) == 0x0010) {
-		temp = viM->gpr[reg_dst] - viM->gpr[reg_src];
+		temp = (uint16_t)viM->gpr[reg_dst] +
+			(uint16_t)(~viM->gpr[reg_src] & 0xFF) + 1;
 		write = false;
 	} else if ((instruction & 0x03FF) == 0x0090) {
 		temp = viM->gpr[reg_dst] + viM->gpr[reg_src];
@@ -146,23 +148,26 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 		temp = viM->gpr[reg_dst] & viM->gpr[reg_src];
 		write = false;
 	} else if ((instruction & 0x7F) == 0x01) {
-		temp = viM->gpr[reg_src] - viM->gpr[reg_mod];
+		temp = (uint16_t)viM->gpr[reg_src] +
+			(uint16_t)(~viM->gpr[reg_mod] & 0xFF) + 1;
 		sub_add = 0;
 	} else if ((instruction & 0x7F) == 0x11) {
-		temp = viM->gpr[reg_src] - viM->gpr[reg_mod] -
-			(viM->csr[0] & 1);
+		temp = (uint16_t)viM->gpr[reg_src] +
+			(uint16_t)(~viM->gpr[reg_mod] & 0xFF) +
+			(viM->csr[0] & 0x01);
 		sub_add = 0;
 	} else if ((instruction & 0x7F) == 0x21) {
 		temp = viM->gpr[reg_src] + viM->gpr[reg_mod];
 		sub_add = 1;
 	} else if ((instruction & 0x7F) == 0x31) {
-		temp = viM->gpr[reg_src] + viM->gpr[reg_mod] +
-			(viM->csr[0] & 1);
+		temp = (uint16_t)viM->gpr[reg_src] +
+			(uint16_t)viM->gpr[reg_mod] + (viM->csr[0] & 0x01);
 		sub_add = 1;
 	} else if ((instruction & 0x1F) == 0x09) {
 		temp = imm_li;
 	} else if ((instruction & 0x1F) == 0x19) {
-		temp = viM->gpr[reg_src] + imm_add;
+		temp = (uint16_t)viM->gpr[reg_src] +
+			(uint16_t)(uint8_t)imm_add;
 	} else if ((instruction & 0xF) == 0xB) {
 		temp = viM->memory[(
 			uint16_t)((viM->gpr[reg_base] |
@@ -177,12 +182,12 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 	} else {
 		viM->csr[0] &= 0xFE;
 	}
-	if (temp == 0) {
+	if ((uint8_t)temp == 0) {
 		viM->csr[0] |= 0x02;
 	} else {
 		viM->csr[0] &= 0xFD;
 	}
-	if ((temp & 0x8000) != 0) {
+	if ((temp & 0x0080) != 0) {
 		viM->csr[0] |= 0x04;
 	} else {
 		viM->csr[0] &= 0xFB;
