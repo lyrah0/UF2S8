@@ -48,7 +48,9 @@ hardware registers:
 |BLIT_CMD         |0xFEDF|Blitter command
 |GFX_ADDR_L       |0xFEE0|Graphics VRAM address low
 |GFX_ADDR_H       |0xFEE1|Graphics VRAM address high
-|reserved         |0xFEE2-0xFEED|Reserved
+|GFX_WIDTH        |0xFEE2|Graphics width (Pixels = Value * 8)
+|GFX_HEIGHT       |0xFEE3|Graphics height (Pixels = Value * 8)
+|reserved         |0xFEE4-0xFEED|Reserved
 |GFX_DATA         |0xFEEE|Graphics VRAM data
 |GFX_CTRL         |0xFEEF|graphics control
 |TERM_OUT         |0xFEF0|terminal output
@@ -96,31 +98,16 @@ GFX_CTRL format:
 
 |Bit	|Description|
 |-------|-----------|
-|7-6	|Reserved|
-|5      |auto increment address on read (VRAM)
-|4      |auto increment address on write (VRAM)
-|3-0	|graphics mode
+|7-4	|Reserved|
+|3      |auto increment address on read (VRAM)
+|2      |auto increment address on write (VRAM)
+|1-0	|color depth mode
 
-* graphics modes:
-        - 0-3 8bpp:
-                - 0 = 320x200 (64000/0xFA00 bytes)
-                - 1 = 272x180 (48960/0xBF00 bytes)
-                - 2 = 256x160 (40960/0xA000 bytes)
-                - 3 = 224x140 (31360/0x7A60 bytes)
-        - 4-6 4bpp:
-                - 4 = 448x280 (62720/0xF500 bytes)
-                - 5 = 400x240 (48000/0xBB80 bytes)
-                - 6 = 320x200 (32000/0x7D00 bytes)
-        - 7-9 2bpp:
-                - 7 = 640x400 (64000/0xFA00 bytes)
-                - 8 = 448x280 (31360/0x7A60 bytes)
-                - 9 = 320x200 (16000/0x3E80 bytes)
-        - 10-13 1bpp:
-                - 10 = 912x570 (64980/0xFDD4 bytes)
-                - 11 = 640x400 (32000/0x7D00 bytes)
-                - 12 = 448x280 (15680/0x3D40 bytes)
-                - 13 = 320x200 (8000/0x1F40 bytes)
-        - 14-15 - Reserved
+* color depth modes:
+        - 0 = 8bpp(RGB332)
+        - 1 = 4bpp
+        - 2 = 2bpp
+        - 3 = 1bpp
 
 
 HW_CTRL format:

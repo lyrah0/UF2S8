@@ -28,7 +28,7 @@ static int cpu_thread_worker(void *data)
 	viM->bp_count = 0;
 	viM->memory[HW_HW_CTRL] = 0;
 	// Default to RGB332 mode
-	viM->memory[HW_GFX_CTRL] = 3;
+	viM->memory[HW_GFX_CTRL] = 0;
 	for (int i = 0; i < 8; i++) {
 		viM->csr[i] = 0;
 	}
@@ -184,8 +184,8 @@ int main(int argc, char *argv[])
 	SDL_WaitThread(viM.cpu_thread, nullptr);
 
 	if (viM.graphics) {
-		for (int i = 0; i < 4; i++) {
-			SDL_DestroyTexture(viM.textures[i]);
+		if (viM.dynamic_texture) {
+			SDL_DestroyTexture(viM.dynamic_texture);
 		}
 		SDL_DestroyPalette(viM.sdl_palette);
 		SDL_DestroyRenderer(viM.renderer);

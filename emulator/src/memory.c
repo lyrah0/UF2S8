@@ -55,7 +55,7 @@ void memory_write(struct VirtualMachine *viM, uint16_t address, uint8_t value)
 			((uint16_t)value << 8);
 	} else if (address == HW_GFX_DATA) {
 		viM->vram[viM->vram_ptr] = value;
-		if (viM->memory[HW_GFX_CTRL] & 0x10) { viM->vram_ptr++; }
+		if (viM->memory[HW_GFX_CTRL] & 0x4) { viM->vram_ptr++; }
 	} else if (address == HW_BANK_SEL) {
 		viM->bank_select = value;
 	} else if (address < 0x8000) {
@@ -97,7 +97,7 @@ uint8_t memory_read(struct VirtualMachine *viM, uint16_t address)
 	if (address == HW_GFX_ADDR_H) { return (uint8_t)(viM->vram_ptr >> 8); }
 	if (address == HW_GFX_DATA) {
 		uint8_t value = viM->vram[viM->vram_ptr];
-		if (viM->memory[HW_GFX_CTRL] & 0x20) { viM->vram_ptr++; }
+		if (viM->memory[HW_GFX_CTRL] & 0x8) { viM->vram_ptr++; }
 		return value;
 	}
 	if (address == HW_BANK_SEL) { return viM->bank_select; }

@@ -4,21 +4,6 @@
 #include <SDL3/SDL.h>
 
 enum {
-	GFX_MODE0_RES = 200,
-	GFX_MODE1_RES = 180,
-	GFX_MODE2_RES = 160,
-	GFX_MODE3_RES = 140,
-	GFX_MODE4_RES = 280,
-	GFX_MODE5_RES = 240,
-	GFX_MODE6_RES = 200,
-	GFX_MODE7_RES = 400,
-	GFX_MODE8_RES = 280,
-	GFX_MODE9_RES = 200,
-	GFX_MODE10_RES = 570,
-	GFX_MODE11_RES = 400,
-	GFX_MODE12_RES = 280,
-	GFX_MODE13_RES = 200,
-	DEFAULT_DISPLAY_HEIGHT = 1080,
 	HW_BLIT_SRC_X_L = 0xFEC0,
 	HW_BLIT_SRC_X_H = 0xFEC1,
 	HW_BLIT_SRC_Y_L = 0xFEC2,
@@ -49,6 +34,8 @@ enum {
 	HW_BLIT_CMD = 0xFEDF,
 	HW_GFX_ADDR_L = 0xFEE0,
 	HW_GFX_ADDR_H = 0xFEE1,
+	HW_GFX_WIDTH = 0xFEE2,
+	HW_GFX_HEIGHT = 0xFEE3,
 	HW_GFX_DATA = 0xFEEE,
 	HW_GFX_CTRL = 0xFEEF,
 	HW_PALETTE_START = 0xFFF0,
@@ -87,7 +74,9 @@ struct VirtualMachine {
 	SDL_Thread *cpu_thread;
 	SDL_Window *window;
 	SDL_Renderer *renderer;
-	SDL_Texture *textures[14];
+	SDL_Texture *dynamic_texture;
+	int current_res_w;
+	int current_res_h;
 	SDL_Palette *sdl_palette;
 	uint8_t vram[VRAM_SIZE];
 	uint16_t vram_ptr;

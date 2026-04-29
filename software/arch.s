@@ -29,6 +29,8 @@
 .equ HW_BLIT_CMD,          0xFEDF
 .equ HW_GFX_ADDR_L,        0xFEE0
 .equ HW_GFX_ADDR_H,        0xFEE1
+.equ HW_GFX_WIDTH,         0xFEE2
+.equ HW_GFX_HEIGHT,        0xFEE3
 .equ HW_GFX_DATA,          0xFEEE
 .equ HW_GFX_CTRL,          0xFEEF
 .equ HW_TERM_OUT,          0xFEF0
@@ -76,56 +78,6 @@
 .equ KBD_STAT_READY,      0x01
 .equ KBD_STAT_RELEASE,    0x02
 
-; Graphics Modes - Resolutions
-; 8bpp
-.equ MODE0_W, 320
-.equ MODE0_H, 200
-.equ MODE1_W, 272
-.equ MODE1_H, 180
-.equ MODE2_W, 256
-.equ MODE2_H, 160
-.equ MODE3_W, 224
-.equ MODE3_H, 140
-; 4bpp
-.equ MODE4_W, 448
-.equ MODE4_H, 280
-.equ MODE5_W, 400
-.equ MODE5_H, 240
-.equ MODE6_W, 320
-.equ MODE6_H, 200
-; 2bpp
-.equ MODE7_W, 640
-.equ MODE7_H, 400
-.equ MODE8_W, 448
-.equ MODE8_H, 280
-.equ MODE9_W, 320
-.equ MODE9_H, 200
-; 1bpp
-.equ MODE10_W, 912
-.equ MODE10_H, 570
-.equ MODE11_W, 640
-.equ MODE11_H, 400
-.equ MODE12_W, 448
-.equ MODE12_H, 280
-.equ MODE13_W, 320
-.equ MODE13_H, 200
-
-; Graphics Modes - VRAM Sizes
-.equ MODE0_VRAM_SIZE,  0xFA00
-.equ MODE1_VRAM_SIZE,  0xBF00
-.equ MODE2_VRAM_SIZE,  0xA000
-.equ MODE3_VRAM_SIZE,  0x7A60
-.equ MODE4_VRAM_SIZE,  0xF500
-.equ MODE5_VRAM_SIZE,  0xBB80
-.equ MODE6_VRAM_SIZE,  0x7D00
-.equ MODE7_VRAM_SIZE,  0xFA00
-.equ MODE8_VRAM_SIZE,  0x7A60
-.equ MODE9_VRAM_SIZE,  0x3E80
-.equ MODE10_VRAM_SIZE, 0xFDD4
-.equ MODE11_VRAM_SIZE, 0x7D00
-.equ MODE12_VRAM_SIZE, 0x3D40
-.equ MODE13_VRAM_SIZE, 0x1F40
-
 ; Register bases and offsets
 .equ HW_BLIT_BASE,     0xFEC0
 .equ OFS_BLIT_SRC_X_L, 0x00
@@ -160,6 +112,8 @@
 .equ HW_GFX_BASE,     0xFEE0
 .equ OFS_GFX_ADDR_L,   0x00
 .equ OFS_GFX_ADDR_H,   0x01
+.equ OFS_GFX_WIDTH,    0x02
+.equ OFS_GFX_HEIGHT,   0x03
 .equ OFS_GFX_DATA,     0x0E
 .equ OFS_GFX_CTRL,     0x0F
 

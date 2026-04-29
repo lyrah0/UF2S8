@@ -22,13 +22,23 @@ init_timer:
 
         LI      r0, 0x80
         MOV     flags, r0
+init_graphics:
+        LI      r0, 40
+        SB      r0, [a3+OFS_GFX_WIDTH]
+        LI      r0, 25
+        SB      r0, [a3+OFS_GFX_HEIGHT]
 
 demos_start:
         BL      AL, clear_screen
+        LI      r3, 0x00                ; don't skip vsync wait
         BL      AL, draw_rects
         BL      AL, draw_sprites
-wait_loop:
-        B       AL, wait_loop
+        LI      r2, 40                  ; wait 40 frames
+        BL      AL, wait
+        LI      r3, 0x01                ; skip wait
+        BL      AL, draw_rects
+idle_loop:
+        B       AL, idle_loop
 
 clear_screen:
         LI      r7, >HW_BLIT_BASE
@@ -39,13 +49,13 @@ clear_screen:
         SB      r0, [a3+OFS_BLIT_DST_Y_L]
         SB      r0, [a3+OFS_BLIT_DST_Y_H]
         SB      r0, [a3+OFS_BLIT_COLOR]
-        LI      r0, <MODE0_W
+        LI      r0, 0x40
         SB      r0, [a3+OFS_BLIT_WIDTH_L]
-        LI      r0, >MODE0_W
+        LI      r0, 0x01
         SB      r0, [a3+OFS_BLIT_WIDTH_H]
-        LI      r0, <MODE0_H
+        LI      r0, 0xC8
         SB      r0, [a3+OFS_BLIT_HEIGHT_L]
-        LI      r0, >MODE0_H
+        LI      r0, 0x00
         SB      r0, [a3+OFS_BLIT_HEIGHT_H]
         LI      r0, CMD_FILL_RECT
         SB      r0, [a3+OFS_BLIT_CMD]
@@ -67,7 +77,6 @@ draw_rects:
         LI      r4, 0x00        ; x
         LI      r5, 0x00        ; y
         LI      r1, 40          ; number of rects to draw
-        LI      r0, 0x00        ; color
 draw_rects_loop:
         SB      r0, [a3+OFS_BLIT_COLOR]
         ADD     r0, r0, 17
@@ -82,7 +91,10 @@ draw_rects_loop:
         CMA     r1, r1
         B       ZS, draw_rects_end
         ADD     r1, r1, -1
+        CMA     r3, r3
+        B       ZC, draw_rects_skip
         WFI
+draw_rects_skip:
         B       AL, draw_rects_loop
 draw_rects_end:
         RET
@@ -145,7 +157,11 @@ draw_sprites:
 draw_sprites_end:
         RET
 
-
+wait:
+        WFI
+        ADD     r2, r2, -1
+        B       ZC, wait
+        RET
 
 .bankw1 0
 .origin 0x8000
