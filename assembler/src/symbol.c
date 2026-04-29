@@ -126,6 +126,22 @@ static bool symbol_directive_origin(
 	return false;
 }
 
+static bool symbol_directive_space(
+	struct TokenList *tokenList, int *current_address, int *current_token)
+{
+	*current_token += 2;
+	struct Token *token = &tokenList->tokens[*current_token];
+
+	if (*current_token >= tokenList->count) { return false; }
+	if (token->type != TOKEN_NUMBER) {
+		printf("ERROR: %d: space expects a positive number\n",
+			token->line);
+		return true;
+	}
+	*current_address += (int)token->num_value;
+	return false;
+}
+
 static bool symbol_directives(
 	struct TokenList *tokenList, int *current_address, int *current_token)
 {
@@ -163,6 +179,12 @@ static bool symbol_directives(
 	}
 	if (strcasecmp(next->str, "align") == 0) {
 		return symbol_directive_align(
+			tokenList, current_address, current_token);
+	}
+	if (strcasecmp(next->str, "space") == 0 ||
+		strcasecmp(next->str, "fill") == 0 ||
+		strcasecmp(next->str, "resb") == 0) {
+		return symbol_directive_space(
 			tokenList, current_address, current_token);
 	}
 	printf("ERROR: unknown directive %s in line %d\n", next->str,

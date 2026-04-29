@@ -298,6 +298,29 @@ static bool encode_directive_origin(struct TokenList *tokenList, FILE *foutput,
 	return false;
 }
 
+static bool encode_directive_space(struct TokenList *tokenList, FILE *foutput,
+	int *current_address, int *current_token)
+{
+	*current_token += 2;
+	struct Token *token = &tokenList->tokens[*current_token];
+
+	if (*current_token >= tokenList->count) { return false; }
+	if (token->type != TOKEN_NUMBER) {
+		printf("ERROR: %d: space expects a positive number\n",
+			token->line);
+		return true;
+	}
+	*current_address += (int)token->num_value;
+	const int empty = 0;
+	for (int i = 0; i < token->num_value; i++) {
+		if (!fwrite(&empty, 1, 1, foutput)) {
+			printf("ERROR: failed to write output\n");
+			return true;
+		}
+	}
+	return false;
+}
+
 static bool encode_directives(struct TokenList *tokenList, FILE *foutput,
 	int *current_address, int *current_token)
 {
@@ -335,6 +358,12 @@ static bool encode_directives(struct TokenList *tokenList, FILE *foutput,
 	}
 	if (strcasecmp(next->str, "align") == 0) {
 		return encode_directive_align(
+			tokenList, foutput, current_address, current_token);
+	}
+	if (strcasecmp(next->str, "space") == 0 ||
+		strcasecmp(next->str, "fill") == 0 ||
+		strcasecmp(next->str, "resb") == 0) {
+		return encode_directive_space(
 			tokenList, foutput, current_address, current_token);
 	}
 
