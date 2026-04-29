@@ -38,9 +38,7 @@ static bool disassemble_mov(uint16_t instruction)
 	uint8_t reg_dst = inst.reg_dst;
 	uint8_t reg_src = inst.reg_src;
 
-	if (inst.reg2.opcode == 0x0080) {
-		printf("MOV r%hhu, r%hhu", reg_dst, reg_src);
-	} else if (inst.reg2.opcode == 0x0100) {
+	if (inst.reg2.opcode == 0x010) {
 		printf("MOV r%hhu, ", reg_dst);
 		switch (reg_src) {
 		case 0:
@@ -55,7 +53,7 @@ static bool disassemble_mov(uint16_t instruction)
 		default:
 			printf("???%hhu", reg_src);
 		}
-	} else if (inst.reg2.opcode == 0x0180) {
+	} else if (inst.reg2.opcode == 0x090) {
 		printf("MOV ");
 		switch (reg_dst) {
 		case 0:
@@ -122,18 +120,18 @@ void disassemble(uint16_t instruction)
 	} else if (inst.reg1.opcode == 0x0800) {
 		printf("INCC r%hhu", reg_dst);
 	} else if (inst.reg1.opcode == 0x0C00) {
-		printf("DECC r%hhu", reg_dst);
+		printf("DECB r%hhu", reg_dst);
 	} else if (inst.reg1.opcode == 0x1800) {
 		printf("POP r%hhu", reg_dst);
 	} else if (inst.reg1.opcode == 0x1C00) {
 		printf("PUSH r%hhu", reg_dst);
 	} else if (disassemble_mov(instruction)) {
 	} else if (inst.opcode == 0x10) {
-		const char instructions[8][4] = { "CMP", "CMN", "CMA", "???",
+		const char instructions[8][4] = { "???", "???", "CMP", "CMA",
 			"???", "???", "???", "???" };
-		printf("%s r%hhu, r%hhu, r%hhu",
+		printf("%s r%hhu, r%hhu",
 			instructions[(instruction >> 7) & 0x7], reg_dst,
-			reg_src, reg_mod);
+			reg_src);
 	} else if (inst.branch.opcode == 0x1) {
 		const char instructions[8][4] = { "SUB", "SBC", "ADD", "ADC",
 			"AND", "OR", "NOR", "XOR" };

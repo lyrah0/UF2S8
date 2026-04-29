@@ -73,17 +73,16 @@ Conditions:
 |SWI     |sss_101_000_000_0000|Software interrupt from register
 |POP     |ddd_110_000_000_0000|pop register from stack
 |PUSH    |sss_111_000_000_0000|push register to stack
-|MOV     |ddd_sss_001_000_0000|Move register to register
-|MOV     |ddd_sss_010_000_0000|Move csr to register
-|MOV     |ddd_sss_011_000_0000|Move register to csr
-|CMP     |sss_sss_000_001_0000|Compare subtraction
-|CMN     |sss_sss_001_001_0000|Compare addition
-|CMA     |sss_sss_010_001_0000|Compare And
+|MOV     |ddd_sss_000_001_0000|Move csr to register
+|MOV     |ddd_sss_001_001_0000|Move register to csr
+|CMP     |sss_sss_010_001_0000|Compare subtraction
+|CMA     |sss_sss_011_001_0000|Compare And
 |SUB     |ddd_sss_sss_000_0001|Subtract
 |SBC     |ddd_sss_sss_001_0001|Subtract with carry
 |ADD     |ddd_sss_sss_010_0001|Add
 |ADC     |ddd_sss_sss_011_0001|Add with carry
 |AND     |ddd_sss_sss_100_0001|And
+|MOV     |ddd_sss_sss_100_0001|Move register to register (both source registers are the same)
 |OR      |ddd_sss_sss_101_0001|Or
 |NOR     |ddd_sss_sss_110_0001|Not Or
 |XOR     |ddd_sss_sss_111_0001|Exclusive or

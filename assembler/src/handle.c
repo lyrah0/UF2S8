@@ -248,14 +248,14 @@ bool handle_mov(const struct TokenList *tokenList, int *current_token,
 				token->line);
 			return true;
 		}
-		*machine_code = 0x0180 | (next1->num_value - 20) << 13 |
+		*machine_code = 0x0090 | (next1->num_value - 20) << 13 |
 			next3->num_value << 10;
 	} else if (next3->num_value > 19) {
-		*machine_code = 0x0100 | next1->num_value << 13 |
+		*machine_code = 0x0010 | next1->num_value << 13 |
 			(next3->num_value - 20) << 10;
 	} else {
-		*machine_code = 0x0080 | next1->num_value << 13 |
-			next3->num_value << 10;
+		*machine_code = 0x0041 | next1->num_value << 13 |
+			next3->num_value << 10 | next3->num_value << 7;
 	}
 	*current_token += 3;
 	return false;

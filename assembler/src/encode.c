@@ -49,17 +49,12 @@ static bool encode_instructions(struct TokenList *tokenList,
 		}
 	} else if (!strcasecmp(token->str, "CMP")) {
 		if (handle_crr(
-			    tokenList, current_token, &machine_code, 0x0010)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "CMN")) {
-		if (handle_crr(
-			    tokenList, current_token, &machine_code, 0x0090)) {
+			    tokenList, current_token, &machine_code, 0x0110)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "CMA")) {
 		if (handle_crr(
-			    tokenList, current_token, &machine_code, 0x0110)) {
+			    tokenList, current_token, &machine_code, 0x0190)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "SUB")) {
