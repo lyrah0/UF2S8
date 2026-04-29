@@ -8,7 +8,7 @@ FLAGS_DEBUG := -ggdb3
 FLAGS_HARDENING :=-fstack-protector-strong -fstack-clash-protection
 # Removed: -fsanitize-address-use-after-scope -fharden-compares -fharden-conditional-branches -fharden-control-flow-redundancy -fsanitize=undefined 
 #FLAGS_SANITIZER := -fsanitize-recover=all -fsanitize=address,pointer-compare,pointer-subtract,leak,undefined -fsanitize-recover=all
-FLAGS_SANITIZER := -fsanitize-recover=all -fsanitize=address,pointer-compare,pointer-subtract,leak,undefined -fsanitize-recover=all
+#FLAGS_SANITIZER := -fsanitize-recover=all -fsanitize=address,pointer-compare,pointer-subtract,leak,undefined -fsanitize-recover=all
 
 FLAGS_LTO := -fuse-linker-plugin -flto=auto -fdevirtualize-at-ltrans --param=lto-max-streaming-parallelism=16 --param=lto-partitions=16 -flto-compression-level=1
 
@@ -116,7 +116,7 @@ $(EXEC_TESTS): %: %.c $(TARGET_LIB_STATIC) $(OBJ_FILES_LIB)
 #%.o
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c Makefile
 	# $(LDFLAGS)
-	$(CC) $(LIBS) $(CPPFLAGS) $(CFLAGS) $(MISCFLAGS) $(LDFLAGS) -MMD -MP -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(MISCFLAGS) -MMD -MP -c $< -o $@
 
 clean:
 	-rm tests/tests.log $(OBJ_FILES) $(EXEC_TESTS) $(TARGET_EXEC) $(TARGET_LIB_STATIC) $(TARGET_LIB_SHARED) $(wildcard *.o) $(wildcard *.i) $(wildcard *.s)

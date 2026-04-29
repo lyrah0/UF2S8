@@ -69,7 +69,7 @@
 !_TAG_PARSER_VERSION!JSON	0.0	/current.age/
 !_TAG_PARSER_VERSION!Make	1.1	/current.age/
 !_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
-!_TAG_PROC_CWD	/home/laura/projects/uf2s8v0/emulator/	//
+!_TAG_PROC_CWD	/home/laura/projects/uf2s8/emulator/	//
 !_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
 !_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
 !_TAG_PROGRAM_URL	https://ctags.io/	/official site/
@@ -97,11 +97,376 @@ $(TARGET_LIB_SHARED)	Makefile	/^$(TARGET_LIB_SHARED): CFLAGS := $(filter-out -fn
 $(TARGET_LIB_SHARED)	Makefile	/^$(TARGET_LIB_SHARED): LDFLAGS := $(filter-out -no-pie -s, $(LDFLAGS))$/;"	t
 $(TARGET_LIB_STATIC)	Makefile	/^$(TARGET_LIB_STATIC): $(OBJ_FILES_LIB)$/;"	t
 %	Makefile	/^$(EXEC_TESTS): %: %.c $(TARGET_LIB_STATIC) $(OBJ_FILES_LIB)$/;"	t
+0	compile_commands.json	/^      "gcc",$/;"	s	array:0.arguments
+0	compile_commands.json	/^      "gcc",$/;"	s	array:1.arguments
+0	compile_commands.json	/^      "gcc",$/;"	s	array:2.arguments
+0	compile_commands.json	/^      "gcc",$/;"	s	array:3.arguments
+0	compile_commands.json	/^      "gcc",$/;"	s	array:4.arguments
 0	compile_commands.json	/^  {$/;"	o
+1	compile_commands.json	/^      "-D_GLIBCXX_ASSERTIONS",$/;"	s	array:0.arguments
+1	compile_commands.json	/^      "-D_GLIBCXX_ASSERTIONS",$/;"	s	array:1.arguments
+1	compile_commands.json	/^      "-D_GLIBCXX_ASSERTIONS",$/;"	s	array:2.arguments
+1	compile_commands.json	/^      "-D_GLIBCXX_ASSERTIONS",$/;"	s	array:3.arguments
+1	compile_commands.json	/^      "-D_GLIBCXX_ASSERTIONS",$/;"	s	array:4.arguments
 1	compile_commands.json	/^  {$/;"	o
+10	compile_commands.json	/^      "-Wextra",$/;"	s	array:0.arguments
+10	compile_commands.json	/^      "-Wextra",$/;"	s	array:1.arguments
+10	compile_commands.json	/^      "-Wextra",$/;"	s	array:2.arguments
+10	compile_commands.json	/^      "-Wextra",$/;"	s	array:3.arguments
+10	compile_commands.json	/^      "-Wextra",$/;"	s	array:4.arguments
+11	compile_commands.json	/^      "-Walloc-zero",$/;"	s	array:0.arguments
+11	compile_commands.json	/^      "-Walloc-zero",$/;"	s	array:1.arguments
+11	compile_commands.json	/^      "-Walloc-zero",$/;"	s	array:2.arguments
+11	compile_commands.json	/^      "-Walloc-zero",$/;"	s	array:3.arguments
+11	compile_commands.json	/^      "-Walloc-zero",$/;"	s	array:4.arguments
+12	compile_commands.json	/^      "-Warray-bounds=2",$/;"	s	array:0.arguments
+12	compile_commands.json	/^      "-Warray-bounds=2",$/;"	s	array:1.arguments
+12	compile_commands.json	/^      "-Warray-bounds=2",$/;"	s	array:2.arguments
+12	compile_commands.json	/^      "-Warray-bounds=2",$/;"	s	array:3.arguments
+12	compile_commands.json	/^      "-Warray-bounds=2",$/;"	s	array:4.arguments
+13	compile_commands.json	/^      "-Wattribute-alias=2",$/;"	s	array:0.arguments
+13	compile_commands.json	/^      "-Wattribute-alias=2",$/;"	s	array:1.arguments
+13	compile_commands.json	/^      "-Wattribute-alias=2",$/;"	s	array:2.arguments
+13	compile_commands.json	/^      "-Wattribute-alias=2",$/;"	s	array:3.arguments
+13	compile_commands.json	/^      "-Wattribute-alias=2",$/;"	s	array:4.arguments
+14	compile_commands.json	/^      "-Wbad-function-cast",$/;"	s	array:0.arguments
+14	compile_commands.json	/^      "-Wbad-function-cast",$/;"	s	array:1.arguments
+14	compile_commands.json	/^      "-Wbad-function-cast",$/;"	s	array:2.arguments
+14	compile_commands.json	/^      "-Wbad-function-cast",$/;"	s	array:3.arguments
+14	compile_commands.json	/^      "-Wbad-function-cast",$/;"	s	array:4.arguments
+15	compile_commands.json	/^      "-Wdate-time",$/;"	s	array:0.arguments
+15	compile_commands.json	/^      "-Wdate-time",$/;"	s	array:1.arguments
+15	compile_commands.json	/^      "-Wdate-time",$/;"	s	array:2.arguments
+15	compile_commands.json	/^      "-Wdate-time",$/;"	s	array:3.arguments
+15	compile_commands.json	/^      "-Wdate-time",$/;"	s	array:4.arguments
+16	compile_commands.json	/^      "-Wdisabled-optimization",$/;"	s	array:0.arguments
+16	compile_commands.json	/^      "-Wdisabled-optimization",$/;"	s	array:1.arguments
+16	compile_commands.json	/^      "-Wdisabled-optimization",$/;"	s	array:2.arguments
+16	compile_commands.json	/^      "-Wdisabled-optimization",$/;"	s	array:3.arguments
+16	compile_commands.json	/^      "-Wdisabled-optimization",$/;"	s	array:4.arguments
+17	compile_commands.json	/^      "-Wdouble-promotion",$/;"	s	array:0.arguments
+17	compile_commands.json	/^      "-Wdouble-promotion",$/;"	s	array:1.arguments
+17	compile_commands.json	/^      "-Wdouble-promotion",$/;"	s	array:2.arguments
+17	compile_commands.json	/^      "-Wdouble-promotion",$/;"	s	array:3.arguments
+17	compile_commands.json	/^      "-Wdouble-promotion",$/;"	s	array:4.arguments
+18	compile_commands.json	/^      "-Wduplicated-branches",$/;"	s	array:0.arguments
+18	compile_commands.json	/^      "-Wduplicated-branches",$/;"	s	array:1.arguments
+18	compile_commands.json	/^      "-Wduplicated-branches",$/;"	s	array:2.arguments
+18	compile_commands.json	/^      "-Wduplicated-branches",$/;"	s	array:3.arguments
+18	compile_commands.json	/^      "-Wduplicated-branches",$/;"	s	array:4.arguments
+19	compile_commands.json	/^      "-Wduplicated-cond",$/;"	s	array:0.arguments
+19	compile_commands.json	/^      "-Wduplicated-cond",$/;"	s	array:1.arguments
+19	compile_commands.json	/^      "-Wduplicated-cond",$/;"	s	array:2.arguments
+19	compile_commands.json	/^      "-Wduplicated-cond",$/;"	s	array:3.arguments
+19	compile_commands.json	/^      "-Wduplicated-cond",$/;"	s	array:4.arguments
+2	compile_commands.json	/^      "-D_FORTIFY_SOURCE=3",$/;"	s	array:0.arguments
+2	compile_commands.json	/^      "-D_FORTIFY_SOURCE=3",$/;"	s	array:1.arguments
+2	compile_commands.json	/^      "-D_FORTIFY_SOURCE=3",$/;"	s	array:2.arguments
+2	compile_commands.json	/^      "-D_FORTIFY_SOURCE=3",$/;"	s	array:3.arguments
+2	compile_commands.json	/^      "-D_FORTIFY_SOURCE=3",$/;"	s	array:4.arguments
 2	compile_commands.json	/^  {$/;"	o
+20	compile_commands.json	/^      "-Wfloat-equal",$/;"	s	array:0.arguments
+20	compile_commands.json	/^      "-Wfloat-equal",$/;"	s	array:1.arguments
+20	compile_commands.json	/^      "-Wfloat-equal",$/;"	s	array:2.arguments
+20	compile_commands.json	/^      "-Wfloat-equal",$/;"	s	array:3.arguments
+20	compile_commands.json	/^      "-Wfloat-equal",$/;"	s	array:4.arguments
+21	compile_commands.json	/^      "-Wformat=2",$/;"	s	array:0.arguments
+21	compile_commands.json	/^      "-Wformat=2",$/;"	s	array:1.arguments
+21	compile_commands.json	/^      "-Wformat=2",$/;"	s	array:2.arguments
+21	compile_commands.json	/^      "-Wformat=2",$/;"	s	array:3.arguments
+21	compile_commands.json	/^      "-Wformat=2",$/;"	s	array:4.arguments
+22	compile_commands.json	/^      "-Wformat-overflow=2",$/;"	s	array:0.arguments
+22	compile_commands.json	/^      "-Wformat-overflow=2",$/;"	s	array:1.arguments
+22	compile_commands.json	/^      "-Wformat-overflow=2",$/;"	s	array:2.arguments
+22	compile_commands.json	/^      "-Wformat-overflow=2",$/;"	s	array:3.arguments
+22	compile_commands.json	/^      "-Wformat-overflow=2",$/;"	s	array:4.arguments
+23	compile_commands.json	/^      "-Wformat-signedness",$/;"	s	array:0.arguments
+23	compile_commands.json	/^      "-Wformat-signedness",$/;"	s	array:1.arguments
+23	compile_commands.json	/^      "-Wformat-signedness",$/;"	s	array:2.arguments
+23	compile_commands.json	/^      "-Wformat-signedness",$/;"	s	array:3.arguments
+23	compile_commands.json	/^      "-Wformat-signedness",$/;"	s	array:4.arguments
+24	compile_commands.json	/^      "-Wformat-truncation=2",$/;"	s	array:0.arguments
+24	compile_commands.json	/^      "-Wformat-truncation=2",$/;"	s	array:1.arguments
+24	compile_commands.json	/^      "-Wformat-truncation=2",$/;"	s	array:2.arguments
+24	compile_commands.json	/^      "-Wformat-truncation=2",$/;"	s	array:3.arguments
+24	compile_commands.json	/^      "-Wformat-truncation=2",$/;"	s	array:4.arguments
+25	compile_commands.json	/^      "-Wimplicit-fallthrough=5",$/;"	s	array:0.arguments
+25	compile_commands.json	/^      "-Wimplicit-fallthrough=5",$/;"	s	array:1.arguments
+25	compile_commands.json	/^      "-Wimplicit-fallthrough=5",$/;"	s	array:2.arguments
+25	compile_commands.json	/^      "-Wimplicit-fallthrough=5",$/;"	s	array:3.arguments
+25	compile_commands.json	/^      "-Wimplicit-fallthrough=5",$/;"	s	array:4.arguments
+26	compile_commands.json	/^      "-Winit-self",$/;"	s	array:0.arguments
+26	compile_commands.json	/^      "-Winit-self",$/;"	s	array:1.arguments
+26	compile_commands.json	/^      "-Winit-self",$/;"	s	array:2.arguments
+26	compile_commands.json	/^      "-Winit-self",$/;"	s	array:3.arguments
+26	compile_commands.json	/^      "-Winit-self",$/;"	s	array:4.arguments
+27	compile_commands.json	/^      "-Winvalid-pch",$/;"	s	array:0.arguments
+27	compile_commands.json	/^      "-Winvalid-pch",$/;"	s	array:1.arguments
+27	compile_commands.json	/^      "-Winvalid-pch",$/;"	s	array:2.arguments
+27	compile_commands.json	/^      "-Winvalid-pch",$/;"	s	array:3.arguments
+27	compile_commands.json	/^      "-Winvalid-pch",$/;"	s	array:4.arguments
+28	compile_commands.json	/^      "-Wlogical-op",$/;"	s	array:0.arguments
+28	compile_commands.json	/^      "-Wlogical-op",$/;"	s	array:1.arguments
+28	compile_commands.json	/^      "-Wlogical-op",$/;"	s	array:2.arguments
+28	compile_commands.json	/^      "-Wlogical-op",$/;"	s	array:3.arguments
+28	compile_commands.json	/^      "-Wlogical-op",$/;"	s	array:4.arguments
+29	compile_commands.json	/^      "-Wmissing-include-dirs",$/;"	s	array:0.arguments
+29	compile_commands.json	/^      "-Wmissing-include-dirs",$/;"	s	array:1.arguments
+29	compile_commands.json	/^      "-Wmissing-include-dirs",$/;"	s	array:2.arguments
+29	compile_commands.json	/^      "-Wmissing-include-dirs",$/;"	s	array:3.arguments
+29	compile_commands.json	/^      "-Wmissing-include-dirs",$/;"	s	array:4.arguments
+3	compile_commands.json	/^      "-DNDEBUG",$/;"	s	array:0.arguments
+3	compile_commands.json	/^      "-DNDEBUG",$/;"	s	array:1.arguments
+3	compile_commands.json	/^      "-DNDEBUG",$/;"	s	array:2.arguments
+3	compile_commands.json	/^      "-DNDEBUG",$/;"	s	array:3.arguments
+3	compile_commands.json	/^      "-DNDEBUG",$/;"	s	array:4.arguments
 3	compile_commands.json	/^  {$/;"	o
+30	compile_commands.json	/^      "-Wnested-externs",$/;"	s	array:0.arguments
+30	compile_commands.json	/^      "-Wnested-externs",$/;"	s	array:1.arguments
+30	compile_commands.json	/^      "-Wnested-externs",$/;"	s	array:2.arguments
+30	compile_commands.json	/^      "-Wnested-externs",$/;"	s	array:3.arguments
+30	compile_commands.json	/^      "-Wnested-externs",$/;"	s	array:4.arguments
+31	compile_commands.json	/^      "-Wnull-dereference",$/;"	s	array:0.arguments
+31	compile_commands.json	/^      "-Wnull-dereference",$/;"	s	array:1.arguments
+31	compile_commands.json	/^      "-Wnull-dereference",$/;"	s	array:2.arguments
+31	compile_commands.json	/^      "-Wnull-dereference",$/;"	s	array:3.arguments
+31	compile_commands.json	/^      "-Wnull-dereference",$/;"	s	array:4.arguments
+32	compile_commands.json	/^      "-Wshadow=global",$/;"	s	array:0.arguments
+32	compile_commands.json	/^      "-Wshadow=global",$/;"	s	array:1.arguments
+32	compile_commands.json	/^      "-Wshadow=global",$/;"	s	array:2.arguments
+32	compile_commands.json	/^      "-Wshadow=global",$/;"	s	array:3.arguments
+32	compile_commands.json	/^      "-Wshadow=global",$/;"	s	array:4.arguments
+33	compile_commands.json	/^      "-Wshift-overflow=2",$/;"	s	array:0.arguments
+33	compile_commands.json	/^      "-Wshift-overflow=2",$/;"	s	array:1.arguments
+33	compile_commands.json	/^      "-Wshift-overflow=2",$/;"	s	array:2.arguments
+33	compile_commands.json	/^      "-Wshift-overflow=2",$/;"	s	array:3.arguments
+33	compile_commands.json	/^      "-Wshift-overflow=2",$/;"	s	array:4.arguments
+34	compile_commands.json	/^      "-Wstrict-aliasing=3",$/;"	s	array:0.arguments
+34	compile_commands.json	/^      "-Wstrict-aliasing=3",$/;"	s	array:1.arguments
+34	compile_commands.json	/^      "-Wstrict-aliasing=3",$/;"	s	array:2.arguments
+34	compile_commands.json	/^      "-Wstrict-aliasing=3",$/;"	s	array:3.arguments
+34	compile_commands.json	/^      "-Wstrict-aliasing=3",$/;"	s	array:4.arguments
+35	compile_commands.json	/^      "-Wstrict-overflow=1",$/;"	s	array:0.arguments
+35	compile_commands.json	/^      "-Wstrict-overflow=1",$/;"	s	array:1.arguments
+35	compile_commands.json	/^      "-Wstrict-overflow=1",$/;"	s	array:2.arguments
+35	compile_commands.json	/^      "-Wstrict-overflow=1",$/;"	s	array:3.arguments
+35	compile_commands.json	/^      "-Wstrict-overflow=1",$/;"	s	array:4.arguments
+36	compile_commands.json	/^      "-Wstringop-overflow=4",$/;"	s	array:0.arguments
+36	compile_commands.json	/^      "-Wstringop-overflow=4",$/;"	s	array:1.arguments
+36	compile_commands.json	/^      "-Wstringop-overflow=4",$/;"	s	array:2.arguments
+36	compile_commands.json	/^      "-Wstringop-overflow=4",$/;"	s	array:3.arguments
+36	compile_commands.json	/^      "-Wstringop-overflow=4",$/;"	s	array:4.arguments
+37	compile_commands.json	/^      "-Wsuggest-attribute=pure",$/;"	s	array:0.arguments
+37	compile_commands.json	/^      "-Wsuggest-attribute=pure",$/;"	s	array:1.arguments
+37	compile_commands.json	/^      "-Wsuggest-attribute=pure",$/;"	s	array:2.arguments
+37	compile_commands.json	/^      "-Wsuggest-attribute=pure",$/;"	s	array:3.arguments
+37	compile_commands.json	/^      "-Wsuggest-attribute=pure",$/;"	s	array:4.arguments
+38	compile_commands.json	/^      "-Wsuggest-attribute=const",$/;"	s	array:0.arguments
+38	compile_commands.json	/^      "-Wsuggest-attribute=const",$/;"	s	array:1.arguments
+38	compile_commands.json	/^      "-Wsuggest-attribute=const",$/;"	s	array:2.arguments
+38	compile_commands.json	/^      "-Wsuggest-attribute=const",$/;"	s	array:3.arguments
+38	compile_commands.json	/^      "-Wsuggest-attribute=const",$/;"	s	array:4.arguments
+39	compile_commands.json	/^      "-Wsuggest-attribute=noreturn",$/;"	s	array:0.arguments
+39	compile_commands.json	/^      "-Wsuggest-attribute=noreturn",$/;"	s	array:1.arguments
+39	compile_commands.json	/^      "-Wsuggest-attribute=noreturn",$/;"	s	array:2.arguments
+39	compile_commands.json	/^      "-Wsuggest-attribute=noreturn",$/;"	s	array:3.arguments
+39	compile_commands.json	/^      "-Wsuggest-attribute=noreturn",$/;"	s	array:4.arguments
+4	compile_commands.json	/^      "-pipe",$/;"	s	array:0.arguments
+4	compile_commands.json	/^      "-pipe",$/;"	s	array:1.arguments
+4	compile_commands.json	/^      "-pipe",$/;"	s	array:2.arguments
+4	compile_commands.json	/^      "-pipe",$/;"	s	array:3.arguments
+4	compile_commands.json	/^      "-pipe",$/;"	s	array:4.arguments
 4	compile_commands.json	/^  {$/;"	o
+40	compile_commands.json	/^      "-Wsuggest-attribute=format",$/;"	s	array:0.arguments
+40	compile_commands.json	/^      "-Wsuggest-attribute=format",$/;"	s	array:1.arguments
+40	compile_commands.json	/^      "-Wsuggest-attribute=format",$/;"	s	array:2.arguments
+40	compile_commands.json	/^      "-Wsuggest-attribute=format",$/;"	s	array:3.arguments
+40	compile_commands.json	/^      "-Wsuggest-attribute=format",$/;"	s	array:4.arguments
+41	compile_commands.json	/^      "-Wsuggest-attribute=cold",$/;"	s	array:0.arguments
+41	compile_commands.json	/^      "-Wsuggest-attribute=cold",$/;"	s	array:1.arguments
+41	compile_commands.json	/^      "-Wsuggest-attribute=cold",$/;"	s	array:2.arguments
+41	compile_commands.json	/^      "-Wsuggest-attribute=cold",$/;"	s	array:3.arguments
+41	compile_commands.json	/^      "-Wsuggest-attribute=cold",$/;"	s	array:4.arguments
+42	compile_commands.json	/^      "-Wsuggest-attribute=malloc",$/;"	s	array:0.arguments
+42	compile_commands.json	/^      "-Wsuggest-attribute=malloc",$/;"	s	array:1.arguments
+42	compile_commands.json	/^      "-Wsuggest-attribute=malloc",$/;"	s	array:2.arguments
+42	compile_commands.json	/^      "-Wsuggest-attribute=malloc",$/;"	s	array:3.arguments
+42	compile_commands.json	/^      "-Wsuggest-attribute=malloc",$/;"	s	array:4.arguments
+43	compile_commands.json	/^      "-Wsuggest-final-methods",$/;"	s	array:0.arguments
+43	compile_commands.json	/^      "-Wsuggest-final-methods",$/;"	s	array:1.arguments
+43	compile_commands.json	/^      "-Wsuggest-final-methods",$/;"	s	array:2.arguments
+43	compile_commands.json	/^      "-Wsuggest-final-methods",$/;"	s	array:3.arguments
+43	compile_commands.json	/^      "-Wsuggest-final-methods",$/;"	s	array:4.arguments
+44	compile_commands.json	/^      "-Wsuggest-final-types",$/;"	s	array:0.arguments
+44	compile_commands.json	/^      "-Wsuggest-final-types",$/;"	s	array:1.arguments
+44	compile_commands.json	/^      "-Wsuggest-final-types",$/;"	s	array:2.arguments
+44	compile_commands.json	/^      "-Wsuggest-final-types",$/;"	s	array:3.arguments
+44	compile_commands.json	/^      "-Wsuggest-final-types",$/;"	s	array:4.arguments
+45	compile_commands.json	/^      "-Wswitch-default",$/;"	s	array:0.arguments
+45	compile_commands.json	/^      "-Wswitch-default",$/;"	s	array:1.arguments
+45	compile_commands.json	/^      "-Wswitch-default",$/;"	s	array:2.arguments
+45	compile_commands.json	/^      "-Wswitch-default",$/;"	s	array:3.arguments
+45	compile_commands.json	/^      "-Wswitch-default",$/;"	s	array:4.arguments
+46	compile_commands.json	/^      "-Wtrampolines",$/;"	s	array:0.arguments
+46	compile_commands.json	/^      "-Wtrampolines",$/;"	s	array:1.arguments
+46	compile_commands.json	/^      "-Wtrampolines",$/;"	s	array:2.arguments
+46	compile_commands.json	/^      "-Wtrampolines",$/;"	s	array:3.arguments
+46	compile_commands.json	/^      "-Wtrampolines",$/;"	s	array:4.arguments
+47	compile_commands.json	/^      "-Wtrivial-auto-var-init",$/;"	s	array:0.arguments
+47	compile_commands.json	/^      "-Wtrivial-auto-var-init",$/;"	s	array:1.arguments
+47	compile_commands.json	/^      "-Wtrivial-auto-var-init",$/;"	s	array:2.arguments
+47	compile_commands.json	/^      "-Wtrivial-auto-var-init",$/;"	s	array:3.arguments
+47	compile_commands.json	/^      "-Wtrivial-auto-var-init",$/;"	s	array:4.arguments
+48	compile_commands.json	/^      "-Wundef",$/;"	s	array:0.arguments
+48	compile_commands.json	/^      "-Wundef",$/;"	s	array:1.arguments
+48	compile_commands.json	/^      "-Wundef",$/;"	s	array:2.arguments
+48	compile_commands.json	/^      "-Wundef",$/;"	s	array:3.arguments
+48	compile_commands.json	/^      "-Wundef",$/;"	s	array:4.arguments
+49	compile_commands.json	/^      "-Wunsuffixed-float-constants",$/;"	s	array:0.arguments
+49	compile_commands.json	/^      "-Wunsuffixed-float-constants",$/;"	s	array:1.arguments
+49	compile_commands.json	/^      "-Wunsuffixed-float-constants",$/;"	s	array:2.arguments
+49	compile_commands.json	/^      "-Wunsuffixed-float-constants",$/;"	s	array:3.arguments
+49	compile_commands.json	/^      "-Wunsuffixed-float-constants",$/;"	s	array:4.arguments
+5	compile_commands.json	/^      "-std=gnu23",$/;"	s	array:0.arguments
+5	compile_commands.json	/^      "-std=gnu23",$/;"	s	array:1.arguments
+5	compile_commands.json	/^      "-std=gnu23",$/;"	s	array:2.arguments
+5	compile_commands.json	/^      "-std=gnu23",$/;"	s	array:3.arguments
+5	compile_commands.json	/^      "-std=gnu23",$/;"	s	array:4.arguments
+50	compile_commands.json	/^      "-Wuse-after-free=3",$/;"	s	array:0.arguments
+50	compile_commands.json	/^      "-Wuse-after-free=3",$/;"	s	array:1.arguments
+50	compile_commands.json	/^      "-Wuse-after-free=3",$/;"	s	array:2.arguments
+50	compile_commands.json	/^      "-Wuse-after-free=3",$/;"	s	array:3.arguments
+50	compile_commands.json	/^      "-Wuse-after-free=3",$/;"	s	array:4.arguments
+51	compile_commands.json	/^      "-Wvector-operation-performance",$/;"	s	array:0.arguments
+51	compile_commands.json	/^      "-Wvector-operation-performance",$/;"	s	array:1.arguments
+51	compile_commands.json	/^      "-Wvector-operation-performance",$/;"	s	array:2.arguments
+51	compile_commands.json	/^      "-Wvector-operation-performance",$/;"	s	array:3.arguments
+51	compile_commands.json	/^      "-Wvector-operation-performance",$/;"	s	array:4.arguments
+52	compile_commands.json	/^      "-Woverlength-strings",$/;"	s	array:0.arguments
+52	compile_commands.json	/^      "-Woverlength-strings",$/;"	s	array:1.arguments
+52	compile_commands.json	/^      "-Woverlength-strings",$/;"	s	array:2.arguments
+52	compile_commands.json	/^      "-Woverlength-strings",$/;"	s	array:3.arguments
+52	compile_commands.json	/^      "-Woverlength-strings",$/;"	s	array:4.arguments
+53	compile_commands.json	/^      "-Wpointer-arith",$/;"	s	array:0.arguments
+53	compile_commands.json	/^      "-Wpointer-arith",$/;"	s	array:1.arguments
+53	compile_commands.json	/^      "-Wpointer-arith",$/;"	s	array:2.arguments
+53	compile_commands.json	/^      "-Wpointer-arith",$/;"	s	array:3.arguments
+53	compile_commands.json	/^      "-Wpointer-arith",$/;"	s	array:4.arguments
+54	compile_commands.json	/^      "-Wno-incompatible-pointer-types",$/;"	s	array:0.arguments
+54	compile_commands.json	/^      "-Wno-incompatible-pointer-types",$/;"	s	array:1.arguments
+54	compile_commands.json	/^      "-Wno-incompatible-pointer-types",$/;"	s	array:2.arguments
+54	compile_commands.json	/^      "-Wno-incompatible-pointer-types",$/;"	s	array:3.arguments
+54	compile_commands.json	/^      "-Wno-incompatible-pointer-types",$/;"	s	array:4.arguments
+55	compile_commands.json	/^      "-Wno-pointer-sign",$/;"	s	array:0.arguments
+55	compile_commands.json	/^      "-Wno-pointer-sign",$/;"	s	array:1.arguments
+55	compile_commands.json	/^      "-Wno-pointer-sign",$/;"	s	array:2.arguments
+55	compile_commands.json	/^      "-Wno-pointer-sign",$/;"	s	array:3.arguments
+55	compile_commands.json	/^      "-Wno-pointer-sign",$/;"	s	array:4.arguments
+56	compile_commands.json	/^      "-Wno-discarded-qualifiers",$/;"	s	array:0.arguments
+56	compile_commands.json	/^      "-Wno-discarded-qualifiers",$/;"	s	array:1.arguments
+56	compile_commands.json	/^      "-Wno-discarded-qualifiers",$/;"	s	array:2.arguments
+56	compile_commands.json	/^      "-Wno-discarded-qualifiers",$/;"	s	array:3.arguments
+56	compile_commands.json	/^      "-Wno-discarded-qualifiers",$/;"	s	array:4.arguments
+57	compile_commands.json	/^      "-fstack-protector-strong",$/;"	s	array:0.arguments
+57	compile_commands.json	/^      "-fstack-protector-strong",$/;"	s	array:1.arguments
+57	compile_commands.json	/^      "-fstack-protector-strong",$/;"	s	array:2.arguments
+57	compile_commands.json	/^      "-fstack-protector-strong",$/;"	s	array:3.arguments
+57	compile_commands.json	/^      "-fstack-protector-strong",$/;"	s	array:4.arguments
+58	compile_commands.json	/^      "-fstack-clash-protection",$/;"	s	array:0.arguments
+58	compile_commands.json	/^      "-fstack-clash-protection",$/;"	s	array:1.arguments
+58	compile_commands.json	/^      "-fstack-clash-protection",$/;"	s	array:2.arguments
+58	compile_commands.json	/^      "-fstack-clash-protection",$/;"	s	array:3.arguments
+58	compile_commands.json	/^      "-fstack-clash-protection",$/;"	s	array:4.arguments
+59	compile_commands.json	/^      "-momit-leaf-frame-pointer",$/;"	s	array:0.arguments
+59	compile_commands.json	/^      "-momit-leaf-frame-pointer",$/;"	s	array:1.arguments
+59	compile_commands.json	/^      "-momit-leaf-frame-pointer",$/;"	s	array:2.arguments
+59	compile_commands.json	/^      "-momit-leaf-frame-pointer",$/;"	s	array:3.arguments
+59	compile_commands.json	/^      "-momit-leaf-frame-pointer",$/;"	s	array:4.arguments
+6	compile_commands.json	/^      "-g0",$/;"	s	array:0.arguments
+6	compile_commands.json	/^      "-g0",$/;"	s	array:1.arguments
+6	compile_commands.json	/^      "-g0",$/;"	s	array:2.arguments
+6	compile_commands.json	/^      "-g0",$/;"	s	array:3.arguments
+6	compile_commands.json	/^      "-g0",$/;"	s	array:4.arguments
+60	compile_commands.json	/^      "-ftree-vectorize",$/;"	s	array:0.arguments
+60	compile_commands.json	/^      "-ftree-vectorize",$/;"	s	array:1.arguments
+60	compile_commands.json	/^      "-ftree-vectorize",$/;"	s	array:2.arguments
+60	compile_commands.json	/^      "-ftree-vectorize",$/;"	s	array:3.arguments
+60	compile_commands.json	/^      "-ftree-vectorize",$/;"	s	array:4.arguments
+61	compile_commands.json	/^      "-fdelete-null-pointer-checks",$/;"	s	array:0.arguments
+61	compile_commands.json	/^      "-fdelete-null-pointer-checks",$/;"	s	array:1.arguments
+61	compile_commands.json	/^      "-fdelete-null-pointer-checks",$/;"	s	array:2.arguments
+61	compile_commands.json	/^      "-fdelete-null-pointer-checks",$/;"	s	array:3.arguments
+61	compile_commands.json	/^      "-fdelete-null-pointer-checks",$/;"	s	array:4.arguments
+62	compile_commands.json	/^      "-fno-var-tracking",$/;"	s	array:0.arguments
+62	compile_commands.json	/^      "-fno-var-tracking",$/;"	s	array:1.arguments
+62	compile_commands.json	/^      "-fno-var-tracking",$/;"	s	array:2.arguments
+62	compile_commands.json	/^      "-fno-var-tracking",$/;"	s	array:3.arguments
+62	compile_commands.json	/^      "-fno-var-tracking",$/;"	s	array:4.arguments
+63	compile_commands.json	/^      "-ffinite-loops",$/;"	s	array:0.arguments
+63	compile_commands.json	/^      "-ffinite-loops",$/;"	s	array:1.arguments
+63	compile_commands.json	/^      "-ffinite-loops",$/;"	s	array:2.arguments
+63	compile_commands.json	/^      "-ffinite-loops",$/;"	s	array:3.arguments
+63	compile_commands.json	/^      "-ffinite-loops",$/;"	s	array:4.arguments
+64	compile_commands.json	/^      "-fgcse-las",$/;"	s	array:0.arguments
+64	compile_commands.json	/^      "-fgcse-las",$/;"	s	array:1.arguments
+64	compile_commands.json	/^      "-fgcse-las",$/;"	s	array:2.arguments
+64	compile_commands.json	/^      "-fgcse-las",$/;"	s	array:3.arguments
+64	compile_commands.json	/^      "-fgcse-las",$/;"	s	array:4.arguments
+65	compile_commands.json	/^      "-fgcse-sm",$/;"	s	array:0.arguments
+65	compile_commands.json	/^      "-fgcse-sm",$/;"	s	array:1.arguments
+65	compile_commands.json	/^      "-fgcse-sm",$/;"	s	array:2.arguments
+65	compile_commands.json	/^      "-fgcse-sm",$/;"	s	array:3.arguments
+65	compile_commands.json	/^      "-fgcse-sm",$/;"	s	array:4.arguments
+66	compile_commands.json	/^      "-Isrc",$/;"	s	array:0.arguments
+66	compile_commands.json	/^      "-Isrc",$/;"	s	array:1.arguments
+66	compile_commands.json	/^      "-Isrc",$/;"	s	array:2.arguments
+66	compile_commands.json	/^      "-Isrc",$/;"	s	array:3.arguments
+66	compile_commands.json	/^      "-Isrc",$/;"	s	array:4.arguments
+67	compile_commands.json	/^      "-MMD",$/;"	s	array:0.arguments
+67	compile_commands.json	/^      "-MMD",$/;"	s	array:1.arguments
+67	compile_commands.json	/^      "-MMD",$/;"	s	array:2.arguments
+67	compile_commands.json	/^      "-MMD",$/;"	s	array:3.arguments
+67	compile_commands.json	/^      "-MMD",$/;"	s	array:4.arguments
+68	compile_commands.json	/^      "-MP",$/;"	s	array:0.arguments
+68	compile_commands.json	/^      "-MP",$/;"	s	array:1.arguments
+68	compile_commands.json	/^      "-MP",$/;"	s	array:2.arguments
+68	compile_commands.json	/^      "-MP",$/;"	s	array:3.arguments
+68	compile_commands.json	/^      "-MP",$/;"	s	array:4.arguments
+69	compile_commands.json	/^      "-c",$/;"	s	array:0.arguments
+69	compile_commands.json	/^      "-c",$/;"	s	array:1.arguments
+69	compile_commands.json	/^      "-c",$/;"	s	array:2.arguments
+69	compile_commands.json	/^      "-c",$/;"	s	array:3.arguments
+69	compile_commands.json	/^      "-c",$/;"	s	array:4.arguments
+7	compile_commands.json	/^      "-Ofast",$/;"	s	array:0.arguments
+7	compile_commands.json	/^      "-Ofast",$/;"	s	array:1.arguments
+7	compile_commands.json	/^      "-Ofast",$/;"	s	array:2.arguments
+7	compile_commands.json	/^      "-Ofast",$/;"	s	array:3.arguments
+7	compile_commands.json	/^      "-Ofast",$/;"	s	array:4.arguments
+70	compile_commands.json	/^      "src\/cpu.c",$/;"	s	array:0.arguments
+70	compile_commands.json	/^      "src\/debugger.c",$/;"	s	array:1.arguments
+70	compile_commands.json	/^      "src\/io.c",$/;"	s	array:2.arguments
+70	compile_commands.json	/^      "src\/main.c",$/;"	s	array:3.arguments
+70	compile_commands.json	/^      "src\/memory.c",$/;"	s	array:4.arguments
+71	compile_commands.json	/^      "-o",$/;"	s	array:0.arguments
+71	compile_commands.json	/^      "-o",$/;"	s	array:1.arguments
+71	compile_commands.json	/^      "-o",$/;"	s	array:2.arguments
+71	compile_commands.json	/^      "-o",$/;"	s	array:3.arguments
+71	compile_commands.json	/^      "-o",$/;"	s	array:4.arguments
+72	compile_commands.json	/^      "build\/cpu.o"$/;"	s	array:0.arguments
+72	compile_commands.json	/^      "build\/debugger.o"$/;"	s	array:1.arguments
+72	compile_commands.json	/^      "build\/io.o"$/;"	s	array:2.arguments
+72	compile_commands.json	/^      "build\/main.o"$/;"	s	array:3.arguments
+72	compile_commands.json	/^      "build\/memory.o"$/;"	s	array:4.arguments
+8	compile_commands.json	/^      "-march=native",$/;"	s	array:0.arguments
+8	compile_commands.json	/^      "-march=native",$/;"	s	array:1.arguments
+8	compile_commands.json	/^      "-march=native",$/;"	s	array:2.arguments
+8	compile_commands.json	/^      "-march=native",$/;"	s	array:3.arguments
+8	compile_commands.json	/^      "-march=native",$/;"	s	array:4.arguments
+9	compile_commands.json	/^      "-Wall",$/;"	s	array:0.arguments
+9	compile_commands.json	/^      "-Wall",$/;"	s	array:1.arguments
+9	compile_commands.json	/^      "-Wall",$/;"	s	array:2.arguments
+9	compile_commands.json	/^      "-Wall",$/;"	s	array:3.arguments
+9	compile_commands.json	/^      "-Wall",$/;"	s	array:4.arguments
 AR	Makefile	/^AR := gcc-ar$/;"	m
 AVX512_IS_KILL	Makefile	/^AVX512_IS_KILL := -mno-avx512f -mno-avx512pf -mno-avx512er -mno-avx512cd -mno-avx512vl -mno-avx5/;"	m
 BIN_DIR	Makefile	/^BIN_DIR := .\/bin$/;"	m
@@ -123,7 +488,6 @@ FLAGS_HARDENING	Makefile	/^FLAGS_HARDENING :=-fstack-protector-strong -fstack-cl
 FLAGS_LTO	Makefile	/^FLAGS_LTO := -fuse-linker-plugin -flto=auto -fdevirtualize-at-ltrans --param=lto-max-streaming-p/;"	m
 FLAGS_PARAMS_MAX	Makefile	/^FLAGS_PARAMS_MAX := --param=ipa-sra-max-replacements=16 --param=max-cse-path-length=65536 --para/;"	m
 FLAGS_PARAMS_X32	Makefile	/^FLAGS_PARAMS_X32 := --param=dse-max-alias-queries-per-store=8192 --param=dse-max-object-size=819/;"	m
-FLAGS_SANITIZER	Makefile	/^FLAGS_SANITIZER := -fsanitize-recover=all -fsanitize=address,pointer-compare,pointer-subtract,le/;"	m
 FLAGS_WARNINGS	Makefile	/^FLAGS_WARNINGS := -Wall -Wextra -Walloc-zero -Warray-bounds=2 -Wattribute-alias=2 -Wbad-function/;"	m
 GCC_CFLAGS	Makefile	/^GCC_CFLAGS := -pipe -std=gnu23 -g0 -Ofast -march=native $(FLAGS_WARNINGS) $(FLAGS_ANALYZER) $(FL/;"	m
 HDR_FILES	Makefile	/^HDR_FILES := $(wildcard $(SRC_DIR)\/**\/*.h $(SRC_DIR)\/*.h)$/;"	m
@@ -160,17 +524,17 @@ __anonb568cdef0908	src/isa.h	/^	struct {$/;"	s	union:__anonb568cdef010a
 __anoncf38b9b50103	src/vm.h	/^enum { MAX_MEMORY = 1 << 16, MAX_BREAKPOINTS = 1 << 4 };$/;"	g
 addi	src/isa.h	/^	} addi;$/;"	m	union:__anonb568cdef010a	typeref:struct:__anonb568cdef010a::__anonb568cdef0708
 all	Makefile	/^all: make_dirs $(TARGET_EXEC) check$/;"	t
+arguments	compile_commands.json	/^    "arguments": [$/;"	a	object:0
+arguments	compile_commands.json	/^    "arguments": [$/;"	a	object:1
+arguments	compile_commands.json	/^    "arguments": [$/;"	a	object:2
+arguments	compile_commands.json	/^    "arguments": [$/;"	a	object:3
+arguments	compile_commands.json	/^    "arguments": [$/;"	a	object:4
 bp_count	src/vm.h	/^	int bp_count;$/;"	m	struct:VirtualMachine	typeref:typename:int
 branch	src/isa.h	/^	} branch;$/;"	m	union:__anonb568cdef010a	typeref:struct:__anonb568cdef010a::__anonb568cdef0908
 breakpoint	src/vm.h	/^	uint16_t breakpoint[MAX_BREAKPOINTS];$/;"	m	struct:VirtualMachine	typeref:typename:uint16_t[]
 build_libs	Makefile	/^build_libs: $(TARGET_LIB_STATIC) $(TARGET_LIB_SHARED)$/;"	t
 check	Makefile	/^check: $(HDR_FILES) $(SRC_FILES) $(SRC_TESTS)$/;"	t
 clean	Makefile	/^clean:$/;"	t
-command	compile_commands.json	/^    "command": "gcc -D_GLIBCXX_ASSERTIONS -D_FORTIFY_SOURCE=3 -pipe -std=gnu23 -Ofast -march=nat/;"	s	object:0
-command	compile_commands.json	/^    "command": "gcc -D_GLIBCXX_ASSERTIONS -D_FORTIFY_SOURCE=3 -pipe -std=gnu23 -Ofast -march=nat/;"	s	object:1
-command	compile_commands.json	/^    "command": "gcc -D_GLIBCXX_ASSERTIONS -D_FORTIFY_SOURCE=3 -pipe -std=gnu23 -Ofast -march=nat/;"	s	object:2
-command	compile_commands.json	/^    "command": "gcc -D_GLIBCXX_ASSERTIONS -D_FORTIFY_SOURCE=3 -pipe -std=gnu23 -Ofast -march=nat/;"	s	object:3
-command	compile_commands.json	/^    "command": "gcc -D_GLIBCXX_ASSERTIONS -D_FORTIFY_SOURCE=3 -pipe -std=gnu23 -Ofast -march=nat/;"	s	object:4
 cond	src/isa.h	/^		uint16_t cond : 3;$/;"	m	struct:__anonb568cdef010a::__anonb568cdef0908	typeref:typename:uint16_t:3
 condition_str	src/debugger.c	/^static const char condition_str[8][3] = { "ZS", "ZC", "CS", "CC", "NS", "NC",$/;"	v	typeref:typename:const char[8][3]	file:
 csr	src/vm.h	/^	uint8_t csr[8];$/;"	m	struct:VirtualMachine	typeref:typename:uint8_t[8]
@@ -184,11 +548,11 @@ debug_prompt_l	src/debugger.c	/^static void debug_prompt_l(struct VirtualMachine
 debug_prompt_m	src/debugger.c	/^static void debug_prompt_m(struct VirtualMachine *viM, char *input)$/;"	f	typeref:typename:void	file:
 debug_prompt_s	src/debugger.c	/^static void debug_prompt_s(char *input, int *length)$/;"	f	typeref:typename:void	file:
 decode_execute	src/cpu.c	/^bool decode_execute(struct VirtualMachine *viM, uint16_t instruction)$/;"	f	typeref:typename:bool
-directory	compile_commands.json	/^    "directory": "\/home\/laura\/projects\/uf2s8v0\/emulator",$/;"	s	object:0
-directory	compile_commands.json	/^    "directory": "\/home\/laura\/projects\/uf2s8v0\/emulator",$/;"	s	object:1
-directory	compile_commands.json	/^    "directory": "\/home\/laura\/projects\/uf2s8v0\/emulator",$/;"	s	object:2
-directory	compile_commands.json	/^    "directory": "\/home\/laura\/projects\/uf2s8v0\/emulator",$/;"	s	object:3
-directory	compile_commands.json	/^    "directory": "\/home\/laura\/projects\/uf2s8v0\/emulator",$/;"	s	object:4
+directory	compile_commands.json	/^    "directory": "\/home\/laura\/projects\/uf2s8\/emulator",$/;"	s	object:0
+directory	compile_commands.json	/^    "directory": "\/home\/laura\/projects\/uf2s8\/emulator",$/;"	s	object:1
+directory	compile_commands.json	/^    "directory": "\/home\/laura\/projects\/uf2s8\/emulator",$/;"	s	object:2
+directory	compile_commands.json	/^    "directory": "\/home\/laura\/projects\/uf2s8\/emulator",$/;"	s	object:3
+directory	compile_commands.json	/^    "directory": "\/home\/laura\/projects\/uf2s8\/emulator",$/;"	s	object:4
 disassemble	src/debugger.c	/^void disassemble(uint16_t instruction)$/;"	f	typeref:typename:void
 disassemble_branch	src/debugger.c	/^static bool disassemble_branch(uint16_t instruction)$/;"	f	typeref:typename:bool	file:
 disassemble_loadstore	src/debugger.c	/^static bool disassemble_loadstore(uint16_t instruction)$/;"	f	typeref:typename:bool	file:
@@ -197,11 +561,11 @@ execute_branch	src/cpu.c	/^static bool execute_branch(struct VirtualMachine *viM
 execute_flags	src/cpu.c	/^static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)$/;"	f	typeref:typename:bool	file:
 execute_logic	src/cpu.c	/^static uint32_t execute_logic(struct VirtualMachine *viM, uint16_t instruction)$/;"	f	typeref:typename:uint32_t	file:
 fetch_instruction	src/memory.c	/^uint16_t fetch_instruction(struct VirtualMachine *viM)$/;"	f	typeref:typename:uint16_t
-file	compile_commands.json	/^    "file": "src\/cpu.c"$/;"	s	object:1
-file	compile_commands.json	/^    "file": "src\/debugger.c"$/;"	s	object:4
-file	compile_commands.json	/^    "file": "src\/io.c"$/;"	s	object:3
-file	compile_commands.json	/^    "file": "src\/main.c"$/;"	s	object:0
-file	compile_commands.json	/^    "file": "src\/memory.c"$/;"	s	object:2
+file	compile_commands.json	/^    "file": "src\/cpu.c",$/;"	s	object:0
+file	compile_commands.json	/^    "file": "src\/debugger.c",$/;"	s	object:1
+file	compile_commands.json	/^    "file": "src\/io.c",$/;"	s	object:2
+file	compile_commands.json	/^    "file": "src\/main.c",$/;"	s	object:3
+file	compile_commands.json	/^    "file": "src\/memory.c",$/;"	s	object:4
 flags_overflow_add	src/cpu.c	/^static void flags_overflow_add($/;"	f	typeref:typename:void	file:
 flags_overflow_sub	src/cpu.c	/^static void flags_overflow_sub($/;"	f	typeref:typename:void	file:
 get_cond	src/cpu.c	/^static bool get_cond(struct VirtualMachine *viM, uint16_t instruction)$/;"	f	typeref:typename:bool	file:
@@ -231,6 +595,11 @@ opcode	src/isa.h	/^		uint16_t opcode : 5;$/;"	m	struct:__anonb568cdef010a::__ano
 opcode	src/isa.h	/^		uint16_t opcode : 5;$/;"	m	struct:__anonb568cdef010a::__anonb568cdef0708	typeref:typename:uint16_t:5
 opcode	src/isa.h	/^		uint16_t opcode : 7;$/;"	m	struct:__anonb568cdef010a::__anonb568cdef0208	typeref:typename:uint16_t:7
 opcode	src/isa.h	/^		uint16_t opcode : 7;$/;"	m	struct:__anonb568cdef010a::__anonb568cdef0508	typeref:typename:uint16_t:7
+output	compile_commands.json	/^    "output": "build\/cpu.o"$/;"	s	object:0
+output	compile_commands.json	/^    "output": "build\/debugger.o"$/;"	s	object:1
+output	compile_commands.json	/^    "output": "build\/io.o"$/;"	s	object:2
+output	compile_commands.json	/^    "output": "build\/main.o"$/;"	s	object:3
+output	compile_commands.json	/^    "output": "build\/memory.o"$/;"	s	object:4
 pc	src/vm.h	/^	uint16_t pc;$/;"	m	struct:VirtualMachine	typeref:typename:uint16_t
 print_state	src/cpu.c	/^void print_state(const struct VirtualMachine *viM, uint16_t instruction)$/;"	f	typeref:typename:void
 raw	src/isa.h	/^	uint16_t raw;$/;"	m	union:__anonb568cdef010a	typeref:typename:uint16_t
