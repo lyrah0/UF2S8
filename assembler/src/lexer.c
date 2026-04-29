@@ -294,6 +294,53 @@ static bool get_token(struct TokenList *tokenList, char **cursor, int line_num)
 	return false;
 }
 
+static bool process_line_tokens(
+	struct TokenList *tokenList, char *line, int line_num)
+{
+	char *cursor = line;
+	while (*cursor != '\0') {
+		if (isspace(*cursor)) { //NOLINT
+			cursor++;
+			continue;
+		}
+		if (get_token(tokenList, &cursor, line_num)) { return true; }
+	}
+	return false;
+}
+
+// NOLINTNEXTLINE(misc-no-recursion)
+static bool lexer_recursive(const char *filepath, struct TokenList *tokenList,
+	int depth, const char **include_stack);
+
+// NOLINTNEXTLINE(misc-no-recursion)
+static bool process_include(struct TokenList *tokenList,
+	int tokens_before_line, const char *dir, int depth,
+	const char **include_stack)
+{
+	struct Token *token = &tokenList->tokens[tokens_before_line];
+	struct Token *next = &tokenList->tokens[tokens_before_line + 1];
+	struct Token *next2 = &tokenList->tokens[tokens_before_line + 2];
+
+	if (token->type == TOKEN_PERIOD && next->type == TOKEN_SYMBOL &&
+		strcasecmp(next->str, "include") == 0 &&
+		next2->type == TOKEN_STRING) {
+		char inc_path[MAX_LINE_LEN];
+		if (next2->str[0] == '/') {
+			strncpy(inc_path, next2->str, MAX_LINE_LEN);
+		} else {
+			(void)snprintf(inc_path, MAX_LINE_LEN, "%s%s", dir,
+				next2->str);
+		}
+		tokenList->count = tokens_before_line;
+		if (lexer_recursive(
+			    inc_path, tokenList, depth + 1, include_stack)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+// NOLINTNEXTLINE(misc-no-recursion)
 static bool lexer_recursive(const char *filepath, struct TokenList *tokenList,
 	int depth, const char **include_stack)
 {
@@ -320,7 +367,6 @@ static bool lexer_recursive(const char *filepath, struct TokenList *tokenList,
 	get_dir(filepath, dir);
 
 	char line[MAX_LINE_LEN];
-	char *cursor = nullptr;
 	int line_num = 1;
 
 	for (int i = 0; i < MAX_LINES; i++, line_num++) {
@@ -331,45 +377,21 @@ static bool lexer_recursive(const char *filepath, struct TokenList *tokenList,
 		} else {
 			line[MAX_LINE_LEN - 1] = '\0';
 		}
-		cursor = line;
+
 		int tokens_before_line = tokenList->count;
-		while (*cursor != '\0') {
-			if (isspace(*cursor)) { //NOLINT
-				cursor++;
-				continue;
-			}
-			if (get_token(tokenList, &cursor, line_num)) {
-				(void)fclose(finput);
-				return true;
-			}
+
+		if (process_line_tokens(tokenList, line, line_num)) {
+			(void)fclose(finput);
+			return true;
 		}
+
 		int tokens_after_line = tokenList->count;
 
 		if (tokens_after_line - tokens_before_line == 3) {
-			struct Token *token =
-				&tokenList->tokens[tokens_before_line];
-			struct Token *next =
-				&tokenList->tokens[tokens_before_line + 1];
-			struct Token *next2 =
-				&tokenList->tokens[tokens_before_line + 2];
-			if (token->type == TOKEN_PERIOD &&
-				next->type == TOKEN_SYMBOL &&
-				strcasecmp(next->str, "include") == 0 &&
-				next2->type == TOKEN_STRING) {
-				char inc_path[MAX_LINE_LEN];
-				if (next2->str[0] == '/') {
-					strncpy(inc_path, next2->str,
-						MAX_LINE_LEN);
-				} else {
-					(void)snprintf(inc_path, MAX_LINE_LEN,
-						"%s%s", dir, next2->str);
-				}
-				tokenList->count = tokens_before_line;
-				if (lexer_recursive(inc_path, tokenList,
-					    depth + 1, include_stack)) {
-					(void)fclose(finput);
-					return true;
-				}
+			if (process_include(tokenList, tokens_before_line, dir,
+				    depth, include_stack)) {
+				(void)fclose(finput);
+				return true;
 			}
 		}
 	}

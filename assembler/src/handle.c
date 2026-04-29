@@ -478,7 +478,8 @@ bool handle_branch_cond(const struct TokenList *tokenList,
 				 current_address - 2) >>
 			1;
 		if ((int16_t)offset > 511 || (int16_t)offset < -512) {
-			printf("Warning: %d: Branch target too far away from %s.\n",
+			printf("Warning: %d: Branch target too far away from "
+			       "%s.\n",
 				next3->line, next3->str);
 		}
 		base++;
