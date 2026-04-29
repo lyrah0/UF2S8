@@ -37,9 +37,9 @@ struct VirtualMachine {
 	SDL_Texture *texture;
 	SDL_Palette *sdl_palette;
 	uint8_t processed_vram[16384];
-	uint8_t sdl_input_buffer[16];
-	int sdl_buf_head;
-	int sdl_buf_tail;
+	uint16_t key_buffer[64];
+	int key_head;
+	int key_tail;
 };
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 static inline int16_t sign_extend(uint16_t value, uint8_t bits)

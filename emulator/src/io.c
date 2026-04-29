@@ -1,24 +1,6 @@
 #include "io.h"
 #include "vm.h"
 #include <stdint.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
-
-int get_keypress_nonblocking()
-{
-	// Save current file flags
-	int oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
-	// Apply flags with non-blocking added
-	fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
-
-	int character = getchar();
-
-	// Restore blocking behaviour
-	fcntl(STDIN_FILENO, F_SETFL, oldf);
-
-	return character;
-}
 
 void interrupt_pushtostack(struct VirtualMachine *viM)
 {
@@ -50,24 +32,9 @@ void interrupt_timer(struct VirtualMachine *viM, const unsigned int *timer)
 	}
 }
 
-void interrupt_input(struct VirtualMachine *viM, const unsigned int *timer)
+void interrupt_input(struct VirtualMachine *viM)
 {
-	if (!(*timer % 1000 == 0 && (viM->csr[0] >> 7) == 1)) { return; }
-
-	int character = -1;
-
-	// Check SDL buffer first
-	if (viM->sdl_buf_head != viM->sdl_buf_tail) {
-		character = viM->sdl_input_buffer[viM->sdl_buf_head];
-		viM->sdl_buf_head = (viM->sdl_buf_head + 1) % 16;
-	} else {
-		// Fallback to terminal
-		character = get_keypress_nonblocking();
-	}
-
-	if (character != -1) {
-		viM->memory[HW_KEYBOARD_DATA] = (uint8_t)character;
-
+	if ((viM->csr[0] >> 7) == 1 && viM->key_head != viM->key_tail) {
 		interrupt_pushtostack(viM);
 
 		uint16_t vector_addr = 0xFF06;

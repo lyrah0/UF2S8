@@ -4,7 +4,6 @@
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_keyboard.h>
-#include <SDL3/SDL_keycode.h>
 #include <SDL3/SDL_pixels.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_surface.h>
@@ -16,44 +15,20 @@
 void handle_graphics_events(struct VirtualMachine *viM)
 {
 	if (!viM->graphics) { return; }
-
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
-		if (event.type == SDL_EVENT_QUIT) { viM->running = false; }
-		if (event.type == SDL_EVENT_TEXT_INPUT) {
-			for (const char *p = event.text.text; *p != '\0';
-				p++) {
-				int next = (viM->sdl_buf_tail + 1) % 16;
-				if (next != viM->sdl_buf_head) {
-					viM->sdl_input_buffer[viM
-							->sdl_buf_tail] =
-						(uint8_t)*p;
-					viM->sdl_buf_tail = next;
-				}
-			}
-		} else if (event.type == SDL_EVENT_KEY_DOWN) {
-			uint8_t c = 0;
-			switch (event.key.key) {
-			case SDLK_RETURN:
-				c = '\n';
-				break;
-			case SDLK_BACKSPACE:
-				c = '\b';
-				break;
-			case SDLK_TAB:
-				c = '\t';
-				break;
-			case SDLK_ESCAPE:
-				c = '\x1b';
-				break;
-			}
-			if (c != 0) {
-				int next = (viM->sdl_buf_tail + 1) % 16;
-				if (next != viM->sdl_buf_head) {
-					viM->sdl_input_buffer[viM
-							->sdl_buf_tail] = c;
-					viM->sdl_buf_tail = next;
-				}
+		if (event.type == SDL_EVENT_QUIT) {
+			viM->running = false;
+		} else if (event.type == SDL_EVENT_KEY_DOWN ||
+			event.type == SDL_EVENT_KEY_UP) {
+			bool released = (event.type == SDL_EVENT_KEY_UP);
+			uint8_t scancode = (uint8_t)event.key.scancode;
+
+			int next = (viM->key_tail + 1) % 64;
+			if (next != viM->key_head) {
+				viM->key_buffer[viM->key_tail] =
+					((uint16_t)released << 8) | scancode;
+				viM->key_tail = next;
 			}
 		}
 	}
@@ -88,27 +63,28 @@ void render_graphics_frame(struct VirtualMachine *viM)
 
 	if (mode == 0) {
 		for (int i = 0; i < 2048; i++) {
-			uint8_t b = source_data[i];
+			uint8_t byte = source_data[i];
 			for (int j = 0; j < 8; j++) {
 				viM->processed_vram[(i * 8) + j] =
-					(b >> (7 - j)) & 1;
+					(byte >> (7 - j)) & 1;
 			}
 		}
 		source_data = viM->processed_vram;
 	} else if (mode == 1) {
 		for (int i = 0; i < 4096; i++) {
-			uint8_t b = source_data[i];
+			uint8_t byte = source_data[i];
 			for (int j = 0; j < 4; j++) {
 				viM->processed_vram[(i * 4) + j] =
-					(b >> ((3 - j) * 2)) & 3;
+					(byte >> ((3 - j) * 2)) & 3;
 			}
 		}
 		source_data = viM->processed_vram;
 	} else if (mode == 2) {
 		for (int i = 0; i < 8192; i++) {
-			uint8_t b = source_data[i];
-			viM->processed_vram[(ptrdiff_t)(i * 2)] = (b >> 4) & 0x0F;
-			viM->processed_vram[(i * 2) + 1] = b & 0x0F;
+			uint8_t byte = source_data[i];
+			viM->processed_vram[(ptrdiff_t)(i * 2)] = (byte >> 4) &
+				0x0F;
+			viM->processed_vram[(i * 2) + 1] = byte & 0x0F;
 		}
 		source_data = viM->processed_vram;
 	}

@@ -36,7 +36,7 @@ static int cpu_thread_worker(void *data)
 
 	while (viM->running) {
 		interrupt_timer(viM, &timer);
-		interrupt_input(viM, &timer);
+		interrupt_input(viM);
 
 		instruction = fetch_instruction(viM);
 		for (int i = 0; i < viM->bp_count; i++) {
@@ -83,8 +83,8 @@ int main(int argc, char *argv[])
 	viM.memory_dump = false;
 	viM.graphics = false;
 	viM.running = false;
-	viM.sdl_buf_head = 0;
-	viM.sdl_buf_tail = 0;
+	viM.key_head = 0;
+	viM.key_tail = 0;
 
 	while ((opt = getopt(argc, argv, "gmdi:o:")) != -1) {
 		switch (opt) {

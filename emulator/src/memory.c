@@ -5,7 +5,6 @@
 
 static void terminal_write(uint8_t value)
 {
-	//printf("put char!\n");
 	putchar(value);
 	(void)fflush(stdout);
 }
@@ -48,4 +47,28 @@ void memory_write(struct VirtualMachine *viM, uint16_t address, uint8_t value)
 	} else {
 		viM->memory[address] = value;
 	}
+}
+
+uint8_t memory_read(struct VirtualMachine *viM, uint16_t address)
+{
+	if (address == HW_KEYBOARD_DATA) {
+		if (viM->key_head != viM->key_tail) {
+			uint16_t event = viM->key_buffer[viM->key_head];
+			viM->key_head = (viM->key_head + 1) % 64;
+			return (uint8_t)(event & 0xFF);
+		}
+		return 0;
+	}
+	if (address == HW_KEYBOARD_STATUS) {
+		uint8_t status = 0;
+		if (viM->key_head != viM->key_tail) {
+			status |= 0x01; // Ready
+			uint16_t event = viM->key_buffer[viM->key_head];
+			if ((event >> 8) & 1) {
+				status |= 0x02; // Release
+			}
+		}
+		return status;
+	}
+	return viM->memory[address];
 }
