@@ -31,9 +31,9 @@ LDFLAGS :=-fuse-ld=mold -Wl,-O2 -Wl,--as-needed -Wl,--hash-style=gnu -Wl,-z,relr
 CPPFLAGS :=-D_GLIBCXX_ASSERTIONS -D_FORTIFY_SOURCE=3 -DNDEBUG
 
 #MISCFLAGS := -Isrc -rdynamic $(OPTFLAGS)
-MISCFLAGS := -Isrc $(OPTFLAGS)
+MISCFLAGS := -Isrc $(OPTFLAGS) $(shell pkg-config --cflags sdl3)
 # LIBS := -ldl $(OPTLIBS)
-LIBS := $(OPTLIBS) -lbsd -lbstring -lc
+LIBS := $(OPTLIBS) -lbsd -lbstring -lc $(shell pkg-config --libs sdl3)
 
 CC := ccache gcc
 AR := gcc-ar

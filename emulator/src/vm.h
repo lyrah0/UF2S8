@@ -1,6 +1,15 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
+#include <SDL3/SDL.h>
+
+enum {
+	VRAM_START = 0x8000,
+	VRAM_SIZE = 0x4000,
+	VRAM_END = VRAM_START + VRAM_SIZE - 1,
+	SCREEN_WIDTH = 128,
+	SCREEN_HEIGHT = 128
+};
 
 enum { MAX_MEMORY = 1 << 16, MAX_BREAKPOINTS = 1 << 4 };
 
@@ -14,6 +23,10 @@ struct VirtualMachine {
 	bool running;
 	bool debug_mode;
 	bool memory_dump;
+	bool graphics;
+	SDL_Window *window;
+	SDL_Renderer *renderer;
+	SDL_Texture *texture;
 };
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 static inline int16_t sign_extend(uint16_t value, uint8_t bits)

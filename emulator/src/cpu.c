@@ -3,7 +3,6 @@
 #include "vm.h"
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "isa.h"
 #include "memory.h"
@@ -15,16 +14,14 @@ void print_state(const struct VirtualMachine *viM, uint16_t instruction)
 	int negative = (viM->csr[0] >> 2) & 1;
 	int zero = (viM->csr[0] >> 1) & 1;
 	int carry = viM->csr[0] & 1;
-	static unsigned int tick = 0;
 
-	printf("Tick: %03x PC: 0x%04x\tinstruction: 0x%04x\tflags: I:%d V:%d N:%d Z:%d C:%d\n",
-		tick++, (uint16_t)(viM->pc - 2), instruction, interrupt,
-		overflow, negative, zero, carry);
+	printf("PC: 0x%04x\tinstruction: 0x%04x\tflags: I:%d V:%d N:%d Z:%d C:%d\n",
+		(uint16_t)(viM->pc - 2), instruction, interrupt, overflow,
+		negative, zero, carry);
 	printf("r0:0x%02x r1:0x%02x r2:0x%02x r3:0x%02x r4:0x%02x r5:0x%02x r6:0x%02x r7:0x%02x sp:0x%02x%02x\n",
 		viM->gpr[0], viM->gpr[1], viM->gpr[2], viM->gpr[3],
 		viM->gpr[4], viM->gpr[5], viM->gpr[6], viM->gpr[7],
 		viM->csr[7], viM->csr[6]);
-	if (tick > 0xFF) { exit(0); }
 }
 
 static void flags_overflow_add(

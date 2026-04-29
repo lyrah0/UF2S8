@@ -1,10 +1,12 @@
+#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL_video.h>
 #include <unistd.h> //NOLINT
 #include <bits/getopt_core.h> //NOLINT
 #define XOPEN_SOURCE 700
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <termios.h>
 
 #include "vm.h"
@@ -12,6 +14,7 @@
 #include "memory.h"
 #include "io.h"
 #include "debugger.h"
+#include "graphics.h"
 
 static bool main_loop(struct VirtualMachine *viM)
 {
@@ -54,6 +57,8 @@ static bool main_loop(struct VirtualMachine *viM)
 			viM->csr[i] = 0;
 		}
 
+		if (timer % 10000 == 0) { update_graphics(viM); }
+
 		timer++;
 	}
 	memory_dump(viM);
@@ -75,9 +80,13 @@ int main(int argc, char *argv[])
 	struct VirtualMachine viM;
 	viM.debug_mode = false;
 	viM.memory_dump = false;
+	viM.graphics = false;
 
-	while ((opt = getopt(argc, argv, "mdi:o:")) != -1) {
+	while ((opt = getopt(argc, argv, "gmdi:o:")) != -1) {
 		switch (opt) {
+		case 'g':
+			viM.graphics = true;
+			break;
 		case 'm':
 			viM.memory_dump = true;
 			break;
@@ -108,6 +117,13 @@ int main(int argc, char *argv[])
 		// printf("ERROR: Failed to read file.\n");
 	}
 
+	if (viM.graphics) {
+		if (init_sdl(&viM)) {
+			printf("ERROR: failed to initialize SDL\n");
+			return 1;
+		}
+	}
+
 	(void)fclose(finput);
 
 	struct termios oldt;
@@ -124,5 +140,13 @@ int main(int argc, char *argv[])
 	}
 
 	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+
+	if (viM.graphics) {
+		SDL_DestroyTexture(viM.texture);
+		SDL_DestroyRenderer(viM.renderer);
+		SDL_DestroyWindow(viM.window);
+		SDL_Quit();
+	}
+
 	return 0;
 }
