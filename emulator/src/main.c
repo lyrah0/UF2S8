@@ -32,12 +32,12 @@ static int cpu_thread_worker(void *data)
 		viM->csr[i] = 0;
 	}
 	uint16_t instruction = 0;
-	unsigned int timer = 0;
 	uint64_t instruction_count = 0;
 	uint64_t start_ticks = SDL_GetPerformanceCounter();
 
 	while (viM->running) {
-		interrupt_timer(viM, &timer);
+		uint64_t ticks_ns = SDL_GetTicksNS();
+		interrupt_timer(viM, ticks_ns);
 		interrupt_input(viM);
 
 		instruction = fetch_instruction(viM);
@@ -63,7 +63,6 @@ static int cpu_thread_worker(void *data)
 		}
 
 		instruction_count++;
-		timer++;
 	}
 
 	uint64_t end_ticks = SDL_GetPerformanceCounter();

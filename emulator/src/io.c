@@ -15,21 +15,25 @@ void interrupt_pushtostack(struct VirtualMachine *viM)
 	viM->csr[0] &= 0x7F;
 }
 
-void interrupt_timer(struct VirtualMachine *viM, const unsigned int *timer)
+void interrupt_timer(struct VirtualMachine *viM, const uint64_t ticks_ns)
 {
-	uint16_t timer_mult = viM->memory[0xFEFE] << 8 | 0xFF;
-	if (!(*timer % timer_mult == 0 && (viM->csr[0] >> 7) == 1)) { return; }
+	uint8_t hertz = viM->memory[HW_TIMER_MULT];
 
-	uint8_t hardware_control = viM->memory[0xFEFF];
-	bool timer_enabled = (hardware_control & 0x1) != 0;
-
-	if (timer_enabled) {
-		interrupt_pushtostack(viM);
-
-		uint16_t vector_addr = 0xFF06;
-		viM->pc = viM->memory[vector_addr] |
-			viM->memory[vector_addr + 1] << 8;
+	if ((viM->csr[0] & 0x80) == 0 ||
+		(viM->memory[HW_HARDWARE_CONTROL] & 0x01) == 0 || hertz == 0) {
+		return;
 	}
+
+	static uint64_t last_ticks = 0;
+	uint64_t period_ns = 1000000000ULL / hertz;
+
+	if (ticks_ns - last_ticks < period_ns) { return; }
+	last_ticks = ticks_ns;
+
+	interrupt_pushtostack(viM);
+
+	uint16_t vector_addr = 0xFF04;
+	viM->pc = viM->memory[vector_addr] | viM->memory[vector_addr + 1] << 8;
 }
 
 void interrupt_input(struct VirtualMachine *viM)

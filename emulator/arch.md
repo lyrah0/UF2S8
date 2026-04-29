@@ -18,7 +18,7 @@ hardware registers:
 |keyboard_data   |0xFEF1|keyboard data
 |keyboard_status |0xFEF2|keyboard status
 |graphics_control|0xFEFD|graphics control
-|timer_mult      |0xFEFE|timer multiplier
+|timer_mult      |0xFEFE|timer multiplier in hertz (1/hertz) 0=disabled
 |hardware_control|0xFEFF|hardware control
 
 hardware control format:
