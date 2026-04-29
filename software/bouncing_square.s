@@ -23,8 +23,11 @@ main_loop:
     POP  r1
     POP  r0
 
-    ; 2. Delay (approx 16ms to target ~60fps)
-    LI   r5, 0x30           ; Speed up the simulation slightly
+    ; 2. Delay
+    PUSH r7
+    LI  r7, 0x40
+delay_outerer:
+    LI   r5, 0xFF
 delay_outer:
     LI   r6, 0xFF
 delay_inner:
@@ -32,6 +35,9 @@ delay_inner:
     B    NE, delay_inner
     ADD  r5, r5, -1
     B    NE, delay_outer
+    ADD  r7, r7, -1
+    B    NE, delay_outerer
+    POP  r7
 
     ; 3. Erase previous square
     PUSH r0
