@@ -68,6 +68,8 @@ Conditions:
 |NOP     |000_000_000_000_0000|No operation
 |RET     |001_000_000_000_0000|Return
 |RETI    |000_001_000_000_0000|Return from interrupt
+|INCC    |ddd_010_000_000_0000|Increment Carry
+|DECC    |ddd_011_000_000_0000|Decrement Carry
 |SWI     |sss_101_000_000_0000|Software interrupt from register
 |POP     |ddd_110_000_000_0000|pop register from stack
 |PUSH    |sss_111_000_000_0000|push register to stack
