@@ -154,12 +154,12 @@ static bool encode_instructions(struct TokenList *tokenList,
 		}
 	} else if (!strcasecmp(token->str, "B")) {
 		if (handle_branch_cond(tokenList, symbolTable, current_token,
-			    &machine_code, 0x000C, *current_address)) {
+			    &machine_code, false, *current_address)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "BL")) {
 		if (handle_branch_cond(tokenList, symbolTable, current_token,
-			    &machine_code, 0x000E, *current_address)) {
+			    &machine_code, true, *current_address)) {
 			goto error;
 		}
 	} else {

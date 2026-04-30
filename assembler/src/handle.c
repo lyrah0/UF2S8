@@ -479,14 +479,18 @@ bool handle_loadstore(const struct TokenList *tokenList,
 // Handles B, BL
 bool handle_branch_cond(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
-	uint16_t *machine_code, uint16_t base, uint16_t current_address)
+	uint16_t *machine_code, bool link, uint16_t current_address)
 {
 	struct Token *token = &tokenList->tokens[*current_token];
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
 	struct Token *next2 = &tokenList->tokens[*current_token + 2];
 	struct Token *next3 = &tokenList->tokens[*current_token + 3];
+	struct Token *next4 = &tokenList->tokens[*current_token + 4];
+	struct Token *next5 = &tokenList->tokens[*current_token + 5];
 	uint8_t base_reg = 0;
 	uint16_t offset = 0;
+	bool is_relative = false;
+	uint16_t base = 0x0000;
 	*current_token += 3;
 	if (next1->type != TOKEN_CONDITION) {
 		printf("ERROR: %d: expected condition after instruction.\n",
@@ -513,7 +517,7 @@ bool handle_branch_cond(const struct TokenList *tokenList,
 			       "%s.\n",
 				next3->line, next3->str);
 		}
-		base++;
+		is_relative = true;
 	} else if (next3->type == TOKEN_NUMBER) {
 		if ((next3->num_value > 511 || next3->num_value < -512) &&
 			next3->str[1] != 'x') {
@@ -527,32 +531,50 @@ bool handle_branch_cond(const struct TokenList *tokenList,
 				next3->line, next3->num_value);
 		}
 		offset = next3->num_value >> 1;
-		base++;
+		is_relative = true;
 	} else if (next3->type == TOKEN_BRACKET_OPEN) {
-		if (handle_bracketparse(tokenList, symbolTable, current_token,
-			    &base_reg, &offset)) {
+		if (next4->type != TOKEN_REGISTER) {
+			printf("ERROR: %d: expected [a?] after comma.\n",
+				token->line);
 			return true;
 		}
+		if (next4->num_value < 10 || next4->num_value > 19) {
+			printf("ERROR: %d: only a0-3 are valid in %s.\n",
+				token->line, token->str);
+			return true;
+		}
+		if (next5->type != TOKEN_BRACKET_CLOSE) {
+			printf("ERROR: %d: expected ] after register.\n",
+				token->line);
+			return true;
+		}
+		base_reg = next4->num_value - 10;
 	} else if (next3->type == TOKEN_REGISTER) {
 		if (next3->num_value < 10 || next3->num_value > 19) {
 			printf("ERROR: %d: only a0-3 are valid in %s.\n",
 				token->line, token->str);
 			return true;
 		}
-		base_reg = next3->num_value;
-		offset = 0;
+		base_reg = next3->num_value - 10;
 	} else {
-		printf("ERROR: %d: expected [r?+/-X] after comma.\n",
-			token->line);
+		printf("ERROR: %d: expected [a?] after comma.\n", token->line);
 		return true;
 	}
-	if (base % 2) {
+	if (is_relative) {
 		offset &= 0x1FF;
+		if (link) {
+			base = 0x000F;
+		} else {
+			base = 0x000E;
+		}
 		*machine_code = base | next1->num_value << 13 | offset << 4;
 	} else {
-		offset &= 0x7F;
-		*machine_code = base | next1->num_value << 13 |
-			base_reg << 11 | offset << 4;
+		if (link) {
+			base = 0x0070;
+		} else {
+			base = 0x0470;
+		}
+		*machine_code = base | next1->num_value << 13 | base_reg << 11;
 	}
 	return false;
 }

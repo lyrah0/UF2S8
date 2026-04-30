@@ -234,29 +234,25 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 		viM->pc |= memory_read(viM, ++temp) << 8;
 		viM->csr[7] = temp >> 8;
 		viM->csr[6] = temp;
-	} else if (inst.branch.opcode == 0xC) { // B reg
+	} else if ((inst.raw & 0x07FF) == 0x0070) { // B reg
 		if (get_cond(viM, instruction)) {
-			viM->pc = (uint16_t)((viM->gpr[reg_base] |
-						     viM->gpr[reg_base + 1]
-							     << 8) +
-				(sign_extend(inst.loadstore.offset, 7) << 1));
+			viM->pc = (uint16_t)(viM->gpr[reg_base] |
+				viM->gpr[reg_base + 1] << 8);
 		}
-	} else if (inst.branch.opcode == 0xD) { // B
-		if (get_cond(viM, instruction)) {
-			viM->pc += (int16_t)(sign_extend(inst.branch.offset, 9)
-				<< 1);
-		}
-	} else if (inst.branch.opcode == 0xE) { // BL reg
+	} else if ((inst.raw & 0x07FF) == 0x0470) { // BL reg
 		if (get_cond(viM, instruction)) {
 			temp = viM->csr[7] << 8 | viM->csr[6];
 			memory_write(viM, temp--, viM->pc >> 8);
 			memory_write(viM, temp--, viM->pc);
-			viM->pc = (uint16_t)((viM->gpr[reg_base] |
-						     viM->gpr[reg_base + 1]
-							     << 8) +
-				(sign_extend(inst.loadstore.offset, 7) << 1));
+			viM->pc = (uint16_t)(viM->gpr[reg_base] |
+				viM->gpr[reg_base + 1] << 8);
 			viM->csr[7] = temp >> 8;
 			viM->csr[6] = temp;
+		}
+	} else if (inst.branch.opcode == 0xE) { // B
+		if (get_cond(viM, instruction)) {
+			viM->pc += (int16_t)(sign_extend(inst.branch.offset, 9)
+				<< 1);
 		}
 	} else if (inst.branch.opcode == 0xF) { // BL
 		if (get_cond(viM, instruction)) {

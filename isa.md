@@ -82,6 +82,8 @@ Conditions:
 |MOV     |ddd_sss_001_001_0000|Move register to csr
 |CMP     |sss_sss_010_001_0000|Compare subtraction
 |CMA     |sss_sss_011_001_0000|Compare And
+|B       |ccc_bb0_000_111_0000|Branch register (COND)
+|BL      |ccc_bb1_000_111_0000|Branch register and push return address to stack (COND)
 |SUB     |ddd_sss_sss_000_0001|Subtract
 |SBB     |ddd_sss_sss_001_0001|Subtract with borrow
 |ADD     |ddd_sss_sss_010_0001|Add
@@ -101,8 +103,6 @@ Conditions:
 |ADD     |ddd_sss_iii_ii1_1001|Add signed immediate
 |SB      |sss_bbo_ooo_ooo_1010|Store byte with offset
 |LB      |ddd_bbo_ooo_ooo_1011|Load byte with offset
-|B       |ccc_bbo_ooo_ooo_1100|Branch register (COND)
-|B       |ccc_ooo_ooo_ooo_1101|Branch relative (COND)
-|BL      |ccc_bbo_ooo_ooo_1110|Branch register and push return address to stack (COND)
+|B       |ccc_ooo_ooo_ooo_1110|Branch relative (COND)
 |BL      |ccc_ooo_ooo_ooo_1111|Branch relative and push return address to stack (COND)
 

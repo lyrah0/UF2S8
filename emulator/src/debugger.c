@@ -80,19 +80,14 @@ static bool disassemble_branch(uint16_t instruction)
 	Instruction inst = { .raw = instruction };
 	uint8_t reg_dst = inst.branch.cond;
 	uint8_t reg_base = inst.loadstore.reg_base;
-	int16_t imm_ls = sign_extend(inst.loadstore.offset, 7);
 	int16_t imm_brel = (int16_t)(sign_extend(inst.branch.offset, 9) << 1);
 
-	if (inst.branch.opcode == 0xC) {
-		printf("B %s, [a%hhu%c%hd]", condition_str[reg_dst], reg_base,
-			imm_ls < 0 ? '-' : '+',
-			imm_ls < 0 ? -(imm_ls << 1) : (imm_ls << 1));
-	} else if (inst.branch.opcode == 0xD) {
-		printf("B %s, %hd", condition_str[reg_dst], imm_brel);
+	if ((inst.raw & 0x07FF) == 0x0070) {
+		printf("B %s, [a%hhu]", condition_str[reg_dst], reg_base);
+	} else if ((inst.raw & 0x07FF) == 0x0470) {
+		printf("BL %s, [a%hhu]", condition_str[reg_dst], reg_base);
 	} else if (inst.branch.opcode == 0xE) {
-		printf("BL %s, [a%hhu%c%hd]", condition_str[reg_dst], reg_base,
-			imm_ls < 0 ? '-' : '+',
-			imm_ls < 0 ? -(imm_ls << 1) : (imm_ls << 1));
+		printf("B %s, %hd", condition_str[reg_dst], imm_brel);
 	} else if (inst.branch.opcode == 0xF) {
 		printf("BL %s, %hd", condition_str[reg_dst], imm_brel);
 	} else {
