@@ -76,6 +76,8 @@ Conditions:
 |SWI     |sss_101_000_000_0000|Software interrupt from register
 |POP     |ddd_110_000_000_0000|pop register from stack
 |PUSH    |sss_111_000_000_0000|push register to stack
+|POP     |dd0_000_111_000_0000|pop address register from stack
+|PUSH    |ss1_000_111_000_0000|push address register to stack
 |MOV     |ddd_sss_000_001_0000|Move csr to register
 |MOV     |ddd_sss_001_001_0000|Move register to csr
 |CMP     |sss_sss_010_001_0000|Compare subtraction

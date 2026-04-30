@@ -136,6 +136,13 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 		temp = memory_read(viM, ++stackp);
 		viM->csr[7] = stackp >> 8;
 		viM->csr[6] = stackp;
+	} else if ((inst.raw & 0x3FFF) == 0x0380) { // POP a
+		uint16_t stackp = viM->csr[7] << 8 | viM->csr[6];
+		temp = memory_read(viM, ++stackp);
+		viM->gpr[reg_dst & 0x6] = memory_read(viM, ++stackp);
+		reg_dst = (reg_dst & 0x6) + 1;
+		viM->csr[7] = stackp >> 8;
+		viM->csr[6] = stackp;
 	} else if (inst.reg2.opcode == 0x0110) { // CMP
 		temp = (uint16_t)viM->gpr[reg_dst] +
 			(uint16_t)(~viM->gpr[reg_src] & 0xFF) + 1;
@@ -292,6 +299,12 @@ bool decode_execute(struct VirtualMachine *viM, uint16_t instruction)
 	} else if (inst.reg1.opcode == 0x1C00) { // Push
 		temp = viM->csr[7] << 8 | viM->csr[6];
 		memory_write(viM, temp--, viM->gpr[reg_dst]);
+		viM->csr[7] = temp >> 8;
+		viM->csr[6] = temp;
+	} else if ((inst.raw & 0x3FFF) == 0x2380) { // Push a
+		temp = viM->csr[7] << 8 | viM->csr[6];
+		memory_write(viM, temp--, viM->gpr[(reg_dst & 0x6) + 1]);
+		memory_write(viM, temp--, viM->gpr[reg_dst & 0x6]);
 		viM->csr[7] = temp >> 8;
 		viM->csr[6] = temp;
 	} else if (inst.reg2.opcode == 0x0090) { // MOV csr, reg

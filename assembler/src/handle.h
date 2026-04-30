@@ -3,6 +3,8 @@
 
 bool handle_spp(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code, uint16_t base);
+bool handle_pp(const struct TokenList *tokenList, int *current_token,
+	uint16_t *machine_code, bool isPush);
 bool handle_mov(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code);
 bool handle_crr(const struct TokenList *tokenList, int *current_token,

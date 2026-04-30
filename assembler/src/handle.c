@@ -250,6 +250,37 @@ bool handle_spp(const struct TokenList *tokenList, int *current_token,
 	return false;
 }
 
+bool handle_pp(const struct TokenList *tokenList, int *current_token,
+	uint16_t *machine_code, bool isPush)
+{
+	struct Token *next1 = &tokenList->tokens[*current_token + 1];
+	if (next1->type != TOKEN_REGISTER) {
+		printf("ERROR: %d: expected register after instruction.\n",
+			next1->line);
+		return true;
+	}
+	if (next1->num_value > 19) {
+		printf("ERROR: %d: invalid register '%s'.\n", next1->line,
+			next1->str);
+		return true;
+	}
+	if (next1->num_value > 9) {
+		if (isPush) {
+			*machine_code = 0x2380 | (next1->num_value - 10) << 14;
+		} else {
+			*machine_code = 0x0380 | (next1->num_value - 10) << 14;
+		}
+	} else {
+		if (isPush) {
+			*machine_code = 0x1C00 | next1->num_value << 13;
+		} else {
+			*machine_code = 0x1800 | next1->num_value << 13;
+		}
+	}
+	*current_token += 1;
+	return false;
+}
+
 // Handles compare register register instructions: CMP, CMN, CMA
 bool handle_crr(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code, uint16_t base)

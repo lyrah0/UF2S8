@@ -128,6 +128,10 @@ void disassemble(uint16_t instruction)
 		printf("POP r%hhu", reg_dst);
 	} else if (inst.reg1.opcode == 0x1C00) {
 		printf("PUSH r%hhu", reg_dst);
+	} else if ((inst.raw & 0x3FFF) == 0x0380) {
+		printf("POP a%hhu", reg_dst >> 1);
+	} else if ((inst.raw & 0x3FFF) == 0x2380) {
+		printf("PUSH a%hhu", reg_dst >> 1);
 	} else if (disassemble_mov(instruction)) {
 	} else if (inst.opcode == 0x10) {
 		const char instructions[8][4] = { "???", "???", "CMP", "CMA",

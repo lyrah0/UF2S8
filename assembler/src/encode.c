@@ -60,13 +60,12 @@ static bool encode_instructions(struct TokenList *tokenList,
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "POP")) {
-		if (handle_spp(
-			    tokenList, current_token, &machine_code, 0x1800)) {
+		if (handle_pp(
+			    tokenList, current_token, &machine_code, false)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "PUSH")) {
-		if (handle_spp(
-			    tokenList, current_token, &machine_code, 0x1C00)) {
+		if (handle_pp(tokenList, current_token, &machine_code, true)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "MOV")) {
