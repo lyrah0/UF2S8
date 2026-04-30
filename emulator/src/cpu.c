@@ -147,7 +147,7 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 		temp = (uint16_t)viM->gpr[reg_src] +
 			(uint16_t)(~viM->gpr[reg_mod] & 0xFF) + 1;
 		sub_add = 0;
-	} else if (inst.reg3.opcode == 0x11) { // SBC
+	} else if (inst.reg3.opcode == 0x11) { // SBB
 		temp = (uint16_t)viM->gpr[reg_src] +
 			(uint16_t)(~viM->gpr[reg_mod] & 0xFF) +
 			(viM->csr[0] & 0x01);

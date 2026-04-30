@@ -88,7 +88,7 @@ static bool encode_instructions(struct TokenList *tokenList,
 			    tokenList, current_token, &machine_code, 0x0001)) {
 			goto error;
 		}
-	} else if (!strcasecmp(token->str, "SBC")) {
+	} else if (!strcasecmp(token->str, "SBB")) {
 		if (handle_rrr(
 			    tokenList, current_token, &machine_code, 0x0011)) {
 			goto error;

@@ -81,7 +81,7 @@ Conditions:
 |CMP     |sss_sss_010_001_0000|Compare subtraction
 |CMA     |sss_sss_011_001_0000|Compare And
 |SUB     |ddd_sss_sss_000_0001|Subtract
-|SBC     |ddd_sss_sss_001_0001|Subtract with carry
+|SBB     |ddd_sss_sss_001_0001|Subtract with borrow
 |ADD     |ddd_sss_sss_010_0001|Add
 |ADC     |ddd_sss_sss_011_0001|Add with carry
 |AND     |ddd_sss_sss_100_0001|And

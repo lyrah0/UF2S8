@@ -136,7 +136,7 @@ void disassemble(uint16_t instruction)
 			instructions[(instruction >> 7) & 0x7], reg_dst,
 			reg_src);
 	} else if (inst.branch.opcode == 0x1) {
-		const char instructions[8][4] = { "SUB", "SBC", "ADD", "ADC",
+		const char instructions[8][4] = { "SUB", "SBB", "ADD", "ADC",
 			"AND", "OR", "NOR", "XOR" };
 		printf("%s r%hhu, r%hhu, r%hhu",
 			instructions[(instruction >> 4) & 0x7], reg_dst,
