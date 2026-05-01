@@ -21,10 +21,10 @@ static bool disassemble_loadstore(uint16_t instruction)
 	uint8_t reg_base = inst.loadstore.reg_base;
 	int16_t imm_ls = sign_extend(inst.loadstore.offset, 7);
 
-	if (inst.loadstore.opcode == 0xA) {
+	if (inst.loadstore.opcode == 0xC) {
 		printf("SB r%hhu, [a%hhu%c%hhd]", reg_dst, reg_base,
 			imm_ls < 0 ? '-' : '+', imm_ls < 0 ? -imm_ls : imm_ls);
-	} else if (inst.loadstore.opcode == 0xB) {
+	} else if (inst.loadstore.opcode == 0xD) {
 		printf("LB r%hhu, [a%hhu%c%hhd]", reg_dst, reg_base,
 			imm_ls < 0 ? '-' : '+', imm_ls < 0 ? -imm_ls : imm_ls);
 	} else {
@@ -151,9 +151,9 @@ void disassemble(uint16_t instruction)
 		} else {
 			printf("r%hhu", reg_mod);
 		}
-	} else if (inst.load_imm.opcode == 0x09) {
+	} else if (inst.load_imm.opcode == 0x0A) {
 		printf("LI r%hhu, 0x%02hhx", reg_dst, imm_li);
-	} else if (inst.addi.opcode == 0x19) {
+	} else if (inst.addi.opcode == 0x1B) {
 		printf("ADD r%hhu, r%hhu, %hhd", reg_dst, reg_src, imm_add);
 	} else if (disassemble_loadstore(instruction)) {
 	} else if (disassemble_branch(instruction)) {

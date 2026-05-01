@@ -357,7 +357,7 @@ bool handle_add(const struct TokenList *tokenList,
 		    tokenList, symbolTable, current_token, &immediate)) {
 		return true;
 	}
-	*machine_code = 0x0019 | next1->num_value << 13 |
+	*machine_code = 0x001B | next1->num_value << 13 |
 		next3->num_value << 10 | (immediate & 0x1F) << 5;
 
 	return false;
@@ -437,14 +437,14 @@ bool handle_li(const struct TokenList *tokenList,
 		    tokenList, symbolTable, current_token, &immediate)) {
 		return true;
 	}
-	*machine_code = 0x0009 | next1->num_value << 13 | immediate << 5;
+	*machine_code = 0x000A | next1->num_value << 13 | immediate << 5;
 	return false;
 }
 
 // Handles SB and LB
 bool handle_loadstore(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
-	uint16_t *machine_code, uint16_t base)
+	uint16_t *machine_code, bool load)
 {
 	struct Token *token = &tokenList->tokens[*current_token];
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
@@ -471,6 +471,7 @@ bool handle_loadstore(const struct TokenList *tokenList,
 		return true;
 	}
 	immediate &= 0x7F;
+	uint16_t base = (int)load ? 0x000D : 0x000C;
 	*machine_code = base | next1->num_value << 13 | base_reg << 11 |
 		immediate << 4;
 	return false;

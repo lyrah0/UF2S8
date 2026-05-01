@@ -99,10 +99,10 @@ Conditions:
 |SLL     |ddd_sss_iii_100_0010|Shift Left Logical immediate
 |SRL     |ddd_sss_iii_101_0010|Shift Right Logical immediate
 |SRA     |ddd_sss_iii_110_0010|Shift Right Arithmetic immediate
-|LI      |ddd_iii_iii_ii0_1001|Load Immediate
-|ADD     |ddd_sss_iii_ii1_1001|Add signed immediate
-|SB      |sss_bbo_ooo_ooo_1010|Store byte with offset
-|LB      |ddd_bbo_ooo_ooo_1011|Load byte with offset
+|LI      |ddd_iii_iii_ii0_1010|Load Immediate
+|ADD     |ddd_sss_iii_ii1_1011|Add signed immediate
+|SB      |sss_bbo_ooo_ooo_1100|Store byte with offset
+|LB      |ddd_bbo_ooo_ooo_1101|Load byte with offset
 |B       |ccc_ooo_ooo_ooo_1110|Branch relative (COND)
 |BL      |ccc_ooo_ooo_ooo_1111|Branch relative and push return address to stack (COND)
 

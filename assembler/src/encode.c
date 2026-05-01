@@ -144,12 +144,12 @@ static bool encode_instructions(struct TokenList *tokenList,
 		}
 	} else if (!strcasecmp(token->str, "SB")) {
 		if (handle_loadstore(tokenList, symbolTable, current_token,
-			    &machine_code, 0x000A)) {
+			    &machine_code, false)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "LB")) {
 		if (handle_loadstore(tokenList, symbolTable, current_token,
-			    &machine_code, 0x000B)) {
+			    &machine_code, true)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "B")) {

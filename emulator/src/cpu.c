@@ -166,12 +166,12 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 		temp = (uint16_t)viM->gpr[reg_src] +
 			(uint16_t)viM->gpr[reg_mod] + (viM->csr[0] & 0x01);
 		sub_add = 1;
-	} else if (inst.load_imm.opcode == 0x09) { // LI
+	} else if (inst.load_imm.opcode == 0x0A) { // LI
 		temp = sign_extend(inst.load_imm.imm, 8);
-	} else if (inst.addi.opcode == 0x19) { // ADDI
+	} else if (inst.addi.opcode == 0x1B) { // ADDI
 		temp = (uint16_t)viM->gpr[reg_src] +
 			(uint16_t)(uint8_t)sign_extend(inst.addi.imm, 5);
-	} else if (inst.loadstore.opcode == 0xB) { // LB
+	} else if (inst.loadstore.opcode == 0xD) { // LB
 		temp = memory_read(viM,
 			(uint16_t)((viM->gpr[reg_base] |
 					   viM->gpr[reg_base + 1] << 8) +
@@ -305,7 +305,7 @@ bool decode_execute(struct VirtualMachine *viM, uint16_t instruction)
 		viM->csr[6] = temp;
 	} else if (inst.reg2.opcode == 0x0090) { // MOV csr, reg
 		viM->csr[reg_dst] = viM->gpr[reg_src];
-	} else if (inst.loadstore.opcode == 0xA) { // SB
+	} else if (inst.loadstore.opcode == 0xC) { // SB
 		temp = (viM->gpr[reg_base] | viM->gpr[reg_base + 1] << 8) +
 			sign_extend(inst.loadstore.offset, 7);
 		memory_write(viM, temp, viM->gpr[reg_dst]);

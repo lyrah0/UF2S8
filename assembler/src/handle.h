@@ -21,7 +21,7 @@ bool handle_li(const struct TokenList *tokenList,
 	uint16_t *machine_code);
 bool handle_loadstore(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
-	uint16_t *machine_code, uint16_t base);
+	uint16_t *machine_code, bool load);
 bool handle_branch_cond(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
 	uint16_t *machine_code, bool link, uint16_t current_address);
