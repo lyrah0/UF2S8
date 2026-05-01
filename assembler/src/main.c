@@ -39,6 +39,10 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	if (!ifilepath && optind < argc) { ifilepath = argv[optind++]; }
+
+	if (!ofilepath && optind < argc) { ofilepath = argv[optind]; }
+
 	if (!ifilepath) {
 		printf("ERROR: no input file provided\n");
 		return 1;

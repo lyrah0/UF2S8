@@ -477,7 +477,10 @@ bool handle_loadstore(const struct TokenList *tokenList,
 	return false;
 }
 
-bool handle_branch_cond_parse(const struct TokenList *tokenList, const struct SymbolTable *symbolTable, int *current_token, uint16_t current_address, uint8_t *base_reg, uint16_t *offset, bool *is_relative)
+bool handle_branch_cond_parse(const struct TokenList *tokenList,
+	const struct SymbolTable *symbolTable, int *current_token,
+	uint16_t current_address, uint8_t *base_reg, uint16_t *offset,
+	bool *is_relative)
 {
 	struct Token *token = &tokenList->tokens[*current_token];
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
@@ -491,7 +494,7 @@ bool handle_branch_cond_parse(const struct TokenList *tokenList, const struct Sy
 			return true;
 		}
 		*offset = (symbolTable->symbols[symbol_num].address -
-				 current_address - 2) >>
+				  current_address - 2) >>
 			1;
 		if ((int16_t)*offset > 511 || (int16_t)*offset < -512) {
 			printf("Warning: %d: Branch target too far away from "
@@ -568,7 +571,7 @@ bool handle_branch_cond(const struct TokenList *tokenList,
 		return true;
 	}
 	if (handle_branch_cond_parse(tokenList, symbolTable, current_token,
-			current_address, &base_reg, &offset, &is_relative)) {
+		    current_address, &base_reg, &offset, &is_relative)) {
 		return true;
 	}
 	if (is_relative) {

@@ -142,6 +142,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	if (!ifilepath && optind < argc) { ifilepath = argv[optind]; }
+
 	if (ifilepath) {
 		finput = fopen(ifilepath, "r");
 	} else {
