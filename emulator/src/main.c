@@ -72,8 +72,8 @@ static int cpu_thread_worker(void *data)
 			}
 			instruction_count++;
 		} else {
-			// Wait for 1000000/255 microseconds
-			usleep((unsigned int)(1000000 / 255) - 500);
+			// Wait for 1000000/255/10 microseconds
+			usleep((unsigned int)(1000000 / 255 / 10));
 		}
 		loop_count++;
 	}
