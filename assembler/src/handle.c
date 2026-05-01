@@ -541,6 +541,8 @@ bool handle_branch_cond_parse(const struct TokenList *tokenList, const struct Sy
 		printf("ERROR: %d: expected [a?] after comma.\n", token->line);
 		return true;
 	}
+
+	return false;
 }
 
 // Handles B, BL
