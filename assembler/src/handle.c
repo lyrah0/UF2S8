@@ -477,17 +477,79 @@ bool handle_loadstore(const struct TokenList *tokenList,
 	return false;
 }
 
+bool handle_branch_cond_parse(const struct TokenList *tokenList, const struct SymbolTable *symbolTable, int *current_token, uint16_t current_address, uint8_t *base_reg, uint16_t *offset, bool *is_relative)
+{
+	struct Token *token = &tokenList->tokens[*current_token];
+	struct Token *next1 = &tokenList->tokens[*current_token + 1];
+	struct Token *next2 = &tokenList->tokens[*current_token + 2];
+
+	if (token->type == TOKEN_SYMBOL) {
+		int symbol_num = handle_symbol(symbolTable, token->str);
+		if (symbol_num == -1) {
+			printf("ERROR: %d: unknown label %s.\n", token->line,
+				token->str);
+			return true;
+		}
+		*offset = (symbolTable->symbols[symbol_num].address -
+				 current_address - 2) >>
+			1;
+		if ((int16_t)*offset > 511 || (int16_t)*offset < -512) {
+			printf("Warning: %d: Branch target too far away from "
+			       "%s.\n",
+				token->line, token->str);
+		}
+		*is_relative = true;
+	} else if (token->type == TOKEN_NUMBER) {
+		if ((token->num_value > 511 || token->num_value < -512)) {
+			printf("Warning: %d: value %lld outside max "
+			       "offset, will wrap around.\n",
+				token->line, token->num_value);
+		}
+		if (token->num_value % 2) {
+			printf("Warning: %d: odd value %lld will be "
+			       "rounded.\n",
+				token->line, token->num_value);
+		}
+		*offset = token->num_value >> 1;
+		*is_relative = true;
+	} else if (token->type == TOKEN_BRACKET_OPEN) {
+		if (next1->type != TOKEN_REGISTER) {
+			printf("ERROR: %d: expected [a?] after comma.\n",
+				token->line);
+			return true;
+		}
+		if (next1->num_value < 10 || next1->num_value > 19) {
+			printf("ERROR: %d: only a0-3 are valid in %s.\n",
+				token->line, token->str);
+			return true;
+		}
+		if (next2->type != TOKEN_BRACKET_CLOSE) {
+			printf("ERROR: %d: expected ] after register.\n",
+				token->line);
+			return true;
+		}
+		*base_reg = next1->num_value - 10;
+		*current_token += 2;
+	} else if (token->type == TOKEN_REGISTER) {
+		if (token->num_value < 10 || token->num_value > 19) {
+			printf("ERROR: %d: only a0-3 are valid in %s.\n",
+				token->line, token->str);
+			return true;
+		}
+		*base_reg = token->num_value - 10;
+	} else {
+		printf("ERROR: %d: expected [a?] after comma.\n", token->line);
+		return true;
+	}
+}
+
 // Handles B, BL
 bool handle_branch_cond(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
 	uint16_t *machine_code, bool link, uint16_t current_address)
 {
-	struct Token *token = &tokenList->tokens[*current_token];
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
 	struct Token *next2 = &tokenList->tokens[*current_token + 2];
-	struct Token *next3 = &tokenList->tokens[*current_token + 3];
-	struct Token *next4 = &tokenList->tokens[*current_token + 4];
-	struct Token *next5 = &tokenList->tokens[*current_token + 5];
 	uint8_t base_reg = 0;
 	uint16_t offset = 0;
 	bool is_relative = false;
@@ -503,62 +565,8 @@ bool handle_branch_cond(const struct TokenList *tokenList,
 			next2->line);
 		return true;
 	}
-	if (next3->type == TOKEN_SYMBOL) {
-		int symbol_num = handle_symbol(symbolTable, next3->str);
-		if (symbol_num == -1) {
-			printf("ERROR: %d: unknown label %s.\n", next3->line,
-				next3->str);
-			return true;
-		}
-		offset = (symbolTable->symbols[symbol_num].address -
-				 current_address - 2) >>
-			1;
-		if ((int16_t)offset > 511 || (int16_t)offset < -512) {
-			printf("Warning: %d: Branch target too far away from "
-			       "%s.\n",
-				next3->line, next3->str);
-		}
-		is_relative = true;
-	} else if (next3->type == TOKEN_NUMBER) {
-		if ((next3->num_value > 511 || next3->num_value < -512) &&
-			next3->str[1] != 'x') {
-			printf("Warning: %d: value %lld outside max "
-			       "offset, will wrap around.\n",
-				next3->line, next3->num_value);
-		}
-		if (next3->num_value % 2) {
-			printf("Warning: %d: odd value %lld will be "
-			       "rounded.\n",
-				next3->line, next3->num_value);
-		}
-		offset = next3->num_value >> 1;
-		is_relative = true;
-	} else if (next3->type == TOKEN_BRACKET_OPEN) {
-		if (next4->type != TOKEN_REGISTER) {
-			printf("ERROR: %d: expected [a?] after comma.\n",
-				token->line);
-			return true;
-		}
-		if (next4->num_value < 10 || next4->num_value > 19) {
-			printf("ERROR: %d: only a0-3 are valid in %s.\n",
-				token->line, token->str);
-			return true;
-		}
-		if (next5->type != TOKEN_BRACKET_CLOSE) {
-			printf("ERROR: %d: expected ] after register.\n",
-				token->line);
-			return true;
-		}
-		base_reg = next4->num_value - 10;
-	} else if (next3->type == TOKEN_REGISTER) {
-		if (next3->num_value < 10 || next3->num_value > 19) {
-			printf("ERROR: %d: only a0-3 are valid in %s.\n",
-				token->line, token->str);
-			return true;
-		}
-		base_reg = next3->num_value - 10;
-	} else {
-		printf("ERROR: %d: expected [a?] after comma.\n", token->line);
+	if (handle_branch_cond_parse(tokenList, symbolTable, current_token,
+			current_address, &base_reg, &offset, &is_relative)) {
 		return true;
 	}
 	if (is_relative) {
