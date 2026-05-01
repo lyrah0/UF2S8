@@ -357,8 +357,8 @@ bool handle_add(const struct TokenList *tokenList,
 		    tokenList, symbolTable, current_token, &immediate)) {
 		return true;
 	}
-	*machine_code = 0x001B | next1->num_value << 13 |
-		next3->num_value << 10 | (immediate & 0x1F) << 5;
+	*machine_code = 0x000B | next1->num_value << 13 |
+		next3->num_value << 10 | (immediate & 0x3F) << 4;
 
 	return false;
 }

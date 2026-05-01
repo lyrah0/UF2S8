@@ -168,9 +168,9 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 		sub_add = 1;
 	} else if (inst.load_imm.opcode == 0x0A) { // LI
 		temp = sign_extend(inst.load_imm.imm, 8);
-	} else if (inst.addi.opcode == 0x1B) { // ADDI
+	} else if (inst.addi.opcode == 0xB) { // ADDI
 		temp = (uint16_t)viM->gpr[reg_src] +
-			(uint16_t)(uint8_t)sign_extend(inst.addi.imm, 5);
+			(uint16_t)(uint8_t)sign_extend(inst.addi.imm, 6);
 	} else if (inst.loadstore.opcode == 0xD) { // LB
 		temp = memory_read(viM,
 			(uint16_t)((viM->gpr[reg_base] |

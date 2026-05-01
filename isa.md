@@ -100,7 +100,7 @@ Conditions:
 |SRL     |ddd_sss_iii_101_0010|Shift Right Logical immediate
 |SRA     |ddd_sss_iii_110_0010|Shift Right Arithmetic immediate
 |LI      |ddd_iii_iii_ii0_1010|Load Immediate
-|ADD     |ddd_sss_iii_ii1_1011|Add signed immediate
+|ADD     |ddd_sss_iii_iii_1011|Add signed immediate
 |SB      |sss_bbo_ooo_ooo_1100|Store byte with offset
 |LB      |ddd_bbo_ooo_ooo_1101|Load byte with offset
 |B       |ccc_ooo_ooo_ooo_1110|Branch relative (COND)

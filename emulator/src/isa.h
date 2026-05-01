@@ -35,8 +35,8 @@ typedef union {
 	} load_imm;
 
 	struct {
-		uint16_t opcode : 5;
-		uint16_t imm : 5;
+		uint16_t opcode : 4;
+		uint16_t imm : 6;
 		uint16_t reg_src : 3;
 		uint16_t reg_dst : 3;
 	} addi;

@@ -103,7 +103,7 @@ void disassemble(uint16_t instruction)
 	uint8_t reg_src = inst.reg_src;
 	uint8_t reg_mod = inst.reg_mod;
 	uint8_t imm_li = sign_extend(inst.load_imm.imm, 8);
-	int8_t imm_add = (int8_t)sign_extend(inst.addi.imm, 5);
+	int8_t imm_add = (int8_t)sign_extend(inst.addi.imm, 6);
 
 	if (instruction == 0x0000) {
 		printf("NOP");
@@ -153,7 +153,7 @@ void disassemble(uint16_t instruction)
 		}
 	} else if (inst.load_imm.opcode == 0x0A) {
 		printf("LI r%hhu, 0x%02hhx", reg_dst, imm_li);
-	} else if (inst.addi.opcode == 0x1B) {
+	} else if (inst.addi.opcode == 0xB) {
 		printf("ADD r%hhu, r%hhu, %hhd", reg_dst, reg_src, imm_add);
 	} else if (disassemble_loadstore(instruction)) {
 	} else if (disassemble_branch(instruction)) {
