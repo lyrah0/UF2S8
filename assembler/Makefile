@@ -19,13 +19,13 @@ GCC_CFLAGS := -pipe -std=gnu23 -g0 -Ofast -march=native $(FLAGS_WARNINGS) $(FLAG
 
 CFLAGS := $(GCC_CFLAGS)
 
-LDFLAGS :=-fuse-ld=mold -Wl,-O2 -Wl,--as-needed -Wl,--hash-style=gnu -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections -Wl,-z,combreloc -no-pie -Wl,-z,pack-relative-relocs -Wl,--icf=all -Wl,--ignore-data-address-equality
+LDFLAGS :=-Wl,-O2 -Wl,--as-needed -Wl,--hash-style=gnu -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections -Wl,-z,combreloc -no-pie -Wl,-z,pack-relative-relocs -Wl,--icf=all -Wl,--ignore-data-address-equality
 CPPFLAGS :=-D_GLIBCXX_ASSERTIONS -D_FORTIFY_SOURCE=3 -DNDEBUG
 
 MISCFLAGS := -Isrc $(OPTFLAGS) $(shell pkg-config --cflags sdl3)
 LIBS := $(OPTLIBS) -lbsd -lbstring -lc $(shell pkg-config --libs sdl3)
 
-CC := ccache gcc
+CC := gcc
 AR := gcc-ar
 
 debug ?= 0
@@ -51,6 +51,10 @@ TARGET_EXEC := $(BIN_DIR)/$(TARGET)
 TARGET_LIB_STATIC := $(BIN_DIR)/lib$(TARGET).a
 TARGET_LIB_SHARED :=  $(BIN_DIR)/lib$(TARGET).so
 
+
+ifneq (, $(shell which mold))
+	LDFLAGS := -fuse-ld=mold $(LDFLAGS)
+endif
 
 ifeq ($(debug),1)
 	CFLAGS := $(filter-out -g0, $(CFLAGS)) $(FLAGS_DEBUG)
