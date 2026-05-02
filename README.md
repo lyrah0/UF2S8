@@ -18,6 +18,8 @@ UF2S8 is a custom 8-bit computer architecture designed from scratch, featuring a
 - **Interrupt system** — Timer, keyboard, software interrupts with a 128-entry vector table
 - **Standardised ABI** — Fastcall calling convention with defined register roles and stack frame layout
 
+![Graphics demo running in the UF2S8 emulator](graphics_demo.gif)
+
 ## Project Structure
 
 | Directory    | Description                                                  |
