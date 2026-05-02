@@ -117,6 +117,10 @@ UF2S8 is a load/store architecture with fixed-width 2-byte instructions and 8-bi
 |------------------------|----------------------------------------------|
 | `software/graphics_demo.s` | Sprite rendering and blitter operations   |
 
+## Use of AI tools
+
+I have used **Antigravity**, to help me with the development of this project. Antigravity has been used to generate code snippets, fix bugs, and refactor code, most of the code was written by a human, and edited by a human.
+
 ## License
 
 This project is licensed under the [GNU General Public License v3.0](LICENSE).
