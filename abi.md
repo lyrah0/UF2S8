@@ -36,11 +36,11 @@ The Frame Pointer (`a3`) points to the base of the current stack frame.
 
 |Address|Content                  |Access    |
 |-------|-------------------------|----------|
-|High   |Argument 3               |`[a3 + 6]`|
-|...    |Return Address High      |`[a3 + 5]`|
-|...    |Return Address Low       |`[a3 + 4]`|
-|...    |Saved `r7` (Old FP High) |`[a3 + 3]`|
-|...    |Saved `r6` (Old FP Low)  |`[a3 + 2]`|
+|High   |Argument 3               |`[a3 + 5]`|
+|...    |Return Address High      |`[a3 + 4]`|
+|...    |Return Address Low       |`[a3 + 3]`|
+|...    |Saved `r7` (Old FP High) |`[a3 + 2]`|
+|...    |Saved `r6` (Old FP Low)  |`[a3 + 1]`|
 |**FP** |Hardware SP High at entry|`r7`      |
 |**FP** |Hardware SP Low at entry |`r6`      |
 |...    |Local Variable 1         |`[a3 - 1]`|
