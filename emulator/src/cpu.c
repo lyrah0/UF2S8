@@ -139,8 +139,8 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 	} else if ((inst.raw & 0x3FFF) == 0x0380) { // POP a
 		uint16_t stackp = viM->csr[7] << 8 | viM->csr[6];
 		temp = memory_read(viM, ++stackp);
-		viM->gpr[reg_dst & 0x6] = memory_read(viM, ++stackp);
-		reg_dst = (reg_dst & 0x6) + 1;
+		viM->gpr[(reg_dst & 0x6) + 1] = memory_read(viM, ++stackp);
+		reg_dst = reg_dst & 0x6;
 		viM->csr[7] = stackp >> 8;
 		viM->csr[6] = stackp;
 	} else if (inst.reg2.opcode == 0x0110) { // CMP
