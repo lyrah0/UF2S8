@@ -52,13 +52,15 @@ enum {
 	MAX_BREAKPOINTS = 1 << 4,
 	VRAM_SIZE = 1 << 16,
 	EXT_MEMORY_W0_SIZE = 16 * 0x8000, // 16 banks of 32KB
-	EXT_MEMORY_W1_SIZE = 16 * 0x4000 // 16 banks of 16KB
+	EXT_MEMORY_W1_SIZE = 8 * 0x4000, // 8 banks of 16KB
+	EXT_MEMORY_W2_SIZE = 2 * 0x2000, // 2 banks of 8KB
 };
 
 struct VirtualMachine {
 	uint8_t memory[MAX_MEMORY];
 	uint8_t ext_memory_w0[EXT_MEMORY_W0_SIZE];
 	uint8_t ext_memory_w1[EXT_MEMORY_W1_SIZE];
+	uint8_t ext_memory_w2[EXT_MEMORY_W2_SIZE];
 	uint8_t bank_select;
 	uint8_t gpr[8];
 	uint8_t csr[8];

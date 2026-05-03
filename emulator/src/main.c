@@ -159,8 +159,10 @@ int main(int argc, char *argv[])
 	(void)fread(&viM.ext_memory_w0, EXT_MEMORY_W0_SIZE, 1, finput);
 	// Read Window 1 banks
 	(void)fread(&viM.ext_memory_w1, EXT_MEMORY_W1_SIZE, 1, finput);
-	// Read Fixed region into memory starting at 0xC000
-	(void)fread(&viM.memory[0xC000], 0x4000, 1, finput);
+	// Read Window 2 banks
+	(void)fread(&viM.ext_memory_w2, EXT_MEMORY_W2_SIZE, 1, finput);
+	// Read Fixed region into memory starting at 0xE000
+	(void)fread(&viM.memory[0xE000], 0x2000, 1, finput);
 
 	(void)fclose(finput);
 

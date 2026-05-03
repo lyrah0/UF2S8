@@ -10,6 +10,7 @@ struct EncodeState {
 	uint8_t *buffer;
 	int bank_w0;
 	int bank_w1;
+	int bank_w2;
 };
 
 static void write_to_buffer(
@@ -21,9 +22,12 @@ static void write_to_buffer(
 	} else if (addr < 0xC000) {
 		offset = EXT_MEMORY_W0_SIZE + (state->bank_w1 * 0x4000) +
 			(addr - 0x8000);
-	} else {
+	} else if (addr < 0xE000) {
 		offset = EXT_MEMORY_W0_SIZE + EXT_MEMORY_W1_SIZE +
 			(addr - 0xC000);
+	} else {
+		offset = EXT_MEMORY_W0_SIZE + EXT_MEMORY_W1_SIZE +
+			EXT_MEMORY_W2_SIZE + (addr - 0xE000);
 	}
 	if (offset + size > TOTAL_BINARY_SIZE) { return; }
 	memcpy(state->buffer + offset, data, size);
@@ -389,10 +393,28 @@ static bool encode_directive_bank(struct TokenList *tokenList,
 	}
 	switch (window) {
 	case 0:
-		state->bank_w0 = (int)token->num_value & 0x0F;
+		if ((int)token->num_value < 0 || (int)token->num_value >= 16) {
+			printf("ERROR: %d: bank value out of range\n",
+				token->line);
+			return true;
+		}
+		state->bank_w0 = (int)token->num_value;
 		break;
 	case 1:
-		state->bank_w1 = (int)token->num_value & 0x0F;
+		if ((int)token->num_value < 0 || (int)token->num_value >= 8) {
+			printf("ERROR: %d: bank value out of range\n",
+				token->line);
+			return true;
+		}
+		state->bank_w1 = (int)token->num_value;
+		break;
+	case 2:
+		if ((int)token->num_value < 0 || (int)token->num_value >= 2) {
+			printf("ERROR: %d: bank value out of range\n",
+				token->line);
+			return true;
+		}
+		state->bank_w2 = (int)token->num_value;
 		break;
 	default:
 		printf("ERROR: %d: invalid window\n", token->line);
@@ -467,6 +489,10 @@ static bool encode_directives(struct TokenList *tokenList,
 		return encode_directive_bank(
 			tokenList, state, current_token, 1);
 	}
+	if (strcasecmp(next->str, "bankw2") == 0) {
+		return encode_directive_bank(
+			tokenList, state, current_token, 2);
+	}
 
 	return false;
 }
@@ -483,6 +509,7 @@ bool encode_and_write(struct TokenList *tokenList,
 	}
 	state.bank_w0 = 0;
 	state.bank_w1 = 0;
+	state.bank_w2 = 0;
 
 	for (int current_token = 0; current_token < tokenList->count;
 		current_token++) {

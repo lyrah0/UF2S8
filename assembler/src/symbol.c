@@ -238,7 +238,8 @@ static bool symbol_directives(struct TokenList *tokenList,
 			tokenList, current_token, symbolTable);
 	}
 	if (strcasecmp(next->str, "bankw0") == 0 ||
-		strcasecmp(next->str, "bankw1") == 0) {
+		strcasecmp(next->str, "bankw1") == 0 ||
+		strcasecmp(next->str, "bankw2") == 0) {
 		*current_token += 2;
 		return false;
 	}

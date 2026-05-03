@@ -66,10 +66,19 @@ Memory Map:
 |Address Range|Size|Type|Description|
 |-------------|----|----|-----------|
 |0x0000-0x7FFF|32KB|Banked|Window 0 (Mapped from 512KB pool, 16 banks)|
-|0x8000-0xBFFF|16KB|Banked|Window 1 (Mapped from 256KB pool, 16 banks)|
-|0xC000-0xFE00|15.5KB|Fixed|Fixed RAM (Stack, Heap, etc.)|
+|0x8000-0xBFFF|16KB|Banked|Window 1 (Mapped from 128KB pool, 8 banks)|
+|0xC000-0xDFFF|8KB|Banked|Window 2 (Mapped from 16KB pool, 2 banks)|
+|0xE000-0xFE00|7.5KB|Fixed|Fixed RAM (Stack, Heap, etc.)|
 |0xFE00-0xFEFF|256B|Fixed|Hardware Registers|
 |0xFF00-0xFFFF|256B|Fixed|Vector table|
+
+BANK_SEL format:
+
+|Bit	|Description|
+|-------|-----------|
+|7	|Window 2 bank
+|6-4	|Window 1 bank
+|3-0	|Window 0 bank
 
 BLIT_FLAGS format:
 

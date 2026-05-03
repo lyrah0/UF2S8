@@ -62,9 +62,13 @@ void memory_write(struct VirtualMachine *viM, uint16_t address, uint8_t value)
 		viM->ext_memory_w0[((viM->bank_select & 0x0F) * 0x8000) +
 			address] = value;
 	} else if (address < 0xC000) {
-		viM->ext_memory_w1[(((viM->bank_select >> 4) & 0x0F) *
+		viM->ext_memory_w1[(((viM->bank_select >> 4) & 0x07) *
 					   0x4000) +
 			(address - 0x8000)] = value;
+	} else if (address < 0xE000) {
+		viM->ext_memory_w2[(((viM->bank_select >> 7) & 0x01) *
+					   0x2000) +
+			(address - 0xC000)] = value;
 	} else {
 		viM->memory[address] = value;
 	}
@@ -108,9 +112,14 @@ uint8_t memory_read(struct VirtualMachine *viM, uint16_t address)
 				address];
 	}
 	if (address < 0xC000) {
-		return viM->ext_memory_w1[(((viM->bank_select >> 4) & 0x0F) *
+		return viM->ext_memory_w1[(((viM->bank_select >> 4) & 0x07) *
 						  0x4000) +
 			(address - 0x8000)];
+	}
+	if (address < 0xE000) {
+		return viM->ext_memory_w2[(((viM->bank_select >> 7) & 0x01) *
+						  0x2000) +
+			(address - 0xC000)];
 	}
 
 	return viM->memory[address];
