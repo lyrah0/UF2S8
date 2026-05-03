@@ -193,13 +193,16 @@ print_char:
         SB      r0, [a2+OFS2_BLIT_HEIGHT_L]
 
         LB      r2, [a3+5]      ; src x
+        LI      r0, 0x0F
+        AND     r2, r2, r0
         LI      r3, 0
         LI      r0, 8
         LI      r1, 0
         BL      AL, multiply
 
         PUSH    a0
-        LB      r2, [a3+6]      ; src y
+        LB      r2, [a3+5]      ; src y
+        SRL     r2, r2, 4
         LI      r3, 0
         LI      r0, 0x00
         LI      r1, 0x04
@@ -260,105 +263,95 @@ multiply_end:
 
 print_chars:
         ; H
-        LI      r0, 7
-        LI      r1, 0
-        PUSH    a0
+        LI      r0, 0x48
+        PUSH    r0
         LI      r0, 0x00
         LI      r1, 0x00
         LI      r2, 0x00
         BL      AL, print_char
         WFI
-        POP     a0
-        ; E
-        LI      r0, 4
-        LI      r1, 0
-        PUSH    a0
+        POP     r0
+        ; e
+        LI      r0, 0x65
+        PUSH    r0
         LI      r0, 0x08
         LI      r1, 0x00
         LI      r2, 0x00
         BL      AL, print_char
         WFI
-        POP     a0
-        ; L
-        LI      r0, 11
-        LI      r1, 0
-        PUSH    a0
+        POP     r0
+        ; l
+        LI      r0, 0x6C
+        PUSH    r0
         LI      r0, 0x10
         LI      r1, 0x00
         LI      r2, 0x00
         BL      AL, print_char
         WFI
-        POP     a0
-        ; L
-        LI      r0, 11
-        LI      r1, 0
-        PUSH    a0
+        POP     r0
+        ; l
+        LI      r0, 0x6C
+        PUSH    r0
         LI      r0, 0x18
         LI      r1, 0x00
         LI      r2, 0x00
         BL      AL, print_char
         WFI
-        POP     a0
-        ; O
-        LI      r0, 14
-        LI      r1, 0
-        PUSH    a0
+        POP     r0
+        ; o
+        LI      r0, 0x6F
+        PUSH    r0
         LI      r0, 0x20
         LI      r1, 0x00
         LI      r2, 0x00
         BL      AL, print_char
         WFI
-        POP     a0
+        POP     r0
         ; W
-        LI      r0, 6
-        LI      r1, 1
-        PUSH    a0
+        LI      r0, 0x57
+        PUSH    r0
         LI      r0, 0x30
         LI      r1, 0x00
         LI      r2, 0x00
         BL      AL, print_char
         WFI
-        POP     a0
-        ; O
-        LI      r0, 14
-        LI      r1, 0
-        PUSH    a0
+        POP     r0
+        ; o
+        LI      r0, 0x6F
+        PUSH    r0
         LI      r0, 0x38
         LI      r1, 0x00
         LI      r2, 0x00
         BL      AL, print_char
         WFI
-        POP     a0
-        ; R
-        LI      r0, 1
-        LI      r1, 1
-        PUSH    a0
+        POP     r0
+        ; r
+        LI      r0, 0x72
+        PUSH    r0
         LI      r0, 0x40
         LI      r1, 0x00
         LI      r2, 0x00
         BL      AL, print_char
         WFI
-        POP     a0
-        ; L
-        LI      r0, 11
-        LI      r1, 0
-        PUSH    a0
+        POP     r0
+        ; l
+        LI      r0, 0x6C
+        PUSH    r0
         LI      r0, 0x48
         LI      r1, 0x00
         LI      r2, 0x00
         BL      AL, print_char
         WFI
-        POP     a0
-        ; D
-        LI      r0, 3
-        LI      r1, 0
-        PUSH    a0
+        POP     r0
+        ; d
+        LI      r0, 0x64
+        PUSH    r0
         LI      r0, 0x50
         LI      r1, 0x00
         LI      r2, 0x00
         BL      AL, print_char
         WFI
-        POP     a0
+        POP     r0
         RET
 
 
