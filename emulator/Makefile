@@ -22,7 +22,7 @@ LDFLAGS :=-Wl,-O2 -Wl,--as-needed -Wl,--hash-style=gnu -Wl,-z,relro -Wl,-z,now -
 CPPFLAGS :=-D_GLIBCXX_ASSERTIONS -D_FORTIFY_SOURCE=3 -DNDEBUG
 
 MISCFLAGS := -Isrc $(OPTFLAGS) $(shell pkg-config --cflags sdl3)
-LIBS := $(OPTLIBS) -lbsd -lbstring -lc $(shell pkg-config --libs sdl3)
+LIBS := $(OPTLIBS) -lc $(shell pkg-config --libs sdl3)
 
 CC := gcc
 AR := gcc-ar

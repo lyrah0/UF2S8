@@ -12,8 +12,7 @@ static void get_dir(const char *filepath, char *dir)
 	const char *last_slash = strrchr(filepath, '/');
 	if (last_slash) {
 		size_t len = last_slash - filepath + 1;
-		strncpy(dir, filepath, len);
-		dir[len] = '\0';
+		(void)snprintf(dir, len + 1, "%s", filepath);
 	} else {
 		dir[0] = '\0';
 	}
@@ -326,7 +325,8 @@ static bool process_include(struct TokenList *tokenList,
 		next2->type == TOKEN_STRING) {
 		char inc_path[MAX_LINE_LEN];
 		if (next2->str[0] == '/') {
-			strncpy(inc_path, next2->str, MAX_LINE_LEN);
+			(void)snprintf(
+				inc_path, MAX_LINE_LEN, "%s", next2->str);
 		} else {
 			(void)snprintf(inc_path, MAX_LINE_LEN, "%s%s", dir,
 				next2->str);

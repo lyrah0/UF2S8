@@ -26,7 +26,8 @@ static bool symbol_construct(struct SymbolTable *symbolTable,
 	}
 
 	symbolTable->symbols[symbolTable->count].address = current_address;
-	(void)strcpy(symbolTable->symbols[symbolTable->count].name, prev->str);
+	(void)snprintf(symbolTable->symbols[symbolTable->count].name,
+		MAX_TOKEN_LEN, "%s", prev->str);
 	symbolTable->count++;
 
 	return false;

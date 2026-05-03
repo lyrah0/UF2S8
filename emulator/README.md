@@ -37,8 +37,6 @@ make
 ### Dependencies
 
 - **SDL3**: Graphics and input handling.
-- **libbsd**: Used for certain utility functions.
-- **libbstring**: Better string handling for the debugger/CLI.
 
 ## Usage
 
