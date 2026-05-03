@@ -95,9 +95,9 @@ UF2S8 is a load/store architecture with fixed-width 2-byte instructions and 8-bi
 0x0000 ┬───────────────┐
        │  Window 0     │ 32 KB — Banked (16 × 32 KB from 512 KB pool)
 0x8000 ├───────────────┤
-       │  Window 1     │ 16 KB — Banked (16 × 16 KB from 128 KB pool)
+       │  Window 1     │ 16 KB — Banked (8 × 16 KB from 128 KB pool)
 0xC000 ├───────────────┤
-       │  Window 2     │ 8 KB — Banked (2 × 4 KB from 16 KB pool)
+       │  Window 2     │ 8 KB — Banked (2 × 8 KB from 16 KB pool)
 0xE000 ├───────────────┤
        │  Fixed RAM    │ 7.5 KB — Stack, heap, general use
 0xFE00 ├───────────────┤
