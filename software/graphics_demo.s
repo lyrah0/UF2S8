@@ -201,16 +201,16 @@ print_char:
         PUSH    a0
         LB      r2, [a3+6]      ; src y
         LI      r3, 0
-        LI      r0, 0x80
-        LI      r1, 0
+        LI      r0, 0x00
+        LI      r1, 0x04
         BL      AL, multiply
 
         POP     a1
         ADD     r0, r0, r2
         ADC     r1, r1, r3
 
-        LI      r2, >font_8x8
-        LI      r3, <font_8x8
+        LI      r3, >font_8x8
+        LI      r2, <font_8x8
         ADD     r0, r0, r2
         ADC     r1, r1, r3
         
@@ -234,8 +234,8 @@ multiply:
         MOV     r6, spl
         MOV     r7, sph
 
-        MOV     r0, r4
-        MOV     r1, r5
+        MOV     r4, r0
+        MOV     r5, r1
 
         LI      r0, 0
         LI      r1, 0
