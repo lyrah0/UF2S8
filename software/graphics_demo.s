@@ -352,6 +352,15 @@ print_chars:
         BL      AL, print_char
         WFI
         POP     r0
+        ; !
+        LI      r0, 0x21
+        PUSH    r0
+        LI      r0, 0x58
+        LI      r1, 0x00
+        LI      r2, 0x00
+        BL      AL, print_char
+        WFI
+        POP     r0
         RET
 
 
