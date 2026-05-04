@@ -42,7 +42,13 @@ demos_start:
         LI      r3, 0x01                ; skip wait
         BL      AL, draw_rects
         BL      AL, print_chars
+        LI      r7, >print_strings
+        LI      r6, <print_strings
+        BL      AL, a3
 idle_loop:
+        ; disable interrupts to halt execution
+        LI      r0, 0x00
+        MOV     flags, r0
         WFI
         B       AL, idle_loop
 
@@ -363,6 +369,62 @@ print_chars:
         POP     r0
         RET
 
+print_string:
+        PUSH    a3
+        MOV     r6, spl
+        MOV     r7, sph
+
+        PUSH    r2
+        PUSH    a0
+print_string_loop:
+        LB      r4, [a3+5]
+        LB      r5, [a3+6]
+        LB      r3, [a2]
+        B       ZS, print_string_end
+        ADD     r4, r4, 1
+        INCC    r5
+        SB      r4, [a3+5]
+        SB      r5, [a3+6]
+        PUSH    r3
+        LB      r2, [a3]
+        BL      AL, print_char
+        LB      r1, [a3-1]
+        LB      r0, [a3-2]
+        ADD     r0, r0, 8
+        INCC    r1
+        SB      r0, [a3-2]
+        SB      r1, [a3-1]
+        POP     r3
+        WFI
+        B       AL, print_string_loop
+print_string_end:
+        MOV     spl, r6
+        MOV     sph, r7
+        POP     a3
+        RET
+
+print_strings:
+        LI      r1, >bonjour
+        LI      r0, <bonjour
+        PUSH    a0
+        LI      r0, 0x00
+        LI      r1, 0x00
+        LI      r2, 0x08
+        BL      AL, print_string
+        POP     a0
+        WFI
+        LI      r1, >alinfini
+        LI      r0, <alinfini
+        PUSH    a0
+        LI      r0, 0x00
+        LI      r1, 0x00
+        LI      r2, 0x10
+        BL      AL, print_string
+        POP     a0
+        WFI
+        ;LI      r0, 0x00
+        ;SWI     r0
+        RET
 
 
 .bankw1 0
@@ -408,6 +470,11 @@ sprite3:
 .db 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF
 
 .include "8x8font.s"
+
+bonjour:
+.asciz "Bonjour les amis!"
+alinfini:
+.asciz "A l'infini!"
 
 .origin 0xC000
 int_handler:
