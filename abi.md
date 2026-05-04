@@ -43,8 +43,8 @@ The Frame Pointer (`a3`) points to the base of the current stack frame.
 |...    |Saved `r6` (Old FP Low)  |`[a3 + 1]`|
 |**FP** |Hardware SP High at entry|`r7`      |
 |**FP** |Hardware SP Low at entry |`r6`      |
-|...    |Local Variable 1         |`[a3 - 1]`|
-|Low    |Local Variable 2         |`[a3 - 2]`|
+|...    |Local Variable 1         |`[a3]`|
+|Low    |Local Variable 2         |`[a3 - 1]`|
 
 ## Function Lifecycle
 
