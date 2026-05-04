@@ -584,9 +584,9 @@ bool handle_branch_cond(const struct TokenList *tokenList,
 		*machine_code = base | next1->num_value << 13 | offset << 4;
 	} else {
 		if (link) {
-			base = 0x0070;
-		} else {
 			base = 0x0470;
+		} else {
+			base = 0x0070;
 		}
 		*machine_code = base | next1->num_value << 13 | base_reg << 11;
 	}
