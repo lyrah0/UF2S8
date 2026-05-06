@@ -52,7 +52,8 @@ The Frame Pointer (`a3`) points to the base of the current stack frame.
 ```unixassembly
 function_name:
     ; 1. Save old Frame Pointer
-    PUSH a3
+    PUSH r7
+    PUSH r6
     ; 2. Set new Frame Pointer to current SP
     MOV r6, spl
     MOV r7, sph
@@ -64,6 +65,7 @@ function_name:
     MOV spl, r6
     MOV sph, r7
     ; 2. Restore old Frame Pointer
-    POP a3
+    POP r6
+    POP r7
     RET
 ```

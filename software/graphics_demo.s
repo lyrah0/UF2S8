@@ -41,7 +41,9 @@ demos_start:
         BL      AL, wait
         LI      r3, 0x01                ; skip wait
         BL      AL, draw_rects
-        BL      AL, print_chars
+        LI      r7, >print_chars
+        LI      r6, <print_chars
+        BL      AL, a3
         LI      r7, >print_strings
         LI      r6, <print_strings
         BL      AL, a3
@@ -176,7 +178,8 @@ wait:
         RET
 
 print_char:
-        PUSH    a3
+        PUSH    r7
+        PUSH    r6
         MOV     r6, spl
         MOV     r7, sph
 
@@ -206,7 +209,8 @@ print_char:
         LI      r1, 0
         BL      AL, multiply
 
-        PUSH    a0
+        PUSH    r1
+        PUSH    r0
         LB      r2, [a3+5]      ; src y
         SRL     r2, r2, 4
         LI      r3, 0
@@ -214,7 +218,8 @@ print_char:
         LI      r1, 0x04
         BL      AL, multiply
 
-        POP     a1
+        POP     r2
+        POP     r3
         ADD     r0, r0, r2
         ADC     r1, r1, r3
 
@@ -232,14 +237,16 @@ print_char:
 print_char_end:
         MOV     spl, r6
         MOV     sph, r7
-        POP     a3
+        POP     r6
+        POP     r7
         RET
 
 
 
 
 multiply:
-        PUSH    a3
+        PUSH    r7
+        PUSH    r6
         MOV     r6, spl
         MOV     r7, sph
 
@@ -263,7 +270,8 @@ multiply_continue:
 multiply_end:
         MOV     spl, r6
         MOV     sph, r7
-        POP     a3
+        POP     r6
+        POP     r7
         RET
 
 
@@ -370,12 +378,14 @@ print_chars:
         RET
 
 print_string:
-        PUSH    a3
+        PUSH    r7
+        PUSH    r6
         MOV     r6, spl
         MOV     r7, sph
 
         PUSH    r2
-        PUSH    a0
+        PUSH    r0
+        PUSH    r1
 print_string_loop:
         LB      r4, [a3+5]
         LB      r5, [a3+6]
@@ -400,30 +410,33 @@ print_string_loop:
 print_string_end:
         MOV     spl, r6
         MOV     sph, r7
-        POP     a3
+        POP     r6
+        POP     r7
         RET
 
 print_strings:
         LI      r1, >bonjour
         LI      r0, <bonjour
-        PUSH    a0
+        PUSH    r1
+        PUSH    r0
         LI      r0, 0x00
         LI      r1, 0x00
         LI      r2, 0x08
         BL      AL, print_string
-        POP     a0
+        POP     r0
+        POP     r1
         WFI
         LI      r1, >alinfini
         LI      r0, <alinfini
-        PUSH    a0
+        PUSH    r1
+        PUSH    r0
         LI      r0, 0x00
         LI      r1, 0x00
         LI      r2, 0x10
         BL      AL, print_string
-        POP     a0
+        POP     r0
+        POP     r1
         WFI
-        ;LI      r0, 0x00
-        ;SWI     r0
         RET
 
 

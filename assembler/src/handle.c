@@ -259,23 +259,15 @@ bool handle_pp(const struct TokenList *tokenList, int *current_token,
 			next1->line);
 		return true;
 	}
-	if (next1->num_value > 19) {
+	if (next1->num_value > 9) {
 		printf("ERROR: %d: invalid register '%s'.\n", next1->line,
 			next1->str);
 		return true;
 	}
-	if (next1->num_value > 9) {
-		if (isPush) {
-			*machine_code = 0x2380 | (next1->num_value - 10) << 14;
-		} else {
-			*machine_code = 0x0380 | (next1->num_value - 10) << 14;
-		}
+	if (isPush) {
+		*machine_code = 0x1C00 | next1->num_value << 13;
 	} else {
-		if (isPush) {
-			*machine_code = 0x1C00 | next1->num_value << 13;
-		} else {
-			*machine_code = 0x1800 | next1->num_value << 13;
-		}
+		*machine_code = 0x1800 | next1->num_value << 13;
 	}
 	*current_token += 1;
 	return false;
