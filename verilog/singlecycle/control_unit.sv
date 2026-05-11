@@ -41,5 +41,29 @@ module control_unit(
 	output logic [1:0]	o_pc_sel
 );
 
+	// instruction stage flip flops
+	logic		r_stage0;
+	logic		r_stage1;
+	logic		r_stage2;
+	logic		r_stage3;
+
+
+	always_comb begin
+		
+	end
+
+	always_ff @(posedge i_clk or negedge i_rst_n) begin
+		if (!i_rst_n) begin
+			r_stage0 <= 1'b1;
+			r_stage1 <= 1'b0;
+			r_stage2 <= 1'b0;
+			r_stage3 <= 1'b0;
+		end else begin
+			r_stage0 <= 1'b1;
+			r_stage1 <= r_stage0;
+			r_stage2 <= r_stage1;
+			r_stage3 <= r_stage2;
+		end
+	end
 
 endmodule
