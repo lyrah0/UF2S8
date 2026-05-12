@@ -11,9 +11,31 @@ module cpu (
 	output logic		o_mem_we
 );
 
-	// Registers
-	logic [14:0]	r_pc;      // Program Counter
+	// PC
+	logic [14:0]	r_pc;
+	logic		w_pc_we;
 
+	// instruction decode
+	logic [3:0]	w_id_op1;
+	logic [2:0]	w_id_op2;
+	logic [2:0]	w_id_rsel1;
+	logic [2:0]	w_id_rsel2;
+	logic [1:0]	w_id_asel;
+	logic [2:0]	w_id_wsel;
+	logic		w_id_opi;
+	logic		w_id_opbr;
+
+	inst_decode u_inst_decode (
+		.i_instr(i_instr),
+		.o_op1(w_id_op1),
+		.o_op2(w_id_op2),
+		.o_rsel1(w_id_rsel1),
+		.o_rsel2(w_id_rsel2),
+		.o_asel(w_id_asel),
+		.o_wsel(w_id_wsel),
+		.o_opi(w_id_opi),
+		.o_opbr(w_id_opbr)
+	);
 	// ALU
 	logic [7:0]	w_alu_a;
 	logic [7:0]	w_alu_b;
@@ -32,14 +54,13 @@ module cpu (
 	);
 
 	// Register File
-	logic [7:0] w_rf_rdata1;
-	logic [7:0] w_rf_rdata2;
-	logic [15:0] w_rf_adata;
-	logic [2:0] w_rf_rsel1;
-	logic [2:0] w_rf_rsel2;
-	logic [2:0] w_rf_wsel;
-	logic [7:0] w_rf_wdata;
-	logic       w_rf_we;
+	logic [7:0]	w_rf_rdata1;
+	logic [7:0]	w_rf_rdata2;
+	logic [15:0]	w_rf_adata;
+	logic [2:0]	w_rf_rsel1;
+	logic [2:0]	w_rf_rsel2;
+	logic [7:0]	w_rf_wdata;
+	logic		w_rf_we;
 
 	register_file u_register_file (
 		.i_clk(i_clk),
@@ -47,7 +68,7 @@ module cpu (
 		.i_we(w_rf_we),
 		.i_rsel1(w_rf_rsel1),
 		.i_rsel2(w_rf_rsel2),
-		.i_wsel(w_rf_wsel),
+		.i_wsel(w_id_wsel),
 		.i_wdata(w_rf_wdata),
 		.o_rdata1(w_rf_rdata1),
 		.o_rdata2(w_rf_rdata2),
@@ -55,14 +76,15 @@ module cpu (
 	);
 
 	// CSR file
-	logic [7:0] w_cf_rdata;
-	logic [7:0] w_cf_wdata;
-	logic       w_cf_we;
-	logic [2:0] w_cf_rsel;
-	logic [2:0] w_cf_wsel;
-	logic       w_cf_wsp;
-	logic [15:0] w_cf_i_sp;
-	logic [15:0] w_cf_o_sp;
+	logic [7:0] 	w_cf_rdata;
+	logic [7:0] 	w_cf_wdata;
+	logic       	w_cf_we;
+	logic [2:0] 	w_cf_rsel;
+	logic [2:0] 	w_cf_wsel;
+	logic       	w_cf_wsp;
+	logic [15:0] 	w_cf_i_sp;
+	logic [15:0] 	w_cf_o_sp;
+	logic [7:0]  	w_cf_flags;
 
 	csr_file u_csr_file (
 		.i_clk(i_clk),
@@ -74,12 +96,13 @@ module cpu (
 		.i_sp(w_cf_i_sp),
 		.i_wsp(w_cf_wsp),
 		.o_rdata(w_cf_rdata),
+		.o_flags(w_cf_flags),
 		.o_sp(w_cf_o_sp)
 	);
 
 	// Immediate Generator
-	logic [2:0] w_ig_sel;
-	logic [15:0] w_ig_imm;
+	logic [2:0]	w_ig_sel;
+	logic [15:0]	w_ig_imm;
 
 	immediate_gen u_immediate_gen (
 		.i_instr(i_instr),
@@ -88,31 +111,31 @@ module cpu (
 	);
 	
 	// Address Generation Unit
-	logic [2:0] w_agu_sel;
-	logic [15:0] w_agu_addr;
+	logic [2:0]	w_agu_sel;
+	logic [15:0]	w_agu_addr;
 
 	agu u_agu (
 		.i_sel(w_agu_sel),
 		.i_offset(w_ig_imm),
 		.i_baseaddr(w_rf_adata),
 		.i_pc({r_pc,1'b0}),
-		.i_sp(w_sp_o_sp),
+		.i_sp(w_sp_sp),
 		.o_addr(w_agu_addr)
 	);
 	
 	// Stack Pointer Selector
-	logic [1:0] w_sp_sel;
-	logic [15:0] w_sp_o_sp;
+	logic [1:0]	w_sp_sel;
+	logic [15:0]	w_sp_sp;
 
 	spsel u_spsel (
 		.i_sel(w_sp_sel),
 		.i_sp(w_cf_o_sp),
-		.o_sp(w_sp_o_sp)
+		.o_sp(w_sp_sp)
 	);
 	
 	// PC Selector
-	logic [1:0] w_pc_sel;
-	logic [15:0] w_pc_pc;
+	logic [1:0]	w_pc_sel;
+	logic [15:0]	w_pc_pc;
 
 	pcsel u_pcsel (
 		.i_sel(w_pc_sel),
@@ -121,5 +144,91 @@ module cpu (
 		.i_data(i_mem_rdata),
 		.o_pc(w_pc_pc)
 	);
+
+	// control unit
+	logic		w_alu_b_sel;
+	logic [1:0]	w_rf_wdata_sel;
+
+	control_unit u_control_unit (
+		.i_clk(i_clk),
+		.i_rst_n(i_rst_n),
+		.i_instr(i_instr),
+		.i_op1(w_id_op1),
+		.i_op2(w_id_op2),
+		.i_rsel1(w_id_rsel1),
+		.i_rsel2(w_id_rsel2),
+		.i_asel(w_id_asel),
+		.i_wsel(w_id_wsel),
+		.i_opi(w_id_opi),
+		.i_opbr(w_id_opbr),
+		.o_alu_op(w_alu_op),
+		.o_rf_we(w_rf_we),
+		.o_rf_rsel1(w_rf_rsel1),
+		.o_rf_rsel2(w_rf_rsel2),
+		.o_cf_we(w_cf_we),
+		.o_cf_rsel(w_cf_rsel),
+		.o_cf_wsel(w_cf_wsel),
+		.o_cf_wsp(w_cf_wsp),
+		.o_ig_sel(w_ig_sel),
+		.o_agu_sel(w_agu_sel),
+		.o_sp_sel(w_sp_sel),
+		.o_pc_sel(w_pc_sel),
+		.o_pc_we(w_pc_we),
+		.o_alu_b_sel(w_alu_b_sel),
+		.o_rf_wdata_sel(w_rf_wdata_sel),
+		.o_mem_wdata_sel(w_mem_wdata_sel),
+		.o_mem_we(o_mem_we),
+		.o_cf_wdata_sel(w_cf_wdata_sel)
+	);
+
+	// misc wires
+	logic [1:0]	w_mem_wdata_sel;
+	logic		w_cf_i_sp_sel;
+	logic		w_cf_wdata_sel;
+
+	always_comb begin
+		w_alu_a = w_rf_rdata1;
+		w_alu_c = w_cf_rdata[0];
+		o_mem_addr = w_agu_addr;
+
+		case (w_alu_b_sel)
+			1'b0: w_alu_b = w_ig_imm[7:0];
+			1'b1: w_alu_b = w_rf_rdata2;
+		endcase
+
+		case (w_rf_wdata_sel)
+			2'b00: w_rf_wdata = w_alu_result;
+			2'b01: w_rf_wdata = w_cf_rdata;
+			2'b10: w_rf_wdata = i_mem_rdata;
+			default: w_rf_wdata = 8'bZ;
+		endcase
+		
+		case (w_mem_wdata_sel)
+			2'h0: o_mem_wdata = w_rf_rdata1;
+			2'h1: o_mem_wdata = w_cf_rdata;
+			2'h2: o_mem_wdata = {r_pc[6:0],1'b0};
+			2'h3: o_mem_wdata = r_pc[14:7];
+		endcase
+
+		case (w_cf_i_sp_sel)
+			1'b0: w_cf_i_sp = w_sp_sp;
+			1'b1: w_cf_i_sp = w_cf_o_sp;
+		endcase
+
+		case (w_cf_wdata_sel)
+			1'h0: w_cf_wdata = w_rf_rdata1;
+			1'h1: w_cf_wdata = w_cf_flags;
+		endcase
+	end
+
+	always_ff @(posedge i_clk or negedge i_rst_n) begin
+		if (!i_rst_n) begin
+			r_pc <= 15'b0;
+		end else begin
+			if (w_pc_we) begin
+				r_pc <= w_pc_pc[15:1];
+			end
+		end
+	end
 	
 endmodule
