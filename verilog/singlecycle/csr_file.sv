@@ -28,12 +28,12 @@ module csr_file(
 		o_sp = {r_reg[7],r_reg[6]};
 	end
 
-	always_ff @(posedge i_clk) begin
+	always_ff @(posedge i_clk or negedge i_rst_n) begin
 		if (!i_rst_n) begin
-			for (byte i = 0; i < 8; i++) r_reg[i[2:0]] <= 8'b0;
+			r_reg[0] <= 8'b0;
 		end
-		if (i_wsel < 6 && i_wsel > 0) begin
-		end else if (i_we) begin
+
+		if (i_we) begin
 			r_reg[i_wsel] <= i_wdata;
 		end
 		if (i_wsp) begin

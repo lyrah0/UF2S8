@@ -1,6 +1,5 @@
 module register_file(
 	input  logic        i_clk,
-	input  logic        i_rst_n,
 	input  logic        i_we,
 	input  logic [2:0]  i_rsel1,
 	input  logic [2:0]  i_rsel2,
@@ -19,9 +18,7 @@ module register_file(
 			   r_gpr[{i_rsel2[2:1],1'b0}]};
 
 	always_ff @(posedge i_clk) begin
-		if (!i_rst_n) begin
-			for (byte i = 0; i < 8; i++) r_gpr[i[2:0]] <= 8'b0;
-		end else if (i_we) begin
+		if (i_we) begin
 			r_gpr[i_wsel] <= i_wdata;
 		end
 	end
