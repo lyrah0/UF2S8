@@ -189,6 +189,8 @@ module cpu (
 	always_comb begin
 		w_alu_a = w_rf_rdata1;
 		w_alu_c = w_cf_rdata[0];
+
+		o_pc = {r_pc,1'b0};
 		o_mem_addr = w_agu_addr;
 
 		case (w_alu_b_sel)
@@ -217,7 +219,7 @@ module cpu (
 
 		case (w_cf_wdata_sel)
 			1'h0: w_cf_wdata = w_rf_rdata1;
-			1'h1: w_cf_wdata = w_cf_flags;
+			1'h1: w_cf_wdata = {w_cf_flags[7:4],w_alu_flags};
 		endcase
 	end
 
