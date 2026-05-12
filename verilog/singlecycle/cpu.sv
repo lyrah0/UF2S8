@@ -39,7 +39,6 @@ module cpu (
 	// ALU
 	logic [7:0]	w_alu_a;
 	logic [7:0]	w_alu_b;
-	logic		w_alu_c;
 	logic [3:0]	w_alu_op;
 	logic [7:0]	w_alu_result;
 	logic [3:0]	w_alu_flags;
@@ -47,7 +46,7 @@ module cpu (
 	alu u_alu (
 		.i_a(w_alu_a),
 		.i_b(w_alu_b),
-		.i_c(w_alu_c),
+		.i_c(w_cf_flags[0]),
 		.i_op(w_alu_op),
 		.o_result(w_alu_result),
 		.o_flags(w_alu_flags)
@@ -191,7 +190,6 @@ module cpu (
 
 	always_comb begin
 		w_alu_a = w_rf_rdata1;
-		w_alu_c = w_cf_rdata[0];
 
 		o_pc = {r_pc,1'b0};
 		o_mem_addr = w_agu_addr;
