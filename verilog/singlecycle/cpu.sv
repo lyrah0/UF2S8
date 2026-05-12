@@ -186,7 +186,9 @@ module cpu (
 	// misc wires
 	logic [1:0]	w_mem_wdata_sel;
 	logic		w_cf_i_sp_sel;
-	logic		w_cf_wdata_sel;
+	logic [1:0]	w_cf_wdata_sel;
+
+
 
 	always_comb begin
 		w_alu_a = w_rf_rdata1;
@@ -200,9 +202,9 @@ module cpu (
 		endcase
 
 		case (w_rf_wdata_sel)
-			2'b00: w_rf_wdata = w_alu_result;
-			2'b01: w_rf_wdata = w_cf_rdata;
-			2'b10: w_rf_wdata = i_mem_rdata;
+			2'h0: w_rf_wdata = w_alu_result;
+			2'h1: w_rf_wdata = w_cf_rdata;
+			2'h2: w_rf_wdata = i_mem_rdata;
 			default: w_rf_wdata = 8'bZ;
 		endcase
 		
@@ -219,8 +221,14 @@ module cpu (
 		endcase
 
 		case (w_cf_wdata_sel)
-			1'h0: w_cf_wdata = w_rf_rdata1;
-			1'h1: w_cf_wdata = {w_cf_flags[7:4],w_alu_flags};
+			2'h0: w_cf_wdata = w_rf_rdata1;
+			2'h1: w_cf_wdata = {w_cf_flags[7:4],w_alu_flags};
+			2'h2: w_cf_wdata = {w_cf_flags[7:4],
+				1'b0,
+				w_rf_wdata[7],
+				w_rf_wdata == 0,
+				1'b0};
+			default: w_cf_wdata = 8'bZ;
 		endcase
 	end
 

@@ -47,7 +47,7 @@ module control_unit(
 	output logic [1:0]	o_rf_wdata_sel,
 	output logic [1:0]	o_mem_wdata_sel,
 	output logic		o_mem_we,
-	output logic		o_cf_wdata_sel
+	output logic [1:0]	o_cf_wdata_sel
 );
 
 	// instruction stage flip flops
@@ -67,18 +67,60 @@ module control_unit(
 		o_agu_sel = 3'b0;
 		o_sp_sel = 2'b0;
 		o_pc_sel = 2'b0;
+		o_pc_rwe = 1'b0;
 		o_pc_we = 1'b1;
+		o_alu_b_sel = 1'b0;
+		o_rf_wdata_sel = 2'b00;
+		o_mem_wdata_sel = 2'b00;
+		o_mem_we = 1'b0;
+		o_cf_wdata_sel = 2'h0;
 		casez (i_instr)
 			16'b000_000_000_000_0000: ; // NOP
 			16'b001_000_000_000_0000: begin // RET
 				o_sp_sel = 2'h1;
 
 				if (r_stage == 0) begin
-					o_pc_sel = 2'h2;
+					o_pc_rwe = 1'b1;
 				end
 				if (r_stage == 1) begin
 					o_pc_sel = 2'h3;
 				end
+			end
+			16'b???_010_000_000_0000: begin // INCC
+				o_alu_op = 4'h1;
+				o_rf_we = 1'b1;
+				o_rf_rsel1 = i_wsel;
+				o_cf_we = 1'b1;
+				o_cf_wsel = 3'h0;
+				o_ig_sel = 3'h7;
+				o_alu_b_sel = 1'b1;
+				o_cf_wdata_sel = 2'h1;
+			end
+			16'b???_011_000_000_0000: begin // DECB
+				o_alu_op = 4'h3;
+				o_rf_we = 1'b1;
+				o_rf_rsel1 = i_wsel;
+				o_cf_we = 1'b1;
+				o_cf_wsel = 3'h0;
+				o_ig_sel = 3'h7;
+				o_alu_b_sel = 1'b1;
+				o_cf_wdata_sel = 2'b1;
+			end
+			16'b???_110_000_000_0000: begin // POP
+				o_rf_we = 1'b1;
+				o_cf_wsp = 1'b1;
+				o_cf_wdata_sel = 2'h2;
+				o_sp_sel = 2'h1; 
+				o_agu_sel = 3'h4;
+				o_rf_wdata_sel = 2'h2;
+			end
+			16'b???_111_000_000_0000: begin // PUSH
+				o_rf_rsel1 = i_wsel;
+				o_cf_wsp = 1'b1;
+				o_cf_wdata_sel = 2'h2;
+				o_sp_sel = 2'h1; 
+				o_agu_sel = 3'h3;
+				o_mem_we = 1'b1;
 			end
 			default: begin // no instruction
 			end
