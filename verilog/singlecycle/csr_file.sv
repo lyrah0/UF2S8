@@ -8,13 +8,25 @@ module csr_file(
 	input logic [15:0]      i_sp,
 	input logic             i_wsp,
 	output logic [7:0]      o_rdata,
+	output logic [7:0]      o_flags,
 	output logic [15:0]     o_sp
 );
 
 	logic [7:0] r_reg [7:0];
 
-	assign o_rdata = r_reg[i_rsel];
-	assign o_sp = {r_reg[7],r_reg[6]};
+
+	always_comb begin
+		r_reg[0][6:4] = '0;
+		r_reg[1] = '0;
+		r_reg[2] = '0;
+		r_reg[3] = '0;
+		r_reg[4] = '0;
+		r_reg[5] = '0;
+
+		o_rdata = r_reg[i_rsel];
+		o_flags = r_reg[0];
+		o_sp = {r_reg[7],r_reg[6]};
+	end
 
 	always_ff @(posedge i_clk) begin
 		if (!i_rst_n) begin
