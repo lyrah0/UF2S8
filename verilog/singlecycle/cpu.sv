@@ -64,7 +64,6 @@ module cpu (
 
 	register_file u_register_file (
 		.i_clk(i_clk),
-		.i_rst_n(i_rst_n),
 		.i_we(w_rf_we),
 		.i_rsel1(w_rf_rsel1),
 		.i_rsel2(w_rf_rsel2),
@@ -135,13 +134,16 @@ module cpu (
 	
 	// PC Selector
 	logic [1:0]	w_pc_sel;
+	logic		w_pc_rwe;
 	logic [15:0]	w_pc_pc;
 
 	pcsel u_pcsel (
+		.i_clk(i_clk),
 		.i_sel(w_pc_sel),
 		.i_pc(r_pc),
 		.i_addr(w_agu_addr),
 		.i_data(i_mem_rdata),
+		.i_we(w_pc_rwe),
 		.o_pc(w_pc_pc)
 	);
 
@@ -173,6 +175,7 @@ module cpu (
 		.o_agu_sel(w_agu_sel),
 		.o_sp_sel(w_sp_sel),
 		.o_pc_sel(w_pc_sel),
+		.o_pc_rwe(w_pc_rwe),
 		.o_pc_we(w_pc_we),
 		.o_alu_b_sel(w_alu_b_sel),
 		.o_rf_wdata_sel(w_rf_wdata_sel),

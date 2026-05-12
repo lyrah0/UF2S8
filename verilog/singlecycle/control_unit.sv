@@ -39,6 +39,7 @@ module control_unit(
 	
 	// PC selector
 	output logic [1:0]	o_pc_sel,
+	output logic		o_pc_rwe,
 
 	// top level signals
 	output logic		o_pc_we,
@@ -50,10 +51,7 @@ module control_unit(
 );
 
 	// instruction stage flip flops
-	logic		r_stage0;
-	logic		r_stage1;
-	logic		r_stage2;
-	logic		r_stage3;
+	logic [1:0]	r_stage;
 
 
 	always_comb begin
@@ -73,21 +71,34 @@ module control_unit(
 		casez (i_instr)
 			16'b000_000_000_000_0000: ; // NOP
 			16'b001_000_000_000_0000: begin // RET
+				o_sp_sel = 2'h1;
 
+				if (r_stage == 0) begin
+					o_pc_sel = 2'h2;
+				end
+				if (r_stage == 1) begin
+					o_pc_sel = 2'h3;
+				end
 			end
 			default: begin // no instruction
-
 			end
 		endcase
 	end
 
 	always_ff @(posedge i_clk or negedge i_rst_n) begin
 		if (!i_rst_n) begin
-			r_stage0 <= 1'b1;
-			r_stage1 <= 1'b0;
-			r_stage2 <= 1'b0;
-			r_stage3 <= 1'b0;
+			r_stage <= 2'b00;
 		end
+
+		casez (i_instr)
+			16'b001_000_000_000_0000: if (r_stage == 0) begin
+				r_stage <= r_stage + 1;
+			end
+			default: begin
+				r_stage <= 2'b00;
+			end		
+		endcase
+
 	end
 
 endmodule
