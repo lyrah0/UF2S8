@@ -11,11 +11,9 @@ module cpu (
 	output logic		o_mem_we
 );
 
-	// PC
+	// Signals
 	logic [14:0]	r_pc;
 	logic		w_pc_we;
-
-	// instruction decode
 	logic [3:0]	w_id_op1;
 	logic [2:0]	w_id_op2;
 	logic [2:0]	w_id_rsel1;
@@ -24,6 +22,40 @@ module cpu (
 	logic [2:0]	w_id_wsel;
 	logic		w_id_opi;
 	logic		w_id_opbr;
+	logic [7:0]	w_alu_a;
+	logic [7:0]	w_alu_b;
+	logic [3:0]	w_alu_op;
+	logic [7:0]	w_alu_result;
+	logic [3:0]	w_alu_flags;
+	logic [7:0]	w_rf_rdata1;
+	logic [7:0]	w_rf_rdata2;
+	logic [15:0]	w_rf_adata;
+	logic [2:0]	w_rf_rsel1;
+	logic [2:0]	w_rf_rsel2;
+	logic [7:0]	w_rf_wdata;
+	logic		w_rf_we;
+	logic [7:0] 	w_cf_rdata;
+	logic [7:0] 	w_cf_wdata;
+	logic       	w_cf_we;
+	logic [2:0] 	w_cf_rsel;
+	logic [2:0] 	w_cf_wsel;
+	logic       	w_cf_wsp;
+	logic [15:0] 	w_cf_i_sp;
+	logic [15:0] 	w_cf_o_sp;
+	logic [7:0]  	w_cf_flags;
+	logic [2:0]	w_ig_sel;
+	logic [15:0]	w_ig_imm;
+	logic [2:0]	w_agu_sel;
+	logic [15:0]	w_agu_addr;
+	logic [1:0]	w_sp_sel;
+	logic [15:0]	w_sp_sp;
+	logic [1:0]	w_pc_sel;
+	logic		w_pc_rwe;
+	logic [15:0]	w_pc_pc;
+	logic		w_alu_b_sel;
+	logic [1:0]	w_rf_wdata_sel;
+	logic [1:0]	w_mem_wdata_sel;
+	logic [1:0]	w_cf_wdata_sel;
 
 	inst_decode u_inst_decode (
 		.i_instr(i_instr),
@@ -36,12 +68,6 @@ module cpu (
 		.o_opi(w_id_opi),
 		.o_opbr(w_id_opbr)
 	);
-	// ALU
-	logic [7:0]	w_alu_a;
-	logic [7:0]	w_alu_b;
-	logic [3:0]	w_alu_op;
-	logic [7:0]	w_alu_result;
-	logic [3:0]	w_alu_flags;
 
 	alu u_alu (
 		.i_a(w_alu_a),
@@ -51,15 +77,6 @@ module cpu (
 		.o_result(w_alu_result),
 		.o_flags(w_alu_flags)
 	);
-
-	// Register File
-	logic [7:0]	w_rf_rdata1;
-	logic [7:0]	w_rf_rdata2;
-	logic [15:0]	w_rf_adata;
-	logic [2:0]	w_rf_rsel1;
-	logic [2:0]	w_rf_rsel2;
-	logic [7:0]	w_rf_wdata;
-	logic		w_rf_we;
 
 	register_file u_register_file (
 		.i_clk(i_clk),
@@ -72,17 +89,6 @@ module cpu (
 		.o_rdata2(w_rf_rdata2),
 		.o_adata(w_rf_adata)
 	);
-
-	// CSR file
-	logic [7:0] 	w_cf_rdata;
-	logic [7:0] 	w_cf_wdata;
-	logic       	w_cf_we;
-	logic [2:0] 	w_cf_rsel;
-	logic [2:0] 	w_cf_wsel;
-	logic       	w_cf_wsp;
-	logic [15:0] 	w_cf_i_sp;
-	logic [15:0] 	w_cf_o_sp;
-	logic [7:0]  	w_cf_flags;
 
 	csr_file u_csr_file (
 		.i_clk(i_clk),
@@ -98,20 +104,12 @@ module cpu (
 		.o_sp(w_cf_o_sp)
 	);
 
-	// Immediate Generator
-	logic [2:0]	w_ig_sel;
-	logic [15:0]	w_ig_imm;
-
 	immediate_gen u_immediate_gen (
 		.i_instr(i_instr),
 		.i_sel(w_ig_sel),
 		.o_immediate(w_ig_imm)
 	);
 	
-	// Address Generation Unit
-	logic [2:0]	w_agu_sel;
-	logic [15:0]	w_agu_addr;
-
 	agu u_agu (
 		.i_sel(w_agu_sel),
 		.i_offset(w_ig_imm),
@@ -121,21 +119,12 @@ module cpu (
 		.o_addr(w_agu_addr)
 	);
 	
-	// Stack Pointer Selector
-	logic [1:0]	w_sp_sel;
-	logic [15:0]	w_sp_sp;
-
 	spsel u_spsel (
 		.i_sel(w_sp_sel),
 		.i_sp(w_cf_o_sp),
 		.o_sp(w_sp_sp)
 	);
 	
-	// PC Selector
-	logic [1:0]	w_pc_sel;
-	logic		w_pc_rwe;
-	logic [15:0]	w_pc_pc;
-
 	pcsel u_pcsel (
 		.i_clk(i_clk),
 		.i_sel(w_pc_sel),
@@ -146,10 +135,6 @@ module cpu (
 		.i_we(w_pc_rwe),
 		.o_pc(w_pc_pc)
 	);
-
-	// control unit
-	logic		w_alu_b_sel;
-	logic [1:0]	w_rf_wdata_sel;
 
 	control_unit u_control_unit (
 		.i_clk(i_clk),
@@ -185,9 +170,6 @@ module cpu (
 		.o_cf_wdata_sel(w_cf_wdata_sel)
 	);
 
-	// misc wires
-	logic [1:0]	w_mem_wdata_sel;
-	logic [1:0]	w_cf_wdata_sel;
 
 
 
