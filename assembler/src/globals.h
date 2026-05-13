@@ -2,7 +2,7 @@
 #include "structures.h"
 
 const char *const instr_list[] = { "NOP", "RET", "RETI", "SWI", "POP", "PUSH",
-	"MOV", "CMP", "CMN", "CMA", "SUB", "SBC", "ADD", "ADC", "AND", "OR",
+	"MOV", "CMP", "CMN", "CMA", "SUB", "SBB", "ADD", "ADC", "AND", "OR",
 	"NOR", "XOR", "SLL", "SRL", "SRA", "LI", "ADD", "SB", "LB", "B", "BL",
 	"INCC", "DECB", "WFI" };
 
