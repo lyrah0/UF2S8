@@ -13,7 +13,7 @@ module pcsel(
 
 	always_comb begin
 		case (i_sel)
-			2'h0: o_pc = i_pc + 1;
+			2'h0: o_pc = {i_pc + 1'b1,1'b0};
 			2'h1: o_pc = i_addr;
 			2'h2: o_pc = {i_pc,1'b0} + i_offset;
 			2'h3: o_pc = {i_data,r_pc,1'b0};
