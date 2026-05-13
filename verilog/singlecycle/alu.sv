@@ -16,7 +16,7 @@ module alu(
 			4'h0: temp_res = i_a + i_b;
 			4'h1: temp_res = i_a + i_b + {8'b0, i_c};
 			4'h2: temp_res = i_a - i_b;
-			4'h3: temp_res = i_a - i_b - {8'b0, i_c};
+			4'h3: temp_res = i_a - i_b - {8'b0, ~i_c};
 			4'h4: temp_res = {1'b0, i_a & i_b};
 			4'h5: temp_res = {1'b0, i_a | i_b};
 			4'h6: temp_res = {1'b0, ~(i_a | i_b)};
@@ -35,13 +35,14 @@ module alu(
 	always_comb begin
 		if (i_op == 4'h0 || i_op == 4'h1) begin
 			v_flag = (i_a[7] == i_b[7]) && (i_a[7] != temp_res[7]);
+			o_flags[0] = temp_res[8]; // Carry
 		end else if (i_op == 4'h2 || i_op == 4'h3) begin
 			v_flag = (i_a[7] != i_b[7]) && (i_a[7] != temp_res[7]);
+			o_flags[0] = ~temp_res[8]; // inverted Carry
 		end else begin
 			v_flag = 1'b0;
 		end
 
-		o_flags[0] = temp_res[8]; // Carry
 		o_flags[1] = (temp_res[7:0] == 8'b0); // Zero
 		o_flags[2] = temp_res[7]; // Negative
 		o_flags[3] = v_flag; // Overflow
