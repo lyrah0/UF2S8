@@ -95,12 +95,19 @@ module control_unit(
 			16'b000_000_000_000_0000: ; // NOP
 			16'b001_000_000_000_0000: begin // RET
 				o_sp_sel = 2'h1;
+				o_agu_sel = 3'h4;
 
 				if (r_stage == 0) begin
+					// SP increment
+					o_cf_wsp = 1'b1;
 					o_pc_rwe = 1'b1;
+					o_pc_we = 1'b0;
 				end
 				if (r_stage == 1) begin
+					// SP increment
+					o_cf_wsp = 1'b1;
 					o_pc_sel = 2'h3;
+					o_pc_we = 1'b1;
 				end
 			end
 			16'b???_010_000_000_0000: begin // INCC

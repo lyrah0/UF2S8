@@ -13,6 +13,7 @@ module cpu (
 
 	// Signals
 	logic [14:0]	r_pc;
+	logic [14:0]	w_pc_next;
 	logic		w_pc_we;
 	logic [3:0]	w_id_op1;
 	logic [2:0]	w_id_op2;
@@ -114,7 +115,7 @@ module cpu (
 		.i_sel(w_agu_sel),
 		.i_offset(w_ig_imm),
 		.i_baseaddr(w_rf_adata),
-		.i_pc({r_pc,1'b0}),
+		.i_pc_next(w_pc_next),
 		.i_sp(w_cf_o_sp),
 		.o_addr(w_agu_addr)
 	);
@@ -128,7 +129,7 @@ module cpu (
 	pcsel u_pcsel (
 		.i_clk(i_clk),
 		.i_sel(w_pc_sel),
-		.i_pc(r_pc),
+		.i_pc_next(w_pc_next),
 		.i_offset(w_ig_imm),
 		.i_addr(w_agu_addr),
 		.i_data(i_mem_rdata),
@@ -175,6 +176,7 @@ module cpu (
 
 	always_comb begin
 		w_alu_a = w_rf_rdata1;
+		w_pc_next = r_pc + 1;
 
 		o_pc = {r_pc,1'b0};
 		o_mem_addr = w_agu_addr;
@@ -194,8 +196,8 @@ module cpu (
 		case (w_mem_wdata_sel)
 			2'h0: o_mem_wdata = w_rf_rdata1;
 			2'h1: o_mem_wdata = w_cf_rdata;
-			2'h2: o_mem_wdata = {r_pc[6:0],1'b0};
-			2'h3: o_mem_wdata = r_pc[14:7];
+			2'h2: o_mem_wdata = {w_pc_next[6:0],1'b0};
+			2'h3: o_mem_wdata = w_pc_next[14:7];
 		endcase
 
 		case (w_cf_wdata_sel)
