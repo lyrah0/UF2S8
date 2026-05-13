@@ -203,7 +203,7 @@ module control_unit(
 					o_cf_wsp = 1'b1;
 					// load new PC
 					o_rf_rsel2 = i_rsel1;
-					o_pc_sel = 2'h2;
+					o_pc_sel = 2'h1;
 					o_pc_we = 1'b1;
 				end
 			end

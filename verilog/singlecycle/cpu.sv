@@ -131,7 +131,7 @@ module cpu (
 		.i_sel(w_pc_sel),
 		.i_pc_next(w_pc_next),
 		.i_offset(w_ig_imm),
-		.i_addr(w_agu_addr),
+		.i_addr(w_rf_adata),
 		.i_data(i_mem_rdata),
 		.i_we(w_pc_rwe),
 		.o_pc(w_pc_pc)
