@@ -85,7 +85,7 @@ test_loadstore:
 	LI	r0, 0x12
 	LI	r1, 0xAB
 	SB	r0, [a3]
-	SB	r0, [a3+15]
+	SB	r1, [a3+15]
 	LB	r2, [a3]
 	LB	r3, [a3+15]
 test_interrupt:
