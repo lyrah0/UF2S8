@@ -145,6 +145,10 @@ module control_unit(
 				o_mem_we = 1'b1;
 			end
 			16'b???_???_000_001_0000: begin // MOV csr->gpr
+				// select csr
+				o_cf_rsel = i_rsel1;
+
+				// write csr output to gpr
 				o_rf_we = 1'b1;
 				o_rf_wdata_sel = 2'h1;
 
