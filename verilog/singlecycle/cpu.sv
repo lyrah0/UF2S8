@@ -115,7 +115,7 @@ module cpu (
 		.i_offset(w_ig_imm),
 		.i_baseaddr(w_rf_adata),
 		.i_pc({r_pc,1'b0}),
-		.i_sp(w_sp_sp),
+		.i_sp(w_cf_o_sp),
 		.o_addr(w_agu_addr)
 	);
 	

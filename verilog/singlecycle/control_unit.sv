@@ -133,7 +133,7 @@ module control_unit(
 				o_rf_rsel1 = i_wsel;
 				o_cf_wsp = 1'b1;
 				o_cf_wdata_sel = 2'h2;
-				o_sp_sel = 2'h1; 
+				o_sp_sel = 2'h2; 
 				o_agu_sel = 3'h3;
 				o_mem_we = 1'b1;
 			end
