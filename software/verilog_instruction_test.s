@@ -22,7 +22,7 @@ test_link_and_return:
 	LI	r6, <return_test
 	LI	r5, 0xFF
 	ADD	r5, r5, 5
-	BL	CS, return_test
+	BL	CS, a3
 test_move:
 	MOV	r5, r2
 	MOV	r0, r3
