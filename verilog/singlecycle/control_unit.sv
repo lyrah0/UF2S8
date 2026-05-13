@@ -152,6 +152,8 @@ module control_unit(
 			16'b???_???_010_001_0000: begin // CMP
 				// operands
 				o_rf_rsel2 = i_wsel;
+				// ALU op
+				o_alu_op = 4'h2;
 				// flags
 				o_cf_we = 1'b1;
 				o_cf_wdata_sel = 2'h2;
