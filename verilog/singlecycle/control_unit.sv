@@ -177,23 +177,23 @@ module control_unit(
 				end
 			end
 			16'b???_??1_000_111_0000: begin // BL
+				o_agu_sel = 3'h3;
+				o_sp_sel = 2'h2;
 				if (w_cond && r_stage == 0) begin
 					// store PC upper
-					o_agu_sel = 3'h3;
 					o_mem_wdata_sel = 2'h3;
 					o_mem_we = 1'b1;
 					// SP decrement
 					o_cf_wsp = 1'b1;
-					o_sp_sel = 2'h2;
+					// disable PC update
+					o_pc_we = 1'b0;
 				end
 				if (w_cond && r_stage == 1) begin
 					// store PC lower
-					o_agu_sel = 3'h3;
 					o_mem_wdata_sel = 2'h2;
 					o_mem_we = 1'b1;
 					// SP decrement
 					o_cf_wsp = 1'b1;
-					o_sp_sel = 2'h2;
 					// load new PC
 					o_rf_rsel2 = i_rsel1;
 					o_pc_sel = 2'h2;
@@ -412,29 +412,32 @@ module control_unit(
 					// immediate operand
 					o_ig_sel = 3'h4;
 					// load new PC
-					o_agu_sel = 3'h2;
-					o_pc_sel = 2'h1;
+					o_pc_sel = 2'h2;
 					o_pc_we = 1'b1;
 				end
 			end
 			16'b???_???_???_???_1111: begin // BL
-				o_agu_sel = 3'h2;
-				o_mem_wdata_sel = 2'h3;
+				o_agu_sel = 3'h3;
 				o_sp_sel = 2'h2;
 				if (w_cond && r_stage == 0) begin
+					// select PC upper
+					o_mem_wdata_sel = 2'h3;
 					// store PC upper
 					o_mem_we = 1'b1;
 					// SP decrement
 					o_cf_wsp = 1'b1;
+					// disable PC update
+					o_pc_we = 1'b0;
 				end
 				if (w_cond && r_stage == 1) begin
+					// select PC lower
+					o_mem_wdata_sel = 2'h2;
 					// store PC lower
 					o_mem_we = 1'b1;
 					// SP decrement
 					o_cf_wsp = 1'b1;
 					// load new PC
 					o_ig_sel = 3'h4;
-					o_rf_rsel2 = i_rsel1;
 					o_pc_sel = 2'h2;
 					o_pc_we = 1'b1;
 				end
@@ -455,6 +458,10 @@ module control_unit(
 				else if (r_stage == 1) r_stage <= 2'h0;
 			end
 			16'b???_??1_000_111_0000: begin // BL
+				if (r_stage == 0 && w_cond) r_stage <= 2'h1;
+				else if (r_stage == 1) r_stage <= 2'h0;
+			end
+			16'b???_???_???_???_1111: begin // BL
 				if (r_stage == 0 && w_cond) r_stage <= 2'h1;
 				else if (r_stage == 1) r_stage <= 2'h0;
 			end
