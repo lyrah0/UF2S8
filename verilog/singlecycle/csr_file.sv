@@ -16,7 +16,6 @@ module csr_file(
 
 
 	always_comb begin
-		r_reg[0][6:4] = '0;
 		r_reg[1] = '0;
 		r_reg[2] = '0;
 		r_reg[3] = '0;
@@ -35,6 +34,7 @@ module csr_file(
 
 		if (i_we) begin
 			r_reg[i_wsel] <= i_wdata;
+			r_reg[0][6:4] <= '0;
 		end
 		if (i_wsp) begin
 			r_reg[6] <= i_sp[7:0];
