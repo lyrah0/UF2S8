@@ -91,7 +91,7 @@ module cpu (
 		.i_rsel(w_cf_rsel),
 		.i_wsel(w_cf_wsel),
 		.i_wdata(w_cf_wdata),
-		.i_sp(w_cf_i_sp),
+		.i_sp(w_sp_sp),
 		.i_wsp(w_cf_wsp),
 		.o_rdata(w_cf_rdata),
 		.o_flags(w_cf_flags),
@@ -140,6 +140,7 @@ module cpu (
 		.i_clk(i_clk),
 		.i_sel(w_pc_sel),
 		.i_pc(r_pc),
+		.i_offset(w_ig_imm),
 		.i_addr(w_agu_addr),
 		.i_data(i_mem_rdata),
 		.i_we(w_pc_rwe),
@@ -160,6 +161,7 @@ module cpu (
 		.i_rsel2(w_id_rsel2),
 		.i_asel(w_id_asel),
 		.i_wsel(w_id_wsel),
+		.i_flags(w_cf_flags),
 		.i_opi(w_id_opi),
 		.i_opbr(w_id_opbr),
 		.o_alu_op(w_alu_op),
@@ -185,7 +187,6 @@ module cpu (
 
 	// misc wires
 	logic [1:0]	w_mem_wdata_sel;
-	logic		w_cf_i_sp_sel;
 	logic [1:0]	w_cf_wdata_sel;
 
 
@@ -197,8 +198,8 @@ module cpu (
 		o_mem_addr = w_agu_addr;
 
 		case (w_alu_b_sel)
-			1'b0: w_alu_b = w_ig_imm[7:0];
-			1'b1: w_alu_b = w_rf_rdata2;
+			1'b0: w_alu_b = w_rf_rdata2;
+			1'b1: w_alu_b = w_ig_imm[7:0];
 		endcase
 
 		case (w_rf_wdata_sel)
@@ -213,11 +214,6 @@ module cpu (
 			2'h1: o_mem_wdata = w_cf_rdata;
 			2'h2: o_mem_wdata = {r_pc[6:0],1'b0};
 			2'h3: o_mem_wdata = r_pc[14:7];
-		endcase
-
-		case (w_cf_i_sp_sel)
-			1'b0: w_cf_i_sp = w_sp_sp;
-			1'b1: w_cf_i_sp = w_cf_o_sp;
 		endcase
 
 		case (w_cf_wdata_sel)
