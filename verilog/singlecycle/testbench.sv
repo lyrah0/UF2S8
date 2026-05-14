@@ -111,6 +111,10 @@ module testbench;
 				$display("[%0t] Halt detected (infinite loop). Simulation finished.", $time);
 				$finish;
 			end
+
+			if (u_cpu.u_control_unit.w_illegal_instruction) begin
+				$display("[%0t] Illegal instruction detected.", $time);
+			end
 		end
 
 		$display("[%0t] Simulation timeout.", $time);

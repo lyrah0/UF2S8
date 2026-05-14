@@ -74,9 +74,13 @@ module control_unit(
 	// wait for interrupt flip flop
 	logic 		r_wfi;
 
+	// illegal instruction signal
+	logic		w_illegal_instruction;
+
 
 	always_comb begin
 		w_interrupt = (i_interrupt && i_flags[7]) || r_interrupt_internal;
+		w_illegal_instruction = 1'b0;
 
 		o_alu_op = 4'b0;
 		o_rf_we = 1'b0;
@@ -134,6 +138,7 @@ module control_unit(
 					o_pc_we = 1'b1;
 				end
 			end
+			16'b010_000_000_000_0000: ; // WFI
 			16'b000_001_000_000_0000: begin // RETI
 				// SP increment
 				o_cf_wsp = 1'b1;
@@ -508,6 +513,10 @@ module control_unit(
 				end
 			end
 			default: begin // no instruction
+				o_interrupt_id = 7'h2;
+				o_interrupt_id_sel = 1'b1;
+				o_interrupt_id_we = 1'b1;
+				w_illegal_instruction = 1'b1;
 			end
 		endcase
 		end
@@ -606,6 +615,10 @@ module control_unit(
 			end
 			default: r_stage <= 2'b00;
 		endcase
+		end
+
+		if (w_illegal_instruction) begin
+			r_interrupt_internal <= 1'b1;
 		end
 
 		if (r_stage == 0 && r_interrupt_stage == 0 && w_interrupt) begin
