@@ -69,6 +69,9 @@ module control_unit(
 	logic 		w_interrupt;
 	logic [2:0]	r_interrupt_stage;
 
+	// wait for interrupt flip flop
+	logic 		r_wfi;
+
 
 	always_comb begin
 		w_interrupt = i_interrupt && i_flags[7];
@@ -106,7 +109,11 @@ module control_unit(
 			3'b111: w_cond = 1'b1;		// AL
 		endcase
 
-		if (r_interrupt_stage == 0 && ~w_interrupt) begin
+		if (r_wfi) begin
+			o_pc_we = 1'b0;
+		end
+
+		if (r_interrupt_stage == 0 && ~w_interrupt && ~r_wfi) begin
 		casez (i_instr)
 			16'b000_000_000_000_0000: ; // NOP
 			16'b001_000_000_000_0000: begin // RET
@@ -124,7 +131,7 @@ module control_unit(
 					o_pc_we = 1'b1;
 				end
 			end
-			16'b000_001_000_000_0000: begin //RETI
+			16'b000_001_000_000_0000: begin // RETI
 				// SP increment
 				o_cf_wsp = 1'b1;
 				o_sp_sel = 2'h1;
@@ -556,12 +563,16 @@ module control_unit(
 			r_stage <= 2'h0;
 			r_interrupt_stage <= 3'h0;
 			or_interrupt_ack <= 1'b0;
+			r_wfi <= 1'b0;
 		end
 
 		casez (i_instr)
 			16'b001_000_000_000_0000: begin // RET
 				if (r_stage == 0 && r_interrupt_stage == 0 && ~w_interrupt) r_stage <= 2'h1;
 				else if (r_stage == 1) r_stage <= 2'h0;
+			end
+			16'b010_000_000_000_0000: begin // WFI
+				r_wfi <= 1'b1;
 			end
 			16'b000_001_000_000_0000: begin //RETI
 				if (r_stage == 0 && r_interrupt_stage == 0 && ~w_interrupt) r_stage <= 2'h1;
@@ -584,6 +595,8 @@ module control_unit(
 			r_interrupt_stage <= 3'h1;
 			// acknowledge interrupt
 			or_interrupt_ack <= 1'b1;
+			// remove WFI
+			r_wfi <= 1'b0;
 		end else if (r_interrupt_stage == 1) begin
 			r_interrupt_stage <= 3'h2;
 			// unacknowledge interrupt

@@ -92,11 +92,11 @@ module testbench;
 				u_cpu.w_cf_flags[1],
 				u_cpu.w_cf_flags[0]);
 	    
-			// Trigger an external interrupt when WFI is reached
-			if (w_instr == 16'h4000 && !interrupt_triggered) begin
+			// Trigger an external interrupt when WFI is reached and some time has passed
+			if (u_cpu.u_control_unit.r_wfi && !interrupt_triggered && $time >= 200) begin
 				$display("[%0t] WFI detected. Triggering external interrupt...", $time);
 				w_interrupt = 1;
-				w_interrupt_id = 7'h00; // SWI 0 handler
+				w_interrupt_id = 7'h01; // Breakpoint
 				interrupt_triggered = 1;
 			end
 

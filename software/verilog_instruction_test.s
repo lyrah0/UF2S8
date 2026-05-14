@@ -95,6 +95,8 @@ test_interrupt:
 	LI	r1, >int_handler
 	SB	r0, [a3]
 	SB	r1, [a3+1]
+	SB	r0, [a3+2]
+	SB	r1, [a3+3]
 	LI	r0, <illegal_instruction_handler
 	LI	r1, >illegal_instruction_handler
 	SB	r0, [a3+4]
@@ -104,6 +106,7 @@ test_interrupt:
 	LI	r0, 0x80
 	MOV	flags, r0
 	WFI
+	NOP
 halt:
 	B	AL, halt
 
