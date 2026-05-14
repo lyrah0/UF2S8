@@ -55,6 +55,16 @@ Run a compiled binary with optional graphics support:
 
 For a detailed breakdown of the hardware registers, memory map, and interrupt vectors, see the [Hardware Architecture Documentation](arch.md).
 
+## Testing
+
+The emulator features unit tests for core components like the CPU and memory controller.
+
+```sh
+make tests
+```
+
+This executes the test suite found in the `tests/` directory.
+
 ## License
 
 This component is part of the UF2S8 project and is licensed under the [GNU General Public License v3.0](../LICENSE).

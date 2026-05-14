@@ -52,6 +52,16 @@ Pass the input assembly file and the desired output binary path:
 - `input.s`: The source assembly file.
 - `output.bin`: The destination binary file.
 
+## Testing
+
+The assembler includes a suite of unit and integration tests (lexer, symbol table, encoding) to ensure correctness.
+
+```sh
+make tests
+```
+
+This runs the tests located in the `tests/` directory using the `runtests.sh` script.
+
 ## License
 
 This component is part of the UF2S8 project and is licensed under the [GNU General Public License v3.0](../LICENSE).

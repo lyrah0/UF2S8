@@ -67,6 +67,18 @@ hexdump -v -e '1/1 "%02X\n"' output.bin > verilog/singlecycle/mem.hex
 cd verilog/singlecycle && iverilog -g2012 -o cpu_sim *.sv && vvp cpu_sim
 ```
 
+### Running Tests
+
+Both the assembler and emulator have test suites that can be run with:
+
+```sh
+# Run assembler tests
+cd assembler && make tests
+
+# Run emulator tests
+cd emulator && make tests
+```
+
 ## Usage
 
 ### Assemble a program
