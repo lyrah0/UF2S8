@@ -18,6 +18,7 @@ module cpu (
 
 	// Signals
 	logic [14:0]	r_pc;
+	logic [6:0]	r_interrupt_id;
 	logic [14:0]	w_pc_next;
 	logic		w_pc_we;
 	logic [3:0]	w_id_op1;
@@ -60,8 +61,12 @@ module cpu (
 	logic [15:0]	w_pc_pc;
 	logic		w_alu_b_sel;
 	logic [1:0]	w_rf_wdata_sel;
-	logic [1:0]	w_mem_wdata_sel;
-	logic [1:0]	w_cf_wdata_sel;
+	logic [2:0]	w_mem_wdata_sel;
+	logic [2:0]	w_cf_wdata_sel;
+	logic		w_interrupt_id_we;
+	logic [6:0]	w_interrupt_id;
+	logic [6:0]	w_cu_interrupt_id;
+	logic		w_interrupt_id_sel;
 
 	inst_decode u_inst_decode (
 		.i_instr(i_instr),
@@ -122,6 +127,7 @@ module cpu (
 		.i_baseaddr(w_rf_adata),
 		.i_pc_next(w_pc_next),
 		.i_sp(w_cf_o_sp),
+		.i_interrupt_id(r_interrupt_id),
 		.o_addr(w_agu_addr)
 	);
 	
@@ -175,8 +181,10 @@ module cpu (
 		.o_mem_we(o_mem_we),
 		.o_cf_wdata_sel(w_cf_wdata_sel),
 		.i_interrupt(i_interrupt),
-		.i_interrupt_id(i_interrupt_id),
-		.o_interrupt_ack(o_interrupt_ack)
+		.o_interrupt_id(w_cu_interrupt_id),
+		.or_interrupt_ack(o_interrupt_ack),
+		.o_interrupt_id_we(w_interrupt_id_we),
+		.o_interrupt_id_sel(w_interrupt_id_sel)
 	);
 
 
@@ -202,21 +210,31 @@ module cpu (
 		endcase
 		
 		case (w_mem_wdata_sel)
-			2'h0: o_mem_wdata = w_rf_rdata1;
-			2'h1: o_mem_wdata = w_cf_rdata;
-			2'h2: o_mem_wdata = {w_pc_next[6:0],1'b0};
-			2'h3: o_mem_wdata = w_pc_next[14:7];
+			3'h0: o_mem_wdata = w_rf_rdata1;
+			3'h1: o_mem_wdata = w_cf_rdata;
+			3'h2: o_mem_wdata = {w_pc_next[6:0],1'b0};
+			3'h3: o_mem_wdata = w_pc_next[14:7];
+			3'h4: o_mem_wdata = w_cf_flags;
+			default: o_mem_wdata = 8'bZ;
 		endcase
 
 		case (w_cf_wdata_sel)
-			2'h0: w_cf_wdata = w_rf_rdata1;
-			2'h1: w_cf_wdata = {w_cf_flags[7:4],w_alu_flags};
-			2'h2: w_cf_wdata = {w_cf_flags[7:4],
+			3'h0: w_cf_wdata = w_rf_rdata1;
+			3'h1: w_cf_wdata = {w_cf_flags[7:4],w_alu_flags};
+			3'h2: w_cf_wdata = {w_cf_flags[7:4],
 				1'b0,
 				w_rf_wdata[7],
 				w_rf_wdata == 0,
 				1'b0};
+			3'h3: w_cf_wdata = 8'b0;
+			3'h4: w_cf_wdata = i_mem_rdata;
 			default: w_cf_wdata = 8'bZ;
+		endcase
+
+		case (w_interrupt_id_sel)
+			1'b0: w_interrupt_id = i_interrupt_id;
+			1'b1: w_interrupt_id = w_cu_interrupt_id;
+			default: w_interrupt_id = 7'bZ;
 		endcase
 	end
 
@@ -226,6 +244,9 @@ module cpu (
 		end else begin
 			if (w_pc_we) begin
 				r_pc <= w_pc_pc[15:1];
+			end
+			if (w_interrupt_id_we) begin
+				r_interrupt_id <= w_interrupt_id;
 			end
 		end
 	end

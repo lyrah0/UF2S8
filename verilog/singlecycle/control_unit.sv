@@ -48,14 +48,16 @@ module control_unit(
 	output logic		o_pc_we,
 	output logic		o_alu_b_sel,
 	output logic [1:0]	o_rf_wdata_sel,
-	output logic [1:0]	o_mem_wdata_sel,
+	output logic [2:0]	o_mem_wdata_sel,
 	output logic		o_mem_we,
-	output logic [1:0]	o_cf_wdata_sel,
+	output logic [2:0]	o_cf_wdata_sel,
 
 	// Interrupt Interface
-	input  logic 		i_interrupt,
-	input  logic [6:0] 	i_interrupt_id,
-	output logic 		o_interrupt_ack
+	input  logic		i_interrupt,
+	output logic [6:0]	o_interrupt_id,
+	output logic		or_interrupt_ack,
+	output logic		o_interrupt_id_we,
+	output logic		o_interrupt_id_sel
 );
 
 	// instruction stage flip flops
@@ -63,8 +65,14 @@ module control_unit(
 
 	logic 		w_cond;
 
+	// interrupt stage flip flops and wires
+	logic 		w_interrupt;
+	logic [2:0]	r_interrupt_stage;
+
 
 	always_comb begin
+		w_interrupt = i_interrupt && i_flags[7];
+
 		o_alu_op = 4'b0;
 		o_rf_we = 1'b0;
 		o_rf_rsel1 = i_rsel1;
@@ -81,9 +89,11 @@ module control_unit(
 		o_pc_we = 1'b1;
 		o_alu_b_sel = 1'b0;
 		o_rf_wdata_sel = 2'h0;
-		o_mem_wdata_sel = 2'h0;
+		o_mem_wdata_sel = 3'h0;
 		o_mem_we = 1'b0;
-		o_cf_wdata_sel = 2'h0;
+		o_cf_wdata_sel = 3'h0;
+		o_interrupt_id_we = 1'b0;
+		o_interrupt_id_sel = 1'b0;
 		
 		case (i_wsel)
 			3'b000: w_cond = i_flags[1];	// ZS/EQ
@@ -96,21 +106,44 @@ module control_unit(
 			3'b111: w_cond = 1'b1;		// AL
 		endcase
 
+		if (r_interrupt_stage == 0 && ~w_interrupt) begin
 		casez (i_instr)
 			16'b000_000_000_000_0000: ; // NOP
 			16'b001_000_000_000_0000: begin // RET
+				// SP increment
+				o_cf_wsp = 1'b1;
 				o_sp_sel = 2'h1;
 				o_agu_sel = 3'h4;
 
 				if (r_stage == 0) begin
-					// SP increment
-					o_cf_wsp = 1'b1;
 					o_pc_rwe = 1'b1;
 					o_pc_we = 1'b0;
 				end
 				if (r_stage == 1) begin
-					// SP increment
-					o_cf_wsp = 1'b1;
+					o_pc_sel = 2'h3;
+					o_pc_we = 1'b1;
+				end
+			end
+			16'b000_001_000_000_0000: begin //RETI
+				// SP increment
+				o_cf_wsp = 1'b1;
+				o_sp_sel = 2'h1;
+				o_agu_sel = 3'h4;
+
+				if (r_stage == 0) begin
+					o_pc_we = 1'b0;
+					// Load flags from memory
+					o_cf_rsel = 3'h0;
+					o_cf_we = 1'b1;
+					o_cf_wdata_sel = 3'h4;
+				end
+				if (r_stage == 1) begin
+					// write PC lower
+					o_pc_rwe = 1'b1;
+					o_pc_we = 1'b0;
+				end
+				if (r_stage == 2) begin
+					// load PC upper
 					o_pc_sel = 2'h3;
 					o_pc_we = 1'b1;
 				end
@@ -122,7 +155,7 @@ module control_unit(
 				o_cf_we = 1'b1;
 				o_ig_sel = 3'h7;
 				o_alu_b_sel = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_011_000_000_0000: begin // DECB
 				o_alu_op = 4'h3;
@@ -131,12 +164,12 @@ module control_unit(
 				o_cf_we = 1'b1;
 				o_ig_sel = 3'h7;
 				o_alu_b_sel = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_110_000_000_0000: begin // POP
 				o_rf_we = 1'b1;
 				o_cf_wsp = 1'b1;
-				o_cf_wdata_sel = 2'h2;
+				o_cf_wdata_sel = 3'h2;
 				o_sp_sel = 2'h1; 
 				o_agu_sel = 3'h4;
 				o_rf_wdata_sel = 2'h2;
@@ -144,7 +177,7 @@ module control_unit(
 			16'b???_111_000_000_0000: begin // PUSH
 				o_rf_rsel1 = i_wsel;
 				o_cf_wsp = 1'b1;
-				o_cf_wdata_sel = 2'h2;
+				o_cf_wdata_sel = 3'h2;
 				o_sp_sel = 2'h2; 
 				o_agu_sel = 3'h3;
 				o_mem_we = 1'b1;
@@ -158,7 +191,7 @@ module control_unit(
 				o_rf_wdata_sel = 2'h1;
 
 				// handle flags
-				o_cf_wdata_sel = 2'h2;
+				o_cf_wdata_sel = 3'h2;
 				o_cf_we = 1'b1;
 			end
 			16'b???_???_001_001_0000: begin // MOV gpr->csr
@@ -172,7 +205,7 @@ module control_unit(
 				o_alu_op = 4'h2;
 				// flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h2;
+				o_cf_wdata_sel = 3'h2;
 			end
 			16'b???_???_011_001_0000: begin // CMA
 				// operands
@@ -181,7 +214,7 @@ module control_unit(
 				o_alu_op = 4'h4;
 				// flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h2;
+				o_cf_wdata_sel = 3'h2;
 			end
 			16'b???_??0_000_111_0000: begin // B
 				if (w_cond) begin
@@ -197,7 +230,7 @@ module control_unit(
 				o_sp_sel = 2'h2;
 				if (w_cond && r_stage == 0) begin
 					// store PC upper
-					o_mem_wdata_sel = 2'h3;
+					o_mem_wdata_sel = 3'h3;
 					o_mem_we = 1'b1;
 					// SP decrement
 					o_cf_wsp = 1'b1;
@@ -206,7 +239,7 @@ module control_unit(
 				end
 				if (w_cond && r_stage == 1) begin
 					// store PC lower
-					o_mem_wdata_sel = 2'h2;
+					o_mem_wdata_sel = 3'h2;
 					o_mem_we = 1'b1;
 					// SP decrement
 					o_cf_wsp = 1'b1;
@@ -224,7 +257,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_001_0001: begin // SBB
 				// subtract with borrow
@@ -234,7 +267,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_010_0001: begin // ADD
 				// add
@@ -244,7 +277,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_011_0001: begin // ADC
 				// add with carry
@@ -254,7 +287,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_100_0001: begin // AND
 				// and
@@ -264,7 +297,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_101_0001: begin // OR
 				// or
@@ -274,7 +307,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_110_0001: begin // NOR
 				// nor
@@ -284,7 +317,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_111_0001: begin // XOR
 				// xor
@@ -294,7 +327,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_000_0010: begin // SLL
 				// shift left logical
@@ -304,7 +337,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_001_0010: begin // SRL
 				// shift right logical
@@ -314,7 +347,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_010_0010: begin // SRA
 				// shift right arithmetic
@@ -324,7 +357,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_100_0010: begin // SLL immediate
 				// shift left logical
@@ -338,7 +371,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_101_0010: begin // SRL immediate
 				// shift right logical
@@ -352,7 +385,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_110_0010: begin // SRA immediate
 				// shift right arithmetic
@@ -366,7 +399,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_??0_1010: begin // LI
 				// ALU passthrough B
@@ -380,7 +413,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h2;
+				o_cf_wdata_sel = 3'h2;
 			end
 			16'b???_???_???_???_1011: begin // ADD immediate
 				// add
@@ -394,7 +427,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h1;
+				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_???_1100: begin // SB
 				// operand A
@@ -402,7 +435,7 @@ module control_unit(
 				// operand B
 				o_rf_rsel2 = i_rsel1;
 				// output A to mem
-				o_mem_wdata_sel = 2'h0;
+				o_mem_wdata_sel = 3'h0;
 				o_mem_we = 1'b1;
 				// immediate operand
 				o_ig_sel = 3'h3;
@@ -421,7 +454,7 @@ module control_unit(
 				o_rf_we = 1'b1;
 				// store flags
 				o_cf_we = 1'b1;
-				o_cf_wdata_sel = 2'h2;
+				o_cf_wdata_sel = 3'h2;
 			end
 			16'b???_???_???_???_1110: begin // B
 				if (w_cond) begin
@@ -437,7 +470,7 @@ module control_unit(
 				o_sp_sel = 2'h2;
 				if (w_cond && r_stage == 0) begin
 					// select PC upper
-					o_mem_wdata_sel = 2'h3;
+					o_mem_wdata_sel = 3'h3;
 					// store PC upper
 					o_mem_we = 1'b1;
 					// SP decrement
@@ -447,7 +480,7 @@ module control_unit(
 				end
 				if (w_cond && r_stage == 1) begin
 					// select PC lower
-					o_mem_wdata_sel = 2'h2;
+					o_mem_wdata_sel = 3'h2;
 					// store PC lower
 					o_mem_we = 1'b1;
 					// SP decrement
@@ -461,29 +494,107 @@ module control_unit(
 			default: begin // no instruction
 			end
 		endcase
+		end
+
+		// interrupt handling
+		if (r_stage == 0 && r_interrupt_stage == 0 && w_interrupt) begin
+			// disable PC update
+			o_pc_we = 1'b0;
+			// store PC upper
+			o_mem_wdata_sel = 3'h3;
+			o_mem_we = 1'b1;
+			o_agu_sel = 3'h3;
+			// SP decrement
+			o_sp_sel = 2'h2;
+			o_cf_wsp = 1'b1;
+			// write external interrupt id to register
+			o_interrupt_id_sel = 1'b0;
+			o_interrupt_id_we = 1'b1;
+		end else if (r_interrupt_stage == 1) begin
+			// disable PC update
+			o_pc_we = 1'b0;
+			// store PC upper
+			o_mem_wdata_sel = 3'h2;
+			o_mem_we = 1'b1;
+			o_agu_sel = 3'h3;
+			// SP decrement
+			o_sp_sel = 2'h2;
+			o_cf_wsp = 1'b1;
+		end else if (r_interrupt_stage == 2) begin
+			// disable PC update
+			o_pc_we = 1'b0;
+			// store flags
+			o_mem_wdata_sel = 3'h4;
+			o_mem_we = 1'b1;
+			o_agu_sel = 3'h3;
+			// SP decrement
+			o_sp_sel = 2'h2;
+			o_cf_wsp = 1'b1;
+			// disable interrupts
+			o_cf_rsel = 3'h0;
+			o_cf_wdata_sel = 3'h3;
+			o_cf_we = 1'b1;
+		end else if (r_interrupt_stage == 3) begin
+			// disable PC update
+			o_pc_we = 1'b0;
+			// read new PC lower
+			o_agu_sel = 3'h6;
+			// write new PC lower to temp register
+			o_pc_rwe = 1'b1;
+		end else if (r_interrupt_stage == 4) begin
+			// enable PC update
+			o_pc_we = 1'b1;
+			// read new PC upper
+			o_agu_sel = 3'h7;
+			// write new PC
+			o_pc_sel = 2'h3;
+		end
 	end
 
 	always_ff @(posedge i_clk or negedge i_rst_n) begin
 		if (!i_rst_n) begin
-			r_stage <= 2'b00;
+			r_stage <= 2'h0;
+			r_interrupt_stage <= 3'h0;
+			or_interrupt_ack <= 1'b0;
 		end
 
 		casez (i_instr)
 			16'b001_000_000_000_0000: begin // RET
-				if (r_stage == 0) r_stage <= 2'h1;
+				if (r_stage == 0 && r_interrupt_stage == 0 && ~w_interrupt) r_stage <= 2'h1;
 				else if (r_stage == 1) r_stage <= 2'h0;
 			end
+			16'b000_001_000_000_0000: begin //RETI
+				if (r_stage == 0 && r_interrupt_stage == 0 && ~w_interrupt) r_stage <= 2'h1;
+				else if (r_stage == 1) r_stage <= 2'h2;
+				else if (r_stage == 2) r_stage <= 2'h0;
+			end
 			16'b???_??1_000_111_0000: begin // BL
-				if (r_stage == 0 && w_cond) r_stage <= 2'h1;
+				if (r_stage == 0 && w_cond && r_interrupt_stage == 0 && ~w_interrupt) r_stage <= 2'h1;
 				else if (r_stage == 1) r_stage <= 2'h0;
 			end
 			16'b???_???_???_???_1111: begin // BL
-				if (r_stage == 0 && w_cond) r_stage <= 2'h1;
+				if (r_stage == 0 && w_cond && r_interrupt_stage == 0 && ~w_interrupt) r_stage <= 2'h1;
 				else if (r_stage == 1) r_stage <= 2'h0;
 			end
 			default: r_stage <= 2'b00;
 		endcase
 
+		if (r_stage == 0 && r_interrupt_stage == 0 && w_interrupt) begin
+			// advance interrupt stage
+			r_interrupt_stage <= 3'h1;
+			// acknowledge interrupt
+			or_interrupt_ack <= 1'b1;
+		end else if (r_interrupt_stage == 1) begin
+			r_interrupt_stage <= 3'h2;
+			// unacknowledge interrupt
+			or_interrupt_ack <= 1'b0;
+		end else if (r_interrupt_stage == 2) begin
+			r_interrupt_stage <= 3'h3;
+		end else if (r_interrupt_stage == 3) begin
+			r_interrupt_stage <= 3'h4;
+		end else if (r_interrupt_stage == 4) begin
+			r_interrupt_stage <= 3'h0;
+		end
 	end
 
 endmodule

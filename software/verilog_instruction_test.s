@@ -95,8 +95,14 @@ test_interrupt:
 	LI	r1, >int_handler
 	SB	r0, [a3]
 	SB	r1, [a3+1]
+	LI	r0, <illegal_instruction_handler
+	LI	r1, >illegal_instruction_handler
+	SB	r0, [a3+4]
+	SB	r1, [a3+5]
 	LI	r0, 0
 	SWI	r0
+	LI	r0, 0x80
+	MOV	flags, r0
 	WFI
 halt:
 	B	AL, halt
@@ -107,4 +113,14 @@ return_test:
 
 
 int_handler:
+	RETI
+
+illegal_instruction_handler:
+	MOV	r7, sph
+	MOV	r6, spl
+	LB	r0, [a3+2]	; lower PC
+	LB	r1, [a3+3]	; upper PC
+	ADD	r0, r0, 2	; skip the illegal instruction
+	SB	r0, [a3+2]
+	SB	r1, [a3+3]
 	RETI

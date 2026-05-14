@@ -16,12 +16,6 @@ module csr_file(
 
 
 	always_comb begin
-		r_reg[1] = '0;
-		r_reg[2] = '0;
-		r_reg[3] = '0;
-		r_reg[4] = '0;
-		r_reg[5] = '0;
-
 		o_rdata = r_reg[i_rsel];
 		o_flags = r_reg[0];
 		o_sp = {r_reg[7],r_reg[6]};
@@ -35,6 +29,12 @@ module csr_file(
 		if (i_we) begin
 			r_reg[i_wsel] <= i_wdata;
 			r_reg[0][6:4] <= '0;
+			// zero out unassigned registers
+			r_reg[1] <= 8'bx;
+			r_reg[2] <= 8'bx;
+			r_reg[3] <= 8'bx;
+			r_reg[4] <= 8'bx;
+			r_reg[5] <= 8'bx;
 		end
 		if (i_wsp) begin
 			r_reg[6] <= i_sp[7:0];

@@ -9,6 +9,9 @@ module testbench;
 	logic [7:0]  w_mem_wdata;
 	logic [7:0]  w_mem_rdata;
 	logic        w_mem_we;
+	logic        w_interrupt;
+	logic [6:0]  w_interrupt_id;
+	logic        w_interrupt_ack;
 
 	// 64KB byte-addressed Memory
 	logic [7:0] r_memory [0:65535];
@@ -22,7 +25,10 @@ module testbench;
 	.o_mem_addr(w_mem_addr),
 	.o_mem_wdata(w_mem_wdata),
 	.i_mem_rdata(w_mem_rdata),
-	.o_mem_we(w_mem_we)
+	.o_mem_we(w_mem_we),
+	.i_interrupt(w_interrupt),
+	.i_interrupt_id(w_interrupt_id),
+	.o_interrupt_ack(w_interrupt_ack)
 	);
 
 	// Clock generation
@@ -47,11 +53,16 @@ module testbench;
 
 	// Main simulation block
 	initial begin
+		logic interrupt_triggered = 0;
 		$display("[%0t] Starting Simulation...", $time);
 	
 		// Initialize memory
 		for (int i = 0; i < 65536; i++) r_memory[i] = 0;
 	
+		// Initialize inputs
+		w_interrupt = 0;
+		w_interrupt_id = 0;
+
 		// Load program
 		$readmemh("mem.hex", r_memory);
 
@@ -61,7 +72,7 @@ module testbench;
 		$display("[%0t] Reset Released", $time);
 
 		// Simulation loop
-		for (int i = 0; i < 100; i++) begin
+		for (int i = 0; i < 200; i++) begin
 			@(posedge w_clk);
 			#1; // Small delay to allow signals to settle for display
 			$display("[%0t] PC: %04X | Instr: %04X | R0: %02X | R1: %02X | R2: %02X | R3: %02X | R4: %02X | R5: %02X | R6: %02X | R7: %02X | SP: %04X | I: %b | V: %b | N: %b | Z: %b | C: %b", 
@@ -81,15 +92,29 @@ module testbench;
 				u_cpu.w_cf_flags[1],
 				u_cpu.w_cf_flags[0]);
 	    
-		// Check for Halt (Branch to self)
-		if (w_instr == 16'hFFFE) begin
-			$display("[%0t] Halt detected (infinite loop). Simulation finished.", $time);
-			$finish;
-		end
-	end
+			// Trigger an external interrupt when WFI is reached
+			if (w_instr == 16'h4000 && !interrupt_triggered) begin
+				$display("[%0t] WFI detected. Triggering external interrupt...", $time);
+				w_interrupt = 1;
+				w_interrupt_id = 7'h00; // SWI 0 handler
+				interrupt_triggered = 1;
+			end
 
-	$display("[%0t] Simulation timeout.", $time);
-	$finish;
+			// Clear interrupt on ack
+			if (w_interrupt_ack) begin
+				$display("[%0t] Interrupt Acknowledged.", $time);
+				w_interrupt = 0;
+			end
+
+			// Check for Halt (Branch to self)
+			if (w_instr == 16'hFFFE) begin
+				$display("[%0t] Halt detected (infinite loop). Simulation finished.", $time);
+				$finish;
+			end
+		end
+
+		$display("[%0t] Simulation timeout.", $time);
+		$finish;
 	end
 
 	initial begin
