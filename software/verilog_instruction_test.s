@@ -106,7 +106,7 @@ test_interrupt:
 	LI	r0, 0x80
 	MOV	flags, r0
 	WFI
-	NOP
+	LI	r0, 0xAB
 halt:
 	B	AL, halt
 

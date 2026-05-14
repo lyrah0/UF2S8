@@ -57,7 +57,8 @@ module control_unit(
 	output logic [6:0]	o_interrupt_id,
 	output logic		or_interrupt_ack,
 	output logic		o_interrupt_id_we,
-	output logic		o_interrupt_id_sel
+	output logic		o_interrupt_id_sel,
+	input logic [6:0]	i_rdata
 );
 
 	// instruction stage flip flops
@@ -68,13 +69,14 @@ module control_unit(
 	// interrupt stage flip flops and wires
 	logic 		w_interrupt;
 	logic [2:0]	r_interrupt_stage;
+	logic		r_interrupt_internal;
 
 	// wait for interrupt flip flop
 	logic 		r_wfi;
 
 
 	always_comb begin
-		w_interrupt = i_interrupt && i_flags[7];
+		w_interrupt = (i_interrupt && i_flags[7]) || r_interrupt_internal;
 
 		o_alu_op = 4'b0;
 		o_rf_we = 1'b0;
@@ -97,6 +99,7 @@ module control_unit(
 		o_cf_wdata_sel = 3'h0;
 		o_interrupt_id_we = 1'b0;
 		o_interrupt_id_sel = 1'b0;
+		o_interrupt_id = 7'b0;
 		
 		case (i_wsel)
 			3'b000: w_cond = i_flags[1];	// ZS/EQ
@@ -172,6 +175,12 @@ module control_unit(
 				o_ig_sel = 3'h7;
 				o_alu_b_sel = 1'b1;
 				o_cf_wdata_sel = 3'h1;
+			end
+			16'b???_101_000_000_0000: begin // SWI
+				o_rf_rsel1 = i_wsel;
+				o_interrupt_id = i_rdata;
+				o_interrupt_id_sel = 1'b1;
+				o_interrupt_id_we = 1'b1;
 			end
 			16'b???_110_000_000_0000: begin // POP
 				o_rf_we = 1'b1;
@@ -508,20 +517,22 @@ module control_unit(
 			// disable PC update
 			o_pc_we = 1'b0;
 			// store PC upper
-			o_mem_wdata_sel = 3'h3;
+			o_mem_wdata_sel = 3'h6;
 			o_mem_we = 1'b1;
 			o_agu_sel = 3'h3;
 			// SP decrement
 			o_sp_sel = 2'h2;
 			o_cf_wsp = 1'b1;
-			// write external interrupt id to register
-			o_interrupt_id_sel = 1'b0;
-			o_interrupt_id_we = 1'b1;
+			if (~r_interrupt_internal) begin
+				// write external interrupt id to register
+				o_interrupt_id_sel = 1'b0;
+				o_interrupt_id_we = 1'b1;
+			end
 		end else if (r_interrupt_stage == 1) begin
 			// disable PC update
 			o_pc_we = 1'b0;
 			// store PC upper
-			o_mem_wdata_sel = 3'h2;
+			o_mem_wdata_sel = 3'h5;
 			o_mem_we = 1'b1;
 			o_agu_sel = 3'h3;
 			// SP decrement
@@ -564,8 +575,11 @@ module control_unit(
 			r_interrupt_stage <= 3'h0;
 			or_interrupt_ack <= 1'b0;
 			r_wfi <= 1'b0;
+			r_interrupt_internal <= 1'b0;
 		end
 
+
+		if (r_interrupt_stage == 0 && ~w_interrupt && ~r_wfi) begin
 		casez (i_instr)
 			16'b001_000_000_000_0000: begin // RET
 				if (r_stage == 0 && r_interrupt_stage == 0 && ~w_interrupt) r_stage <= 2'h1;
@@ -579,6 +593,9 @@ module control_unit(
 				else if (r_stage == 1) r_stage <= 2'h2;
 				else if (r_stage == 2) r_stage <= 2'h0;
 			end
+			16'b???_101_000_000_0000: begin // SWI
+				r_interrupt_internal <= 1'b1;
+			end
 			16'b???_??1_000_111_0000: begin // BL
 				if (r_stage == 0 && w_cond && r_interrupt_stage == 0 && ~w_interrupt) r_stage <= 2'h1;
 				else if (r_stage == 1) r_stage <= 2'h0;
@@ -589,14 +606,19 @@ module control_unit(
 			end
 			default: r_stage <= 2'b00;
 		endcase
+		end
 
 		if (r_stage == 0 && r_interrupt_stage == 0 && w_interrupt) begin
 			// advance interrupt stage
 			r_interrupt_stage <= 3'h1;
-			// acknowledge interrupt
-			or_interrupt_ack <= 1'b1;
+			if (~r_interrupt_internal) begin
+				// acknowledge interrupt
+				or_interrupt_ack <= 1'b1;
+			end
 			// remove WFI
 			r_wfi <= 1'b0;
+			// remove internal interrupt flag
+			r_interrupt_internal <= 1'b0;
 		end else if (r_interrupt_stage == 1) begin
 			r_interrupt_stage <= 3'h2;
 			// unacknowledge interrupt

@@ -183,7 +183,8 @@ module cpu (
 		.o_interrupt_id(w_cu_interrupt_id),
 		.or_interrupt_ack(o_interrupt_ack),
 		.o_interrupt_id_we(w_interrupt_id_we),
-		.o_interrupt_id_sel(w_interrupt_id_sel)
+		.o_interrupt_id_sel(w_interrupt_id_sel),
+		.i_rdata(w_rf_rdata1[6:0])
 	);
 
 
@@ -214,8 +215,8 @@ module cpu (
 			3'h2: o_mem_wdata = {w_pc_next[6:0],1'b0};
 			3'h3: o_mem_wdata = w_pc_next[14:7];
 			3'h4: o_mem_wdata = w_cf_flags;
-			3'h5: o_mem_wdata = {w_pc_next[6:0],1'b0};
-			3'h6: o_mem_wdata = w_pc_next[14:7];
+			3'h5: o_mem_wdata = {r_pc[6:0],1'b0};
+			3'h6: o_mem_wdata = r_pc[14:7];
 			default: o_mem_wdata = 8'bZ;
 		endcase
 
