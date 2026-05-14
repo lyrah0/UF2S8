@@ -5,13 +5,8 @@ module control_unit(
 
 	// Decoder inputs
 	input  logic [15:0]	i_instr,
-	input  logic [3:0]	i_op1,
-	input  logic 		i_opi,
-	input  logic [2:0]	i_op2,
 	input  logic [2:0]	i_rsel2,
 	input  logic [2:0]	i_rsel1,
-	input  logic 		i_opbr,
-	input  logic [1:0]	i_asel,
 	input  logic [2:0]	i_wsel,
 
 	// Flags

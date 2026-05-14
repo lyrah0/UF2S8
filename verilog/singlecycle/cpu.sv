@@ -21,14 +21,9 @@ module cpu (
 	logic [6:0]	r_interrupt_id;
 	logic [14:0]	w_pc_next;
 	logic		w_pc_we;
-	logic [3:0]	w_id_op1;
-	logic [2:0]	w_id_op2;
 	logic [2:0]	w_id_rsel1;
 	logic [2:0]	w_id_rsel2;
-	logic [1:0]	w_id_asel;
 	logic [2:0]	w_id_wsel;
-	logic		w_id_opi;
-	logic		w_id_opbr;
 	logic [7:0]	w_alu_a;
 	logic [7:0]	w_alu_b;
 	logic [3:0]	w_alu_op;
@@ -69,14 +64,9 @@ module cpu (
 
 	inst_decode u_inst_decode (
 		.i_instr(i_instr),
-		.o_op1(w_id_op1),
-		.o_op2(w_id_op2),
 		.o_rsel1(w_id_rsel1),
 		.o_rsel2(w_id_rsel2),
-		.o_asel(w_id_asel),
-		.o_wsel(w_id_wsel),
-		.o_opi(w_id_opi),
-		.o_opbr(w_id_opbr)
+		.o_wsel(w_id_wsel)
 	);
 
 	alu u_alu (
@@ -151,15 +141,10 @@ module cpu (
 		.i_clk(i_clk),
 		.i_rst_n(i_rst_n),
 		.i_instr(i_instr),
-		.i_op1(w_id_op1),
-		.i_op2(w_id_op2),
 		.i_rsel1(w_id_rsel1),
 		.i_rsel2(w_id_rsel2),
-		.i_asel(w_id_asel),
 		.i_wsel(w_id_wsel),
 		.i_flags(w_cf_flags),
-		.i_opi(w_id_opi),
-		.i_opbr(w_id_opbr),
 		.o_alu_op(w_alu_op),
 		.o_rf_we(w_rf_we),
 		.o_rf_rsel1(w_rf_rsel1),
