@@ -8,7 +8,12 @@ module cpu (
 	output logic [15:0]	o_mem_addr,
 	output logic [7:0]	o_mem_wdata,
 	input  logic [7:0]	i_mem_rdata,
-	output logic		o_mem_we
+	output logic		o_mem_we,
+	// Interrupt Interface
+	input logic 		i_interrupt,
+	input logic [6:0] 	i_interrupt_id,
+	output logic 		o_interrupt_ack
+
 );
 
 	// Signals
