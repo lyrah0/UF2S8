@@ -50,7 +50,12 @@ module control_unit(
 	output logic [1:0]	o_rf_wdata_sel,
 	output logic [1:0]	o_mem_wdata_sel,
 	output logic		o_mem_we,
-	output logic [1:0]	o_cf_wdata_sel
+	output logic [1:0]	o_cf_wdata_sel,
+
+	// Interrupt Interface
+	input  logic 		i_interrupt,
+	input  logic [6:0] 	i_interrupt_id,
+	output logic 		o_interrupt_ack
 );
 
 	// instruction stage flip flops

@@ -173,7 +173,10 @@ module cpu (
 		.o_rf_wdata_sel(w_rf_wdata_sel),
 		.o_mem_wdata_sel(w_mem_wdata_sel),
 		.o_mem_we(o_mem_we),
-		.o_cf_wdata_sel(w_cf_wdata_sel)
+		.o_cf_wdata_sel(w_cf_wdata_sel),
+		.i_interrupt(i_interrupt),
+		.i_interrupt_id(i_interrupt_id),
+		.o_interrupt_ack(o_interrupt_ack)
 	);
 
 
