@@ -47,7 +47,6 @@ module cpu (
 	logic [2:0] 	w_cf_rsel;
 	logic [2:0] 	w_cf_wsel;
 	logic       	w_cf_wsp;
-	logic [15:0] 	w_cf_i_sp;
 	logic [15:0] 	w_cf_o_sp;
 	logic [7:0]  	w_cf_flags;
 	logic [2:0]	w_ig_sel;
@@ -215,6 +214,8 @@ module cpu (
 			3'h2: o_mem_wdata = {w_pc_next[6:0],1'b0};
 			3'h3: o_mem_wdata = w_pc_next[14:7];
 			3'h4: o_mem_wdata = w_cf_flags;
+			3'h5: o_mem_wdata = {w_pc_next[6:0],1'b0};
+			3'h6: o_mem_wdata = w_pc_next[14:7];
 			default: o_mem_wdata = 8'bZ;
 		endcase
 
