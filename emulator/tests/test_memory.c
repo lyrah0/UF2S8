@@ -81,7 +81,8 @@ static void test_vram_access()
 	assert(viM->vram[0x1235] == 0xEF);
 	assert(viM->vram_ptr == 0x1236);
 
-	uint8_t val = memory_read(viM, HW_GFX_DATA); // Read from 0x1236, then increment
+	uint8_t val = memory_read(
+		viM, HW_GFX_DATA); // Read from 0x1236, then increment
 	assert(val == 0); // VRAM was 0 at 0x1236
 	(void)val;
 	assert(viM->vram_ptr == 0x1237);

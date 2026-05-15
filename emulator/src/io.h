@@ -4,3 +4,5 @@
 void interrupt_pushtostack(struct VirtualMachine *viM);
 void interrupt_timer(struct VirtualMachine *viM, uint64_t ticks_ns);
 void interrupt_input(struct VirtualMachine *viM);
+void interrupt_uart(struct VirtualMachine *viM);
+void handle_uart_events(struct VirtualMachine *viM);

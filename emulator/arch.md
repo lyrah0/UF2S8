@@ -10,7 +10,8 @@ interrupts:
 |0x03-0x0F|Reserved|Reserved
 |0x10|Timer	|Timer interrupt
 |0x11|Keyboard  |Keyboard interrupt
-|0x12-0x1F|Reserved|Reserved
+|0x12|UART      |UART RX interrupt
+|0x13-0x1F|Reserved|Reserved
 
 hardware registers:
 
@@ -53,10 +54,12 @@ hardware registers:
 |reserved         |0xFEE4-0xFEED|Reserved
 |GFX_DATA         |0xFEEE|Graphics VRAM data
 |GFX_CTRL         |0xFEEF|graphics control
-|TERM_OUT         |0xFEF0|terminal output
 |KBD_DATA         |0xFEF1|keyboard data
 |KBD_STATUS       |0xFEF2|keyboard status
-|reserved         |0xFEF3-0xFEFC|Reserved
+|UART_DATA        |0xFEF3|UART data register (R/W)
+|UART_STATUS      |0xFEF4|UART status register (R)
+|UART_CTRL        |0xFEF5|UART control register (R/W)
+|reserved         |0xFEF6-0xFEFC|Reserved
 |BANK_SEL         |0xFEFD|Bank select register (Bits 0-3: Window 0, Bits 4-7: Window 1)
 |TIMER_HZ         |0xFEFE|timer multiplier in hertz (1/hertz) 0=disabled
 |HW_CTRL          |0xFEFF|hardware control
@@ -135,6 +138,21 @@ KBD_STATUS format:
 |7-2	|Reserved|
 |1	|Press-Release (0=Press, 1=Release)|
 |0	|Keyboard ready (0=Not ready, 1=Ready)|
+|
+|UART_STATUS format:
+|
+|Bit	|Description|
+|-------|-----------|
+|7-2	|Reserved|
+|1	|Transmitter empty (Always 1 in emulator)|
+|0	|Receiver ready (0=No data, 1=Data available)|
+|
+|UART_CTRL format:
+|
+|Bit	|Description|
+|-------|-----------|
+|7-1	|Reserved|
+|0	|Receiver interrupt enable|
 
 graphics VRAM:
 

@@ -33,9 +33,11 @@
 .equ HW_GFX_HEIGHT,        0xFEE3
 .equ HW_GFX_DATA,          0xFEEE
 .equ HW_GFX_CTRL,          0xFEEF
-.equ HW_TERM_OUT,          0xFEF0
 .equ HW_KBD_DATA,          0xFEF1
 .equ HW_KBD_STATUS,        0xFEF2
+.equ HW_UART_DATA,         0xFEF3
+.equ HW_UART_STATUS,       0xFEF4
+.equ HW_UART_CTRL,         0xFEF5
 .equ HW_BANK_SEL,          0xFEFD
 .equ HW_TIMER_HZ,          0xFEFE
 .equ HW_HW_CTRL,           0xFEFF
@@ -50,6 +52,7 @@
 .equ INT_ILL,     0x02
 .equ INT_TIMER,   0x10
 .equ INT_KBD,     0x11
+.equ INT_UART,    0x12
 
 ; Blitter Commands
 .equ CMD_FILL_RECT,       0x01
@@ -116,9 +119,11 @@
 .equ OFS2_GFX_DATA,     0x2E
 .equ OFS2_GFX_CTRL,     0x2F
 
-.equ OFS2_TERM_OUT,    0x30
 .equ OFS2_KBD_DATA,    0x31
 .equ OFS2_KBD_STATUS,  0x32
+.equ OFS2_UART_DATA,   0x33
+.equ OFS2_UART_STATUS, 0x34
+.equ OFS2_UART_CTRL,   0x35
 .equ OFS2_BANK,        0x3D
 .equ OFS2_TIMER_HZ,    0x3E
 .equ OFS2_HW_CTRL,     0x3F

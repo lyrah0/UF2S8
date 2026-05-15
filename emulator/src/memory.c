@@ -44,7 +44,7 @@ void memory_dump(struct VirtualMachine *viM)
 
 void memory_write(struct VirtualMachine *viM, uint16_t address, uint8_t value)
 {
-	if (address == HW_TERM_OUT) {
+	if (address == HW_UART_DATA) {
 		terminal_write(value);
 	} else if (address == HW_BLIT_CMD) {
 		execute_blit(viM, value);
@@ -92,6 +92,21 @@ uint8_t memory_read(struct VirtualMachine *viM, uint16_t address)
 			if ((event >> 8) & 1) {
 				status |= 0x02; // Release
 			}
+		}
+		return status;
+	}
+	if (address == HW_UART_DATA) {
+		if (viM->uart_head != viM->uart_tail) {
+			uint8_t data = viM->uart_buffer[viM->uart_head];
+			viM->uart_head = (viM->uart_head + 1) % 64;
+			return data;
+		}
+		return 0;
+	}
+	if (address == HW_UART_STATUS) {
+		uint8_t status = 0x02; // TX Empty always set
+		if (viM->uart_head != viM->uart_tail) {
+			status |= 0x01; // RX Ready
 		}
 		return status;
 	}

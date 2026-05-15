@@ -39,9 +39,11 @@ enum {
 	HW_GFX_DATA = 0xFEEE,
 	HW_GFX_CTRL = 0xFEEF,
 	HW_PALETTE_START = 0xFFF0,
-	HW_TERM_OUT = 0xFEF0,
 	HW_KBD_DATA = 0xFEF1,
 	HW_KBD_STATUS = 0xFEF2,
+	HW_UART_DATA = 0xFEF3,
+	HW_UART_STATUS = 0xFEF4,
+	HW_UART_CTRL = 0xFEF5,
 	HW_TIMER_HZ = 0xFEFE,
 	HW_BANK_SEL = 0xFEFD,
 	HW_HW_CTRL = 0xFEFF
@@ -86,6 +88,9 @@ struct VirtualMachine {
 	uint16_t key_buffer[64];
 	int key_head;
 	int key_tail;
+	uint8_t uart_buffer[64];
+	int uart_head;
+	int uart_tail;
 };
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 static inline int16_t sign_extend(uint16_t value, uint8_t bits)

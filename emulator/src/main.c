@@ -19,6 +19,16 @@
 #include "io.h"
 #include "debugger.h"
 #include "graphics.h"
+#include <signal.h>
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static struct VirtualMachine *g_viM = nullptr;
+
+static void signal_handler(int sig)
+{
+	(void)sig;
+	if (g_viM) { g_viM->running = false; }
+}
 
 static int cpu_thread_worker(void *data)
 {
@@ -29,6 +39,8 @@ static int cpu_thread_worker(void *data)
 	viM->memory[HW_HW_CTRL] = 0;
 	// Default to RGB332 mode
 	viM->memory[HW_GFX_CTRL] = 0;
+	viM->uart_head = 0;
+	viM->uart_tail = 0;
 	for (int i = 0; i < 8; i++) {
 		viM->csr[i] = 0;
 	}
@@ -45,6 +57,7 @@ static int cpu_thread_worker(void *data)
 			ticks_ns = SDL_GetTicksNS();
 			interrupt_timer(viM, ticks_ns);
 			interrupt_input(viM);
+			interrupt_uart(viM);
 		}
 		if (!viM->wait_for_interrupt) {
 			instruction = fetch_instruction(viM);
@@ -107,9 +120,13 @@ int main(int argc, char *argv[])
 
 	FILE *finput = nullptr;
 	char *ifilepath = nullptr;
-
 	int opt = 0;
-	static struct VirtualMachine viM;
+	struct VirtualMachine viM = { 0 };
+	g_viM = &viM;
+
+	(void)signal(SIGINT, signal_handler);
+	(void)signal(SIGTERM, signal_handler);
+
 	viM.debug_mode = false;
 	viM.memory_dump = false;
 	viM.graphics = false;
@@ -184,6 +201,7 @@ int main(int argc, char *argv[])
 
 	while (viM.running) {
 		handle_graphics_events(&viM);
+		handle_uart_events(&viM);
 		render_graphics_frame(&viM);
 		SDL_Delay(1);
 	}
