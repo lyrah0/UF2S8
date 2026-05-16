@@ -28,7 +28,7 @@ UF2S8 is a custom 8-bit computer architecture designed from scratch, featuring a
 | `assembler/` | Two-pass assembler (C, GNU23) — lexer, encoder, symbol table |
 | `emulator/`  | SDL3-based emulator (C, GNU23) — CPU, graphics, debugger     |
 | `software/`  | Example assembly programs (graphics demos, fonts)            |
-| `verilog/`   | SystemVerilog hardware implementation (Single-cycle CPU)     |
+| `verilog/`   | SystemVerilog hardware implementation (Single-cycle & Multicycle) |
 | `tools/`     | Utilities — `img2bit.py` image-to-sprite converter           |
 
 ## Building
