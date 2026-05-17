@@ -19,16 +19,16 @@ module alu(
 			4'h1: temp_res = i_a + i_b + {16'b0, i_c};
 			4'h2: temp_res = i_a - i_b;
 			4'h3: temp_res = i_a - i_b - {16'b0, ~i_c};
-			4'h4: temp_res = {9'bX, w_a8 & w_b8};
-			4'h5: temp_res = {9'bX, w_a8 | w_b8};
-			4'h6: temp_res = {9'bX, ~(w_a8 | w_b8)};
-			4'h7: temp_res = {9'bX, w_a8 ^ w_b8};
-			4'h8: temp_res = {9'bX, w_a8 << i_b[2:0]};
-			4'h9: temp_res = {9'bX, w_a8 >> i_b[2:0]};
-			4'hA: temp_res = {9'bX, w_a8 >>> i_b[2:0]};
-			4'hB: temp_res = {1'bX, i_a};
-			4'hC: temp_res = {1'bX, i_b};
-			default: temp_res = 17'bX;
+			4'h4: temp_res = {9'bx, w_a8 & w_b8};
+			4'h5: temp_res = {9'bx, w_a8 | w_b8};
+			4'h6: temp_res = {9'bx, ~(w_a8 | w_b8)};
+			4'h7: temp_res = {9'bx, w_a8 ^ w_b8};
+			4'h8: temp_res = {9'bx, w_a8 << i_b[2:0]};
+			4'h9: temp_res = {9'bx, w_a8 >> i_b[2:0]};
+			4'hA: temp_res = {9'bx, w_a8 >>> i_b[2:0]};
+			4'hB: temp_res = {1'bx, i_a};
+			4'hC: temp_res = {1'bx, i_b};
+			default: temp_res = 17'bx;
 		endcase
 	end
 
@@ -44,9 +44,9 @@ module alu(
 			o_flags[0] = ~temp_res[8]; // inverted Carry
 			o_flags[4] = ~temp_res[16]; // inverted Extended Carry
 		end else begin
-			o_flags[3] = 1'bX; // Overflow
-			o_flags[0] = 1'bX; // Carry
-			o_flags[4] = 1'bX; // Extended Carry
+			o_flags[3] = 1'bx; // Overflow
+			o_flags[0] = 1'bx; // Carry
+			o_flags[4] = 1'bx; // Extended Carry
 		end
 
 		o_flags[1] = (temp_res[7:0] == 8'b0); // Zero

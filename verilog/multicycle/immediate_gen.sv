@@ -1,5 +1,5 @@
 module immediate_gen(
-	input  logic [15:4]	i_instr,
+	input  logic [12:4]	i_instr,
 	input  logic [2:0] 	i_sel,
 	output logic [15:0]	o_immediate
 );
