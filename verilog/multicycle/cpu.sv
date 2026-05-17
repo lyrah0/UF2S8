@@ -22,10 +22,14 @@ module cpu(
     	// registers
 	logic [14:0] 	r_pc;
 	logic [15:0] 	r_address;
-	logic [15:0] 	r_data16;
+	logic [15:0] 	r_data;
 	// control signals
 	logic [1:0]	w_ctr_alu_a_sel;
 	logic [1:0]	w_ctr_alu_b_sel;
+	logic		w_ctr_pc_we;
+	logic [1:0]	w_ctr_address_sel;
+	logic		w_ctr_address_we;
+	logic		w_ctr_data_we;
 	
 
 	//Wishbone signals
@@ -143,5 +147,28 @@ module cpu(
 			2'h2: w_alu_b = 16'h1;
 			2'h3: w_alu_b = 16'h2;
 		endcase
+	end
+
+	always_ff @(posedge clk_i) begin
+		if (rst_i) begin
+			r_pc <= 15'b0;
+			r_address <= 16'b0;
+			r_data <= 16'b0;
+		end else begin
+			if (w_ctr_pc_we) begin
+				r_pc <= w_alu_result[15:1];
+			end
+			if (w_ctr_address_we) begin
+				case (w_ctr_address_sel)
+					2'h0: r_address <= w_alu_result;
+					2'h1: r_address <= w_cf_sp_o;
+					2'h2: r_address <= {r_pc, 1'b0};
+					2'h3: r_address <= {r_pc, 1'b1};
+				endcase
+			end
+			if (w_ctr_data_we) begin
+				r_data <= w_alu_result;
+			end
+		end
 	end
 endmodule
