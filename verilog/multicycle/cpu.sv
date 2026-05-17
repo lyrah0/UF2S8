@@ -23,6 +23,7 @@ module cpu(
 	logic [14:0] 	r_pc;
 	logic [15:0] 	r_address;
 	logic [15:0] 	r_data;
+	logic [15:0]	r_instruction;
 	// control signals
 	logic [1:0]	w_ctr_alu_a_sel;
 	logic [1:0]	w_ctr_alu_b_sel;
@@ -30,6 +31,8 @@ module cpu(
 	logic [1:0]	w_ctr_address_sel;
 	logic		w_ctr_address_we;
 	logic		w_ctr_data_we;
+	logic		w_ctr_instruction_lwe;
+	logic		w_ctr_instruction_uwe;
 	
 
 	//Wishbone signals
@@ -135,6 +138,13 @@ module cpu(
 	);
 
 	always_comb begin
+		// static assignments
+		w_wb_addr = r_address;
+		w_rf_wsel = r_instruction[15:13];
+		w_cf_sp_i = w_alu_result;
+		w_alu_c = w_cf_flags[4];
+		w_ig_instr = r_instruction[12:4];
+
 		case (w_ctr_alu_a_sel)
 			2'h0: w_alu_a = {8'b0, w_rf_rdata1};
 			2'h1: w_alu_a = w_rf_adata;
@@ -168,6 +178,12 @@ module cpu(
 			end
 			if (w_ctr_data_we) begin
 				r_data <= w_alu_result;
+			end
+			if (w_ctr_instruction_lwe) begin
+				r_instruction[7:0] <= w_wb_data_o;
+			end
+			if (w_ctr_instruction_uwe) begin
+				r_instruction[15:8] <= w_wb_data_o;
 			end
 		end
 	end
