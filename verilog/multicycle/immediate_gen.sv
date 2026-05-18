@@ -11,6 +11,9 @@ module immediate_gen(
 			3'h2: o_immediate = {{10{i_instr[9]}},i_instr[9:4]};
 			3'h3: o_immediate = {{9{i_instr[10]}},i_instr[10:4]};
 			3'h4: o_immediate = {{6{i_instr[12]}},i_instr[12:4],1'b0};
+			3'h5: o_immediate = 16'h0;
+			3'h6: o_immediate = 16'h1;
+			3'h7: o_immediate = 16'h2;
 			default: o_immediate = 16'bx;
 		endcase
 	end
