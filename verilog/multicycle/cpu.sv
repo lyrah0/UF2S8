@@ -224,9 +224,9 @@ module cpu(
 			if (w_ctr_pc_we) begin
 				case (w_ctr_pc_sel)
 					2'h0: r_pc <= w_alu_result[15:1];
-					2'h1: r_pc <= r_data[15:1];
 					2'h2: r_pc <= {8'hx, w_wb_data_o[7:1]};
 					2'h3: r_pc <= {w_wb_data_o, r_pc[6:0]};
+					default: r_pc <= 15'bx;
 				endcase
 			end
 			if (w_ctr_address_we) begin
