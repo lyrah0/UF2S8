@@ -11,7 +11,7 @@ This directory contains the hardware implementation of the UF2S8 architecture. T
 
 - **Modular Design** — Clean separation between the ALU, Register File, Control Unit, and Address Generation Unit.
 - **Single-Cycle Execution** — A complete instruction is executed in one clock cycle.
-- **Multicycle Design (In Progress)** — Implementation focusing on shared components and state-machine control.
+- **Multicycle Design (In Progress)** — Implementation focusing on shared components and state-machine control, includes wishbone interface.
 - **Simulation Ready** — Includes a testbench for functional verification using Icarus Verilog.
 - **Roadmap** — Moving towards pipelined designs.
 
@@ -20,7 +20,7 @@ This directory contains the hardware implementation of the UF2S8 architecture. T
 | Path | Description |
 |------|-------------|
 | `singlecycle/` | Standard single-cycle CPU implementation. |
-| `multicycle/`  | **(In Progress)** Multicycle CPU implementation. |
+| `multicycle/`  | **(In Progress)** Multicycle CPU implementation with Wishbone interface. |
 
 ## Single-Cycle Architecture
 
