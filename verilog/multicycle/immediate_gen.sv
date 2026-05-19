@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module immediate_gen(
 	input  logic [12:4]	i_instr,
 	input  logic [2:0] 	i_sel,

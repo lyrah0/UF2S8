@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module wb_ram_slave(
 	input  logic        clk_i,
 	input  logic        cyc_i,

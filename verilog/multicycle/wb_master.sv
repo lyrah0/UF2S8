@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module wb_master(
 	// Wishbone signals
 	input  logic        clk_i,

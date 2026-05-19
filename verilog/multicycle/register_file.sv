@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module register_file(
 	input  logic        i_clk,
 	input  logic        i_we,

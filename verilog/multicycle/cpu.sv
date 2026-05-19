@@ -1,9 +1,9 @@
+`timescale 1ns / 1ps
 module cpu(
 	// Wishbone signals
 	input  logic        clk_i,
 	input  logic        rst_i,
 	input  logic        ack_i,
-	input  logic        stall_i,
 	input  logic [7:0]  dat_i,
 	output logic	    stb_o,
 	output logic	    cyc_o,
@@ -22,7 +22,7 @@ module cpu(
     	// registers
 	logic [14:0] 	r_pc;
 	logic [15:0] 	r_address;
-	logic [15:0] 	r_data;
+	logic [7:0] 	r_data;
 	logic [15:0]	r_instruction;
 	logic		r_wb_we;
 	logic		r_wb_req;
@@ -33,14 +33,16 @@ module cpu(
 	logic		w_ctr_alu_b_sel;
 	logic		w_ctr_pc_we;
 	logic [1:0]	w_ctr_pc_sel;
-	logic [1:0]	w_ctr_address_sel;
+	logic [2:0]	w_ctr_address_sel;
 	logic		w_ctr_address_we;
 	logic		w_ctr_data_we;
 	logic		w_ctr_instruction_lwe;
 	logic		w_ctr_instruction_uwe;
 	logic		w_ctr_int_id_we;
 	logic		w_ctr_int_id_sel;
-	logic [1:0]	w_ctr_cf_wdata_sel;
+	logic [2:0]	w_ctr_cf_wdata_sel;
+	logic [1:0]	w_ctr_rf_wdata_sel;
+	logic [1:0]	w_ctr_data_sel;
 
 	
 
@@ -92,7 +94,6 @@ module cpu(
 		.clk_i(clk_i),
 		.rst_i(rst_i),
 		.ack_i(ack_i),
-		.stall_i(stall_i),
 		.dat_i(dat_i),
 		.stb_o(stb_o),
 		.cyc_o(cyc_o),
@@ -178,6 +179,9 @@ module cpu(
 		.o_ctr_data_we(w_ctr_data_we),
 		.o_ctr_instruction_lwe(w_ctr_instruction_lwe),
 		.o_ctr_instruction_uwe(w_ctr_instruction_uwe),
+		.o_ctr_cf_wdata_sel(w_ctr_cf_wdata_sel),
+		.o_ctr_rf_wdata_sel(w_ctr_rf_wdata_sel),
+		.o_ctr_data_sel(w_ctr_data_sel),
 		.i_interrupt(i_int),
 		.o_interrupt_id(w_cu_int_id),
 		.or_interrupt_ack(o_int_ack),
@@ -192,6 +196,7 @@ module cpu(
 		w_wb_req = r_wb_req;
 		w_wb_lock = r_wb_lock;
 		w_wb_addr = r_address;
+		w_wb_data_i = r_data;
 		w_rf_wsel = r_instruction[15:13];
 		w_cf_sp_i = w_alu_result;
 		w_alu_c = w_cf_flags[4];
@@ -208,10 +213,18 @@ module cpu(
 			1'h1: w_alu_b = w_ig_immediate;
 		endcase
 		case (w_ctr_cf_wdata_sel)
-			2'h0: w_cf_wdata = {w_cf_flags[4], 3'hx, w_alu_flags};
-			2'h1: w_cf_wdata = w_rf_rdata1[7:0];
-			2'h2: w_cf_wdata = w_wb_data_o;
+			3'h0: w_cf_wdata = {w_cf_flags[4], 3'hx, w_alu_flags};
+			3'h1: w_cf_wdata = w_rf_rdata1[7:0];
+			3'h2: w_cf_wdata = w_wb_data_o;
+			3'h3: w_cf_wdata = 8'h0;
+			3'h4: w_cf_wdata = {w_cf_flags[4], 4'hx, w_wb_data_o[7], w_wb_data_o == 0, 1'hx};
 			default: w_cf_wdata = 8'hx;
+		endcase
+		case (w_ctr_rf_wdata_sel)
+			2'h0: w_rf_wdata = w_alu_result[7:0];
+			2'h1: w_rf_wdata = w_wb_data_o;
+			2'h2: w_rf_wdata = w_cf_rdata;
+			default: w_rf_wdata = 8'hx;
 		endcase
 	end
 
@@ -219,11 +232,12 @@ module cpu(
 		if (rst_i) begin
 			r_pc <= 15'b0;
 			r_address <= 16'b0;
-			r_data <= 16'b0;
+			r_data <= 8'b0;
 		end else begin
 			if (w_ctr_pc_we) begin
 				case (w_ctr_pc_sel)
 					2'h0: r_pc <= w_alu_result[15:1];
+					2'h1: r_pc <= w_rf_adata[15:1];
 					2'h2: r_pc <= {8'hx, w_wb_data_o[7:1]};
 					2'h3: r_pc <= {w_wb_data_o, r_pc[6:0]};
 					default: r_pc <= 15'bx;
@@ -231,17 +245,26 @@ module cpu(
 			end
 			if (w_ctr_address_we) begin
 				case (w_ctr_address_sel)
-					2'h0: r_address <= w_alu_result;
-					2'h1: r_address <= w_cf_sp_o;
-					2'h2: r_address <= {r_pc, 1'b0};
-					2'h3: r_address <= {r_pc, 1'b1};
+					3'h0: r_address <= w_alu_result;
+					3'h1: r_address <= w_cf_sp_o;
+					3'h2: r_address <= {r_pc, 1'b0};
+					3'h3: r_address <= {r_pc, 1'b1};
+					3'h4: r_address <= {8'hFF, r_int_id, 1'b0};
+					3'h5: r_address <= {8'hFF, r_int_id, 1'b1};
+					default: r_address <= 16'hx;
 				endcase
 				r_wb_we <= w_cu_wb_we;
 				r_wb_req <= w_cu_wb_req;
 				r_wb_lock <= w_cu_wb_lock;
 			end
 			if (w_ctr_data_we) begin
-				r_data <= w_alu_result;
+				case (w_ctr_data_sel)
+					2'h0: r_data <= w_rf_rdata1;
+					2'h1: r_data <= {w_cf_flags[4], 3'hx, w_cf_flags[3:0]};
+					2'h2: r_data <= {r_pc[6:0], 1'b0};
+					2'h3: r_data <= r_pc[14:7];
+					default: r_data <= 8'bx;
+				endcase
 			end
 			if (w_ctr_instruction_lwe) begin
 				r_instruction[7:0] <= w_wb_data_o;
