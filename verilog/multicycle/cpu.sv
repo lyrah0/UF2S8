@@ -199,7 +199,7 @@ module cpu(
 		w_wb_data_i = r_data;
 		w_rf_wsel = r_instruction[15:13];
 		w_cf_sp_i = w_alu_result;
-		w_alu_c = w_cf_flags[4];
+		w_alu_c = w_cf_flags[0];
 		w_ig_instr = r_instruction[12:4];
 
 		case (w_ctr_alu_a_sel)
@@ -254,9 +254,9 @@ module cpu(
 					default: r_address <= 16'hx;
 				endcase
 				r_wb_we <= w_cu_wb_we;
-				r_wb_req <= w_cu_wb_req;
 				r_wb_lock <= w_cu_wb_lock;
 			end
+			r_wb_req <= w_cu_wb_req;
 			if (w_ctr_data_we) begin
 				case (w_ctr_data_sel)
 					2'h0: r_data <= w_rf_rdata1;

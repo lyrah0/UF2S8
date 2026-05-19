@@ -112,7 +112,7 @@ module control_unit(
 			3'h7: w_cond = 1'b1;		// AL
 		endcase
 
-		if (r_stage == 0 && ~w_interrupt && ~r_wfi) begin // Fetch instruction byte 1
+		if (r_stage == 0 && r_interrupt_stage == 0 && ~w_interrupt && ~r_wfi) begin // Fetch instruction byte 1
 			// request lower byte of instruction
 			o_wb_req = 1'b1;
 			o_wb_lock = 1'b1;
@@ -293,22 +293,24 @@ module control_unit(
 					end
 				end
 				16'b???_111_000_000_0000: begin // PUSH
-					// decrement stack pointer
-					o_alu_a_sel = 2'h3;
-					o_alu_b_sel = 1'b1;
-					o_alu_op = 4'h2;
-					o_ig_sel = 3'h6;
-					o_cf_wsp = 1'b1;
-					// send request to bus
-					o_wb_req = 1'b1;
-					o_wb_lock = 1'b0;
-					o_wb_we = 1'b1;
-					o_ctr_address_sel = 3'h1;
-					o_ctr_address_we = 1'b1;
-					// send data
-					o_rf_rsel1 = i_instruction[15:13];
-					o_ctr_data_sel = 2'h0;
-					o_ctr_data_we = 1'b1;
+					if (r_stage == 3) begin
+						// decrement stack pointer
+						o_alu_a_sel = 2'h3;
+						o_alu_b_sel = 1'b1;
+						o_alu_op = 4'h2;
+						o_ig_sel = 3'h6;
+						o_cf_wsp = 1'b1;
+						// send request to bus
+						o_wb_req = 1'b1;
+						o_wb_lock = 1'b0;
+						o_wb_we = 1'b1;
+						o_ctr_address_sel = 3'h1;
+						o_ctr_address_we = 1'b1;
+						// send data
+						o_rf_rsel1 = i_instruction[15:13];
+						o_ctr_data_sel = 2'h0;
+						o_ctr_data_we = 1'b1;
+					end
 				end
 				16'b???_???_000_001_0000: begin // MOV csr->gpr
 					// pick csr
@@ -416,7 +418,7 @@ module control_unit(
 					// select alu op and inputs
 					o_rf_rsel1 = i_instruction[12:10];
 					o_rf_rsel2 = i_instruction[9:7];
-					o_alu_op = 4'h2;
+					o_alu_op = 4'h3;
 					o_alu_a_sel = 2'h0;
 					o_alu_b_sel = 1'h0;
 					// select register input and write enable
@@ -636,21 +638,24 @@ module control_unit(
 					o_cf_we = 1'b1;
 				end
 				16'b???_???_???_???_1100: begin // SB
-					// request to write to bus
-					o_wb_req = 1'b1;
-					o_wb_we = 1'b1;
-					// address
-					o_rf_rsel2 = i_instruction[12:10];
-					o_alu_op = 4'h0;
-					o_alu_a_sel = 2'h1;
-					o_alu_b_sel = 1'h1;
-					o_ig_sel = 3'h3;
-					// select address and write enable
-					o_ctr_address_sel = 3'h0;
-					o_ctr_address_we = 1'b1;
-					// select data and write enable
-					o_ctr_data_sel = 2'h0;
-					o_ctr_data_we = 1'b1;
+					if (r_stage == 3) begin
+						// request to write to bus
+						o_wb_req = 1'b1;
+						o_wb_we = 1'b1;
+						// address
+						o_rf_rsel2 = i_instruction[12:10];
+						o_alu_op = 4'h0;
+						o_alu_a_sel = 2'h1;
+						o_alu_b_sel = 1'h1;
+						o_ig_sel = 3'h3;
+						// select address and write enable
+						o_ctr_address_sel = 3'h0;
+						o_ctr_address_we = 1'b1;
+						// select data and write enable
+						o_rf_rsel1 = i_instruction[15:13];
+						o_ctr_data_sel = 2'h0;
+						o_ctr_data_we = 1'b1;
+					end
 				end
 				16'b???_???_???_???_1101: begin // LB
 					if (r_stage == 3) begin
@@ -717,7 +722,8 @@ module control_unit(
 						// send PC lower
 						o_ctr_data_sel = 2'h2;
 						o_ctr_data_we = 1'b1;
-					end if (r_stage == 5) begin
+					end
+					if (r_stage == 5 && i_wb_ready) begin
 						// select PC and add offset
 						o_alu_op = 4'h0;
 						o_alu_a_sel = 2'h2;
@@ -823,7 +829,7 @@ module control_unit(
 			r_interrupt_internal <= 1'b0;
 			r_wfi <= 1'b0;
 		end else begin
-			if (r_stage == 0 && ~w_interrupt && ~r_wfi) begin
+			if (r_stage == 0 && r_interrupt_stage == 0 && ~w_interrupt && ~r_wfi) begin
 				r_stage <= 3'h1;
 			end
 			if (r_stage == 1 && i_wb_ready) begin
@@ -876,7 +882,26 @@ module control_unit(
 							r_stage <= 3'h0;
 						end
 					end
+					16'b???_111_000_000_0000: begin // PUSH
+						if (r_stage == 3) begin
+							r_stage <= 3'h4;
+						end
+						if (r_stage == 4 && i_wb_ready) begin
+							r_stage <= 3'h0;
+						end
+					end
 					16'b???_??1_000_111_0000: begin // BL
+						if (r_stage == 3) begin
+							r_stage <= 3'h4;
+						end
+						if (r_stage == 4 && i_wb_ready) begin
+							r_stage <= 3'h5;
+						end
+						if (r_stage == 5 && i_wb_ready) begin
+							r_stage <= 3'h0;
+						end
+					end
+					16'b???_???_???_???_1100: begin // SB
 						if (r_stage == 3) begin
 							r_stage <= 3'h4;
 						end
@@ -900,7 +925,7 @@ module control_unit(
 						if (r_stage == 4 && i_wb_ready) begin
 							r_stage <= 3'h5;
 						end
-						if (r_stage == 5) begin
+						if (r_stage == 5 && i_wb_ready) begin
 							r_stage <= 3'h0;
 						end
 					end

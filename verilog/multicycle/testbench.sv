@@ -6,7 +6,6 @@ module testbench;
 	
 	// Wishbone wires
 	logic        w_ack;
-	logic        w_stall;
 	logic [7:0]  w_dat_i;
 	logic        w_stb;
 	logic        w_cyc;
@@ -60,7 +59,7 @@ module testbench;
 
 	// Log memory writes
 	always @(posedge w_clk) begin
-		if (w_cyc && w_stb && w_we && !w_stall) begin
+		if (w_cyc && w_stb && w_we) begin
 			$display("[%0t] MEM WRITE: [%04X] = %02X", $time, w_adr, w_dat_o);
 		end
 	end
@@ -77,6 +76,7 @@ module testbench;
 
 		// Load program
 		$readmemh("mem.hex", u_ram.ram);
+		$display("b0: %X b1: %X b2: %X b3: %X", u_ram.ram[16'h00B0], u_ram.ram[16'h00B1], u_ram.ram[16'h00B2], u_ram.ram[16'h00B3]);
 
 		// Reset sequence (active high)
 		w_rst = 1;
@@ -89,7 +89,7 @@ module testbench;
 			@(posedge w_clk);
 			#0.1; // Small delay to allow signals to settle for display
 			
-			$display("[%0t] Stage: %0d | PC: %04X | Instr Reg: %04X | R0: %02X | R1: %02X | R2: %02X | R3: %02X | R4: %02X | R5: %02X | R6: %02X | R7: %02X | SP: %04X | I: %b | V: %b | N: %b | Z: %b | C: %b | WB: cyc=%b stb=%b ack=%b adr=%04X dat_i=%02X dat_o=%02X req=%b", 
+			$display("[%0t] Stage: %0d | PC: %04X | Instr: %04X | R0: %02X | R1: %02X | R2: %02X | R3: %02X | R4: %02X | R5: %02X | R6: %02X | R7: %02X | SP: %04X | I: %b | V: %b | N: %b | Z: %b | C: %b | WB: cyc=%b stb=%b ack=%b adr=%04X dat_i=%02X dat_o=%02X we=%b", 
 				$time, 
 				u_cpu.cu.r_stage, 
 				{u_cpu.r_pc, 1'b0}, 
@@ -108,7 +108,7 @@ module testbench;
 				u_cpu.cf.o_flags[2],
 				u_cpu.cf.o_flags[1],
 				u_cpu.cf.o_flags[0],
-				w_cyc, w_stb, w_ack, w_adr, w_dat_i, w_dat_o, u_cpu.wb.i_req);
+				w_cyc, w_stb, w_ack, w_adr, w_dat_i, w_dat_o, w_we);
 
 			// Trigger an external interrupt when WFI is reached and some time has passed
 			if (u_cpu.cu.r_wfi && !interrupt_triggered && $time >= 150) begin
