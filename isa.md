@@ -104,3 +104,166 @@ Conditions:
 |B       |ccc_ooo_ooo_ooo_1110|Branch relative (COND)
 |BL      |ccc_ooo_ooo_ooo_1111|Branch relative and push return address to stack (COND)
 
+### instruction details
+
+flag legend:
+
+x - unknown
+m - modified
+
+#### NOP - No operation
+Does nothing
+
+#### RET - Return
+Pop return address from stack to PC
+
+#### WFI - Wait for interrupt
+Halt execution until an interrupt occurs
+
+#### RETI - Return from interrupt
+Pop return address and flags from stack to PC and Flags registers
+
+#### INCC - Increment Carry
+Increment dst with Carry flag
+
+C: m Z: m N: m V: m
+
+#### DECB - Decrement Borrow
+Decrement dst with Borrow flag
+
+C: m Z: m N: m V: m
+
+#### SWI - Software interrupt from register
+Software interrupt with ID from register
+
+#### POP - Pop register from stack
+Pop from stack into register dst
+
+C: x Z: m N: m V: x
+
+#### PUSH - Push register to stack
+Push register src to stack
+
+#### MOV - Move csr to register
+Move csr to register
+
+C: x Z: m N: m V: x
+
+#### MOV - Move register to csr
+Move register to csr
+
+#### CMP - Compare subtraction
+Compare subtraction src1 and src2
+
+C: m Z: m N: m V: m
+
+#### CMA - Compare And
+Compare And src1 and src2
+
+C: x Z: m N: m V: x
+
+#### B - Branch register (COND)
+Branch register (COND)
+
+#### BL - Branch register and push return address to stack (COND)
+Branch register and push return address to stack (COND)
+
+#### SUB - Subtract
+Subtract src2 from src1 and store at dst
+
+C: m Z: m N: m V: m
+
+#### SBB - Subtract with borrow
+Subtract src2 with borrow from src1 and store at dst
+
+C: m Z: m N: m V: m
+
+#### ADD - Add
+Add src1 and src2 and store at dst
+
+C: m Z: m N: m V: m
+
+#### ADC - Add with carry
+Add src1 with carry and src2 and store at dst
+
+C: m Z: m N: m V: m
+
+#### AND - And
+And src1 and src2 and store at dst
+
+C: x Z: m N: m V: x
+
+#### MOV - Move register to register (both source registers are the same)
+Move register src to register dst (both source registers are the same)
+
+C: x Z: m N: m V: x
+
+#### OR - Or
+Or src1 and src2 and store at dst
+
+C: x Z: m N: m V: x
+
+#### NOR - Not Or
+Not Or src1 and src2 and store at dst
+
+C: x Z: m N: m V: x
+
+#### XOR - Exclusive or
+Exclusive or src1 and src2 and store at dst
+
+C: x Z: m N: m V: x
+
+#### SLL - Shift Left Logical
+Shift Left Logical src1 with src2 and store at dst
+
+C: x Z: m N: m V: x
+
+#### SRL - Shift Right Logical
+Shift Right Logical src1 with src2 and store at dst
+
+C: x Z: m N: m V: x
+
+#### SRA - Shift Right Arithmetic
+Shift Right Arithmetic src1 with src2 and store at dst
+
+C: x Z: m N: m V: x
+
+#### SLL - Shift Left Logical immediate
+Shift Left Logical src1 with immediate and store at dst
+
+C: x Z: m N: m V: x
+
+#### SRL - Shift Right Logical immediate
+Shift Right Logical src1 with immediate and store at dst
+
+C: x Z: m N: m V: x
+
+#### SRA - Shift Right Arithmetic immediate
+Shift Right Arithmetic src1 with immediate and store at dst
+
+C: x Z: m N: m V: x
+
+#### LI - Load Immediate
+Load Immediate into dst
+
+C: x Z: m N: m V: x
+
+#### ADD - Add signed immediate
+Add src1 with signed immediate and store at dst
+
+C: m Z: m N: m V: m
+
+#### SB - Store byte with offset
+Store src with base + offset in memory
+
+
+#### LB - Load byte with offset
+Load byte from base + offset in memory to dst
+
+C: x Z: m N: m V: x
+
+#### B - Branch relative (COND)
+Branch relative (COND)
+
+#### BL - Branch relative and push return address to stack (COND)
+Branch relative and push return address to stack (COND)
