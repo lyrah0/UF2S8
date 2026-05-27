@@ -27,6 +27,11 @@ This directory contains the hardware implementation of the UF2S8 architecture. T
 ![Single-cycle data & control paths](singlecycle/Diagram.webp)
 *Single-cycle data & control paths*
 
+## Multicycle Architecture
+
+![Multicycle data & control paths](multicycle/Diagram.webp)
+*Multicycle data & control paths*
+
 ## Simulation
 
 The hardware implementation can be simulated using **Icarus Verilog**.
