@@ -53,15 +53,22 @@ module wb_master(
 				if (stb_o && ack_i) begin
 					stb_o <= 1'b0;
 					// If CPU wants another locked transfer, keep cycle open
-					if (i_lock && i_req) begin
+					if (lock_o) begin
 						cyc_o <= 1'b1;
 					end else begin
 						cyc_o <= 1'b0;
 					end
-				end else if (!stb_o && i_req) begin
-					// CPU starts another locked request
-					stb_o <= 1'b1;
-					we_o  <= i_we;
+				end else if (!stb_o) begin
+					if (i_req) begin
+						// CPU starts another locked request
+						stb_o <= 1'b1;
+						we_o  <= i_we;
+						lock_o <= i_lock;
+						tgc_o  <= i_lock;
+					end else begin
+						// No more requests, close the cycle
+						cyc_o <= 1'b0;
+					end
 				end
 			end
 		end

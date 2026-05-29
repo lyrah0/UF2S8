@@ -253,9 +253,9 @@ module cpu(
 					3'h5: r_address <= {8'hFF, r_int_id, 1'b1};
 					default: r_address <= 16'hx;
 				endcase
-				r_wb_we <= w_cu_wb_we;
-				r_wb_lock <= w_cu_wb_lock;
 			end
+			r_wb_we <= w_cu_wb_we;
+			r_wb_lock <= w_cu_wb_lock;
 			r_wb_req <= w_cu_wb_req;
 			if (w_ctr_data_we) begin
 				case (w_ctr_data_sel)
