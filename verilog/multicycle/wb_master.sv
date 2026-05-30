@@ -68,6 +68,8 @@ module wb_master(
 					end else begin
 						// No more requests, close the cycle
 						cyc_o <= 1'b0;
+						lock_o <= 1'b0;
+						tgc_o <= 1'b0;
 					end
 				end
 			end
