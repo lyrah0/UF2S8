@@ -81,7 +81,7 @@ module cpu(
 	logic [15:0]    w_alu_result;
 	logic [3:0]     w_alu_flags;
 	//Imediate Generator signals
-	logic [12:4]    w_ig_instr;
+	logic [15:4]    w_ig_instr;
 	logic [2:0]     w_ig_sel;
 	logic [15:0]    w_ig_immediate;
 	//Control Unit signals
@@ -162,8 +162,6 @@ module cpu(
 		.o_wb_lock(w_cu_wb_lock),
 		.i_wb_ready(w_wb_ready),
 		.o_rf_we(w_rf_we),
-		.o_rf_rsel1(w_rf_rsel1),
-		.o_rf_rsel2(w_rf_rsel2),
 		.o_cf_we(w_cf_we),
 		.o_cf_rsel(w_cf_rsel),
 		.o_cf_wsel(w_cf_wsel),
@@ -198,9 +196,11 @@ module cpu(
 		w_wb_addr = r_address;
 		w_wb_data_i = r_data;
 		w_rf_wsel = r_instruction[15:13];
+		w_rf_rsel1 = r_instruction[12:10];
+		w_rf_rsel2 = r_instruction[9:7];
 		w_cf_sp_i = w_alu_result;
 		w_alu_c = w_cf_flags[0];
-		w_ig_instr = r_instruction[12:4];
+		w_ig_instr = r_instruction[15:4];
 
 		case (w_ctr_alu_a_sel)
 			2'h0: w_alu_a = {8'b0, w_rf_rdata1};

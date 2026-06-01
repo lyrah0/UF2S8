@@ -49,27 +49,28 @@ static bool encode_instructions(struct TokenList *tokenList,
 	} else if (!strcasecmp(token->str, "RETI")) {
 		machine_code = 0x0400;
 	} else if (!strcasecmp(token->str, "SWI")) {
-		if (handle_spp(
-			    tokenList, current_token, &machine_code, 0x1400)) {
+		if (handle_ss(
+			    tokenList, current_token, &machine_code, 0x0080)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "INCC")) {
-		if (handle_spp(
-			    tokenList, current_token, &machine_code, 0x0800)) {
+		if (handle_sdss(
+			    tokenList, current_token, &machine_code, 0x0110)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "DECB")) {
-		if (handle_spp(
-			    tokenList, current_token, &machine_code, 0x0C00)) {
+		if (handle_sdss(
+			    tokenList, current_token, &machine_code, 0x0190)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "POP")) {
-		if (handle_pp(
-			    tokenList, current_token, &machine_code, false)) {
+		if (handle_sd(
+			    tokenList, current_token, &machine_code, 0x0100)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "PUSH")) {
-		if (handle_pp(tokenList, current_token, &machine_code, true)) {
+		if (handle_ss(
+			    tokenList, current_token, &machine_code, 0x2080)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "MOV")) {
@@ -77,13 +78,13 @@ static bool encode_instructions(struct TokenList *tokenList,
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "CMP")) {
-		if (handle_crr(
-			    tokenList, current_token, &machine_code, 0x0110)) {
+		if (handle_ds(
+			    tokenList, current_token, &machine_code, 0x0020)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "CMA")) {
-		if (handle_crr(
-			    tokenList, current_token, &machine_code, 0x0190)) {
+		if (handle_ds(
+			    tokenList, current_token, &machine_code, 0x2020)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "SUB")) {

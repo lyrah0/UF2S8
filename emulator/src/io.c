@@ -73,6 +73,7 @@ void interrupt_uart(struct VirtualMachine *viM)
 
 struct TerminalState {
 	struct termios orig;
+	int flags;
 	bool initialized;
 };
 
@@ -83,6 +84,7 @@ static void restore_terminal_mode(void)
 {
 	if (s_term_state.initialized) {
 		(void)tcsetattr(STDIN_FILENO, TCSAFLUSH, &s_term_state.orig);
+		(void)fcntl(STDIN_FILENO, F_SETFL, s_term_state.flags);
 	}
 }
 
@@ -92,9 +94,8 @@ void handle_uart_events(struct VirtualMachine *viM)
 
 	if (!s_term_state.initialized) {
 		(void)tcgetattr(STDIN_FILENO, &s_term_state.orig);
+		s_term_state.flags = fcntl(STDIN_FILENO, F_GETFL, 0);
 		(void)atexit(restore_terminal_mode);
-		int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
-		fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 		s_term_state.initialized = true;
 	}
 
@@ -104,6 +105,8 @@ void handle_uart_events(struct VirtualMachine *viM)
 	} else if (!viM->debug_mode && !is_raw) {
 		struct termios raw = s_term_state.orig;
 		raw.c_lflag &= ~(ECHO | ICANON);
+		(void)fcntl(STDIN_FILENO, F_SETFL,
+			s_term_state.flags | O_NONBLOCK);
 		(void)tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 		is_raw = true;
 	}

@@ -263,7 +263,7 @@ multiply_loop:
         B       ZS, multiply_end
 multiply_continue:
         ADD     r2, r2, -1
-        DECB    r3
+        DECB    r3, r3
         ADD     r0, r0, r4
         ADC     r1, r1, r5
         B       AL, multiply_loop
@@ -392,7 +392,7 @@ print_string_loop:
         LB      r3, [a2]
         B       ZS, print_string_end
         ADD     r4, r4, 1
-        INCC    r5
+        INCC    r5, r5
         SB      r4, [a3+5]
         SB      r5, [a3+6]
         PUSH    r3
@@ -401,7 +401,7 @@ print_string_loop:
         LB      r1, [a3-1]
         LB      r0, [a3-2]
         ADD     r0, r0, 8
-        INCC    r1
+        INCC    r1, r1
         SB      r0, [a3-2]
         SB      r1, [a3-1]
         POP     r3

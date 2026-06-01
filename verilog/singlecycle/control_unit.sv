@@ -5,7 +5,6 @@ module control_unit(
 
 	// Decoder inputs
 	input  logic [15:0]	i_instr,
-	input  logic [2:0]	i_rsel2,
 	input  logic [2:0]	i_rsel1,
 	input  logic [2:0]	i_wsel,
 
@@ -17,8 +16,6 @@ module control_unit(
 	
 	// Register File
 	output logic		o_rf_we,
-	output logic [2:0]	o_rf_rsel1,
-	output logic [2:0]	o_rf_rsel2,
 	
 	// CSR File
 	output logic 		o_cf_we,
@@ -79,8 +76,6 @@ module control_unit(
 
 		o_alu_op = 4'b0;
 		o_rf_we = 1'b0;
-		o_rf_rsel1 = i_rsel1;
-		o_rf_rsel2 = i_rsel2;
 		o_cf_we = 1'b0;
 		o_cf_rsel = i_rsel1;
 		o_cf_wsel = 3'h0;
@@ -158,31 +153,19 @@ module control_unit(
 					o_pc_we = 1'b1;
 				end
 			end
-			16'b???_010_000_000_0000: begin // INCC
-				o_alu_op = 4'h1;
-				o_rf_we = 1'b1;
-				o_rf_rsel1 = i_wsel;
-				o_cf_we = 1'b1;
-				o_ig_sel = 3'h7;
-				o_alu_b_sel = 1'b1;
-				o_cf_wdata_sel = 3'h1;
-			end
-			16'b???_011_000_000_0000: begin // DECB
-				o_alu_op = 4'h3;
-				o_rf_we = 1'b1;
-				o_rf_rsel1 = i_wsel;
-				o_cf_we = 1'b1;
-				o_ig_sel = 3'h7;
-				o_alu_b_sel = 1'b1;
-				o_cf_wdata_sel = 3'h1;
-			end
-			16'b???_101_000_000_0000: begin // SWI
-				o_rf_rsel1 = i_wsel;
+			16'b000_???_001_000_0000: begin // SWI
 				o_interrupt_id = i_rdata;
 				o_interrupt_id_sel = 1'b1;
 				o_interrupt_id_we = 1'b1;
 			end
-			16'b???_110_000_000_0000: begin // POP
+			16'b001_???_001_000_0000: begin // PUSH
+				o_cf_wsp = 1'b1;
+				o_cf_wdata_sel = 3'h2;
+				o_sp_sel = 2'h2; 
+				o_agu_sel = 3'h3;
+				o_mem_we = 1'b1;
+			end
+			16'b???_000_010_000_0000: begin // POP
 				o_rf_we = 1'b1;
 				o_cf_wsp = 1'b1;
 				o_cf_wdata_sel = 3'h2;
@@ -190,22 +173,12 @@ module control_unit(
 				o_agu_sel = 3'h4;
 				o_rf_wdata_sel = 2'h2;
 			end
-			16'b???_111_000_000_0000: begin // PUSH
-				o_rf_rsel1 = i_wsel;
-				o_cf_wsp = 1'b1;
-				o_cf_wdata_sel = 3'h2;
-				o_sp_sel = 2'h2; 
-				o_agu_sel = 3'h3;
-				o_mem_we = 1'b1;
-			end
 			16'b???_???_000_001_0000: begin // MOV csr->gpr
 				// select csr
 				o_cf_rsel = i_rsel1;
-
 				// write csr output to gpr
 				o_rf_we = 1'b1;
 				o_rf_wdata_sel = 2'h1;
-
 				// handle flags
 				o_cf_wdata_sel = 3'h2;
 				o_cf_we = 1'b1;
@@ -214,34 +187,45 @@ module control_unit(
 				o_cf_we = 1'b1;
 				o_cf_wsel = i_wsel;
 			end
-			16'b???_???_010_001_0000: begin // CMP
-				// operands
-				o_rf_rsel2 = i_wsel;
+			16'b???_???_010_001_0000: begin // INCC
+				o_alu_op = 4'h1;
+				o_rf_we = 1'b1;
+				o_cf_we = 1'b1;
+				o_ig_sel = 3'h7;
+				o_alu_b_sel = 1'b1;
+				o_cf_wdata_sel = 3'h1;
+			end
+			16'b???_???_011_001_0000: begin // DECB
+				o_alu_op = 4'h3;
+				o_rf_we = 1'b1;
+				o_cf_we = 1'b1;
+				o_ig_sel = 3'h7;
+				o_alu_b_sel = 1'b1;
+				o_cf_wdata_sel = 3'h1;
+			end
+			16'b000_???_???_010_0000: begin // CMP
 				// ALU op
 				o_alu_op = 4'h2;
 				// flags
 				o_cf_we = 1'b1;
 				o_cf_wdata_sel = 3'h2;
 			end
-			16'b???_???_011_001_0000: begin // CMA
-				// operands
-				o_rf_rsel2 = i_wsel;
+			16'b001_???_???_010_0000: begin // CMA
 				// ALU op
 				o_alu_op = 4'h4;
 				// flags
 				o_cf_we = 1'b1;
 				o_cf_wdata_sel = 3'h2;
 			end
-			16'b???_??0_000_111_0000: begin // B
+			16'b???_000_??0_111_0000: begin // B
 				if (w_cond) begin
 					// load new PC
-					o_rf_rsel2 = i_rsel1;
 					o_agu_sel = 3'h0;
 					o_pc_sel = 2'h1;
 					o_pc_we = 1'b1;
 				end
 			end
-			16'b???_??1_000_111_0000: begin // BL
+			16'b???_000_??1_111_0000: begin // BL
 				o_agu_sel = 3'h3;
 				o_sp_sel = 2'h2;
 				if (w_cond && r_stage == 0) begin
@@ -260,7 +244,6 @@ module control_unit(
 					// SP decrement
 					o_cf_wsp = 1'b1;
 					// load new PC
-					o_rf_rsel2 = i_rsel1;
 					o_pc_sel = 2'h1;
 					o_pc_we = 1'b1;
 				end
@@ -435,7 +418,7 @@ module control_unit(
 				// add
 				o_alu_op = 4'h0;
 				// immediate operand
-				o_ig_sel = 3'h2;
+				o_ig_sel = 3'h0;
 				// switch ALU operand B to immediate
 				o_alu_b_sel = 1'b1;
 				// store result in register
@@ -446,21 +429,15 @@ module control_unit(
 				o_cf_wdata_sel = 3'h1;
 			end
 			16'b???_???_???_???_1100: begin // SB
-				// operand A
-				o_rf_rsel1 = i_wsel;
-				// operand B
-				o_rf_rsel2 = i_rsel1;
 				// output A to mem
 				o_mem_wdata_sel = 3'h0;
 				o_mem_we = 1'b1;
 				// immediate operand
-				o_ig_sel = 3'h3;
+				o_ig_sel = 3'h2;
 				// set address + immediate
 				o_agu_sel = 3'h1;
 			end
 			16'b???_???_???_???_1101: begin // LB
-				// operand B
-				o_rf_rsel2 = i_rsel1;
 				// immediate operand
 				o_ig_sel = 3'h3;
 				// set address + immediate
@@ -597,10 +574,10 @@ module control_unit(
 				else if (r_stage == 1) r_stage <= 2'h2;
 				else if (r_stage == 2) r_stage <= 2'h0;
 			end
-			16'b???_101_000_000_0000: begin // SWI
+			16'b000_???_001_000_0000: begin // SWI
 				r_interrupt_internal <= 1'b1;
 			end
-			16'b???_??1_000_111_0000: begin // BL
+			16'b???_000_??1_111_0000: begin // BL
 				if (r_stage == 0 && w_cond && r_interrupt_stage == 0 && ~w_interrupt) r_stage <= 2'h1;
 				else if (r_stage == 1) r_stage <= 2'h0;
 			end

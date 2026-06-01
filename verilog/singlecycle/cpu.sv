@@ -32,8 +32,6 @@ module cpu (
 	logic [7:0]	w_rf_rdata1;
 	logic [7:0]	w_rf_rdata2;
 	logic [15:0]	w_rf_adata;
-	logic [2:0]	w_rf_rsel1;
-	logic [2:0]	w_rf_rsel2;
 	logic [7:0]	w_rf_wdata;
 	logic		w_rf_we;
 	logic [7:0] 	w_cf_rdata;
@@ -81,8 +79,8 @@ module cpu (
 	register_file u_register_file (
 		.i_clk(i_clk),
 		.i_we(w_rf_we),
-		.i_rsel1(w_rf_rsel1),
-		.i_rsel2(w_rf_rsel2),
+		.i_rsel1(w_id_rsel1),
+		.i_rsel2(w_id_rsel2),
 		.i_wsel(w_id_wsel),
 		.i_wdata(w_rf_wdata),
 		.o_rdata1(w_rf_rdata1),
@@ -142,13 +140,10 @@ module cpu (
 		.i_rst_n(i_rst_n),
 		.i_instr(i_instr),
 		.i_rsel1(w_id_rsel1),
-		.i_rsel2(w_id_rsel2),
 		.i_wsel(w_id_wsel),
 		.i_flags(w_cf_flags),
 		.o_alu_op(w_alu_op),
 		.o_rf_we(w_rf_we),
-		.o_rf_rsel1(w_rf_rsel1),
-		.o_rf_rsel2(w_rf_rsel2),
 		.o_cf_we(w_cf_we),
 		.o_cf_rsel(w_cf_rsel),
 		.o_cf_wsel(w_cf_wsel),

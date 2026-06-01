@@ -115,7 +115,7 @@ static bool handle_immediate(const struct TokenList *tokenList,
 		}
 		*immediate = symbolTable->symbols[symbol_num].address & 0xFF;
 	} else if (token->type == TOKEN_NUMBER) {
-		if ((token->num_value > 127 || token->num_value < -128) &&
+		if ((token->num_value > 255 || token->num_value < -128) &&
 			token->str[1] != 'x') {
 			printf("Warning: %d: value %lld outside valid 8-bit "
 			       "immediate range, will wrap around.\n",
@@ -240,7 +240,17 @@ bool handle_mov(const struct TokenList *tokenList, int *current_token,
 	return false;
 }
 
-bool handle_spp(const struct TokenList *tokenList, int *current_token,
+bool handle_ss(const struct TokenList *tokenList, int *current_token,
+	uint16_t *machine_code, uint16_t base)
+{
+	struct Token *next1 = &tokenList->tokens[*current_token + 1];
+	if (handle_errors(tokenList, current_token, 1)) { return true; }
+	*machine_code = base | next1->num_value << 10;
+	*current_token += 1;
+	return false;
+}
+
+bool handle_sd(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code, uint16_t base)
 {
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
@@ -250,37 +260,25 @@ bool handle_spp(const struct TokenList *tokenList, int *current_token,
 	return false;
 }
 
-bool handle_pp(const struct TokenList *tokenList, int *current_token,
-	uint16_t *machine_code, bool isPush)
-{
-	struct Token *next1 = &tokenList->tokens[*current_token + 1];
-	if (next1->type != TOKEN_REGISTER) {
-		printf("ERROR: %d: expected register after instruction.\n",
-			next1->line);
-		return true;
-	}
-	if (next1->num_value > 9) {
-		printf("ERROR: %d: invalid register '%s'.\n", next1->line,
-			next1->str);
-		return true;
-	}
-	if (isPush) {
-		*machine_code = 0x1C00 | next1->num_value << 13;
-	} else {
-		*machine_code = 0x1800 | next1->num_value << 13;
-	}
-	*current_token += 1;
-	return false;
-}
-
-// Handles compare register register instructions: CMP, CMN, CMA
-bool handle_crr(const struct TokenList *tokenList, int *current_token,
+bool handle_sdss(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code, uint16_t base)
 {
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
 	struct Token *next3 = &tokenList->tokens[*current_token + 3];
 	if (handle_errors(tokenList, current_token, 3)) { return true; }
 	*machine_code = base | next1->num_value << 13 | next3->num_value << 10;
+	*current_token += 3;
+	return false;
+}
+
+// Handles compare register register instructions: CMP, CMN, CMA
+bool handle_ds(const struct TokenList *tokenList, int *current_token,
+	uint16_t *machine_code, uint16_t base)
+{
+	struct Token *next1 = &tokenList->tokens[*current_token + 1];
+	struct Token *next3 = &tokenList->tokens[*current_token + 3];
+	if (handle_errors(tokenList, current_token, 3)) { return true; }
+	*machine_code = base | next1->num_value << 10 | next3->num_value << 7;
 	*current_token += 3;
 	return false;
 }
@@ -350,8 +348,8 @@ bool handle_add(const struct TokenList *tokenList,
 		return true;
 	}
 	*machine_code = 0x000B | next1->num_value << 13 |
-		next3->num_value << 10 | (immediate & 0x3F) << 4;
-
+		next3->num_value << 10 | (immediate & 0x7) << 7 |
+		(immediate >> 3 & 0x7) << 4;
 	return false;
 }
 
@@ -463,9 +461,15 @@ bool handle_loadstore(const struct TokenList *tokenList,
 		return true;
 	}
 	immediate &= 0x7F;
-	uint16_t base = (int)load ? 0x000D : 0x000C;
-	*machine_code = base | next1->num_value << 13 | base_reg << 11 |
-		immediate << 4;
+	if (load) {
+		*machine_code = 0x000D | next1->num_value << 13 |
+			base_reg << 8 | (immediate & 0xF) << 4 |
+			(immediate >> 4) << 10;
+	} else {
+		*machine_code = 0x000C | next1->num_value << 10 |
+			base_reg << 8 | (immediate & 0xF) << 4 |
+			(immediate >> 4) << 13;
+	}
 	return false;
 }
 
@@ -576,11 +580,11 @@ bool handle_branch_cond(const struct TokenList *tokenList,
 		*machine_code = base | next1->num_value << 13 | offset << 4;
 	} else {
 		if (link) {
-			base = 0x0470;
+			base = 0x00F0;
 		} else {
 			base = 0x0070;
 		}
-		*machine_code = base | next1->num_value << 13 | base_reg << 11;
+		*machine_code = base | next1->num_value << 13 | base_reg << 8;
 	}
 	return false;
 }

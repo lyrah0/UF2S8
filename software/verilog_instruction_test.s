@@ -41,9 +41,9 @@ test_arithmetic:
 	ADD	r4, r2, r1
 	ADC	r5, r3, r0
 	SUB	r4, r1, r0
-	DECB	r5
+	DECB	r5, r5
 	ADD	r4, r2, r1
-	INCC	r4
+	INCC	r4, r4
 test_logic:
 	LI	r0, 0xFF
 	LI	r1, 0xAB

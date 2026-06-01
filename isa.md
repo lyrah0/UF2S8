@@ -60,28 +60,28 @@ Conditions:
 |CC/LO   |3     |c==0         |Carry clear, unsigned lower|
 |NS/MI   |4     |n==1         |Negative set|
 |NC/PL   |5     |n==0         |Negative clear|
-|VS      |6	|v==1         |Overflow set|
-|AL      |7	|none         |Always|
+|VS      |6	    |v==1         |Overflow set|
+|AL      |7	    |none         |Always|
 
 ## instructions
 
-|Mnemonic|OPCODE             |Description|
-|--------|-------------------|-----------|
+|Mnemonic|OPCODE              |Description|
+|--------|--------------------|-----------|
 |NOP     |000_000_000_000_0000|No operation
 |RET     |001_000_000_000_0000|Return
 |WFI     |010_000_000_000_0000|Wait for interrupt
 |RETI    |000_001_000_000_0000|Return from interrupt
-|INCC    |ddd_010_000_000_0000|Increment Carry
-|DECB    |ddd_011_000_000_0000|Decrement Borrow
-|SWI     |sss_101_000_000_0000|Software interrupt from register
-|POP     |ddd_110_000_000_0000|pop register from stack
-|PUSH    |sss_111_000_000_0000|push register to stack
+|SWI     |000_sss_001_000_0000|Software interrupt from register
+|PUSH    |001_sss_001_000_0000|push register to stack
+|POP     |ddd_000_010_000_0000|pop register from stack
 |MOV     |ddd_sss_000_001_0000|Move csr to register
 |MOV     |ddd_sss_001_001_0000|Move register to csr
-|CMP     |sss_sss_010_001_0000|Compare subtraction
-|CMA     |sss_sss_011_001_0000|Compare And
-|B       |ccc_bb0_000_111_0000|Branch register (COND)
-|BL      |ccc_bb1_000_111_0000|Branch register and push return address to stack (COND)
+|INCC    |ddd_sss_010_001_0000|Increment Carry
+|DECB    |ddd_sss_011_001_0000|Decrement Borrow
+|CMP     |000_sss_sss_010_0000|Compare subtraction
+|CMA     |001_sss_sss_010_0000|Compare And
+|B       |ccc_000_bb0_111_0000|Branch register (COND)
+|BL      |ccc_000_bb1_111_0000|Branch register and push return address to stack (COND)
 |SUB     |ddd_sss_sss_000_0001|Subtract
 |SBB     |ddd_sss_sss_001_0001|Subtract with borrow
 |ADD     |ddd_sss_sss_010_0001|Add
@@ -99,10 +99,12 @@ Conditions:
 |SRA     |ddd_sss_iii_110_0010|Shift Right Arithmetic immediate
 |LI      |ddd_iii_iii_ii0_1010|Load Immediate
 |ADD     |ddd_sss_iii_iii_1011|Add signed immediate
-|SB      |sss_bbo_ooo_ooo_1100|Store byte with offset
-|LB      |ddd_bbo_ooo_ooo_1101|Load byte with offset
+|SB      |ooo_sss_bbo_ooo_1100|Store byte with offset
+|LB      |ddd_ooo_bbo_ooo_1101|Load byte with offset
 |B       |ccc_ooo_ooo_ooo_1110|Branch relative (COND)
 |BL      |ccc_ooo_ooo_ooo_1111|Branch relative and push return address to stack (COND)
+
+ADD immediate format: imm[2:0]|imm[5:3]
 
 ### instruction details
 
@@ -124,12 +126,12 @@ Halt execution until an interrupt occurs
 Pop return address and flags from stack to PC and Flags registers
 
 #### INCC - Increment Carry
-Increment dst with Carry flag
+Increment src with Carry flag and store in dst
 
 C: m Z: m N: m V: m
 
 #### DECB - Decrement Borrow
-Decrement dst with Borrow flag
+Decrement src with Borrow flag and store in dst
 
 C: m Z: m N: m V: m
 

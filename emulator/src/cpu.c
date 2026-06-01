@@ -46,7 +46,8 @@ static void flags_overflow_sub(
 
 static bool get_cond(struct VirtualMachine *viM, uint16_t instruction)
 {
-	uint8_t reg_dst = (instruction >> 13) & 0x7;
+	Instruction inst = { .raw = instruction };
+	uint8_t reg_dst = inst.dst;
 	bool overflow = ((viM->csr[0] >> 3) & 1) != 0;
 	bool negative = ((viM->csr[0] >> 2) & 1) != 0;
 	bool zero = ((viM->csr[0] >> 1) & 1) != 0;
@@ -75,37 +76,37 @@ static bool get_cond(struct VirtualMachine *viM, uint16_t instruction)
 static uint32_t execute_logic(struct VirtualMachine *viM, uint16_t instruction)
 {
 	Instruction inst = { .raw = instruction };
-	uint8_t reg_src = inst.reg_src;
-	uint8_t reg_mod = inst.reg_mod;
+	uint8_t reg_src = inst.src;
+	uint8_t reg_mod = inst.mod;
 
-	if (inst.reg3.opcode == 0x41) { // AND
+	if (inst.op == 0x41) { // AND
 		return viM->gpr[reg_src] & viM->gpr[reg_mod];
 	}
-	if (inst.reg3.opcode == 0x51) { // OR
+	if (inst.op == 0x51) { // OR
 		return viM->gpr[reg_src] | viM->gpr[reg_mod];
 	}
-	if (inst.reg3.opcode == 0x61) { // NOR
+	if (inst.op == 0x61) { // NOR
 		return ~(viM->gpr[reg_src] | viM->gpr[reg_mod]);
 	}
-	if (inst.reg3.opcode == 0x71) { // XOR
+	if (inst.op == 0x71) { // XOR
 		return viM->gpr[reg_src] ^ viM->gpr[reg_mod];
 	}
-	if (inst.reg3.opcode == 0x02) { // SLL
+	if (inst.op == 0x02) { // SLL
 		return viM->gpr[reg_src] << viM->gpr[reg_mod];
 	}
-	if (inst.reg3.opcode == 0x12) { // SRL
+	if (inst.op == 0x12) { // SRL
 		return viM->gpr[reg_src] >> viM->gpr[reg_mod];
 	}
-	if (inst.reg3.opcode == 0x22) { // SRA
+	if (inst.op == 0x22) { // SRA
 		return (int8_t)viM->gpr[reg_src] >> viM->gpr[reg_mod];
 	}
-	if (inst.reg3.opcode == 0x42) { // SLL immediate
+	if (inst.op == 0x42) { // SLL immediate
 		return viM->gpr[reg_src] << reg_mod;
 	}
-	if (inst.reg3.opcode == 0x52) { // SRL immediate
+	if (inst.op == 0x52) { // SRL immediate
 		return viM->gpr[reg_src] >> reg_mod;
 	}
-	if (inst.reg3.opcode == 0x62) { // SRA immediate
+	if (inst.op == 0x62) { // SRA immediate
 		return (int8_t)viM->gpr[reg_src] >> reg_mod;
 	}
 
@@ -115,60 +116,63 @@ static uint32_t execute_logic(struct VirtualMachine *viM, uint16_t instruction)
 static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 {
 	Instruction inst = { .raw = instruction };
-	uint8_t reg_dst = inst.reg_dst;
-	uint8_t reg_src = inst.reg_src;
-	uint8_t reg_mod = inst.reg_mod;
-	uint8_t reg_base = inst.loadstore.reg_base << 1;
+	uint8_t reg_dst = inst.dst;
+	uint8_t reg_src = inst.src;
+	uint8_t reg_mod = inst.mod;
+	uint8_t reg_base = inst.sb.base << 1;
+	int16_t imm_add =
+		sign_extend(((inst.addi.imm1 << 3) | inst.addi.imm0), 6);
+	int16_t imm_lb =
+		sign_extend(((inst.lb.offset1 << 4) | inst.lb.offset0), 7);
 	uint16_t temp = execute_logic(viM, instruction);
 	char sub_add = -1;
 	bool write = true;
 
 	if (temp != 9999) {
-	} else if (inst.reg2.opcode == 0x0010) { // MOV reg, csr
+	} else if (inst.sdss.op == 0x010) { // MOV reg, csr
 		temp = viM->csr[reg_src];
-	} else if (inst.reg1.opcode == 0x0800) { // INCC
-		temp = viM->gpr[reg_dst] + (viM->csr[0] & 1);
-	} else if (inst.reg1.opcode == 0x0C00) { // DECB
-		temp = (uint16_t)viM->gpr[reg_dst] + 0xFF +
+	} else if (inst.sdss.op == 0x110) { // INCC
+		temp = viM->gpr[reg_src] + (viM->csr[0] & 1);
+	} else if (inst.sdss.op == 0x190) { // DECB
+		temp = (uint16_t)viM->gpr[reg_src] + 0xFF +
 			(viM->csr[0] & 0x01);
-	} else if (inst.reg1.opcode == 0x1800) { // POP
+	} else if (inst.sd.op == 0x0100) { // POP
 		uint16_t stackp = viM->csr[7] << 8 | viM->csr[6];
 		temp = memory_read(viM, ++stackp);
 		viM->csr[7] = stackp >> 8;
 		viM->csr[6] = stackp;
-	} else if (inst.reg2.opcode == 0x0110) { // CMP
-		temp = (uint16_t)viM->gpr[reg_dst] +
-			(uint16_t)(~viM->gpr[reg_src] & 0xFF) + 1;
+	} else if (inst.op == 0x20 && inst.ds.op1 == 0x0) { // CMP
+		temp = (uint16_t)viM->gpr[reg_src] +
+			(uint16_t)(~viM->gpr[reg_mod] & 0xFF) + 1;
 		write = false;
-	} else if (inst.reg2.opcode == 0x0190) { // CMA
-		temp = viM->gpr[reg_dst] & viM->gpr[reg_src];
+	} else if (inst.op == 0x20 && inst.ds.op1 == 0x1) { // CMA
+		temp = viM->gpr[reg_src] & viM->gpr[reg_mod];
 		write = false;
-	} else if (inst.reg3.opcode == 0x01) { // SUB
+	} else if (inst.op == 0x01) { // SUB
 		temp = (uint16_t)viM->gpr[reg_src] +
 			(uint16_t)(~viM->gpr[reg_mod] & 0xFF) + 1;
 		sub_add = 0;
-	} else if (inst.reg3.opcode == 0x11) { // SBB
+	} else if (inst.op == 0x11) { // SBB
 		temp = (uint16_t)viM->gpr[reg_src] +
 			(uint16_t)(~viM->gpr[reg_mod] & 0xFF) +
 			(viM->csr[0] & 0x01);
 		sub_add = 0;
-	} else if (inst.reg3.opcode == 0x21) { // ADD
+	} else if (inst.op == 0x21) { // ADD
 		temp = viM->gpr[reg_src] + viM->gpr[reg_mod];
 		sub_add = 1;
-	} else if (inst.reg3.opcode == 0x31) { // ADC
+	} else if (inst.op == 0x31) { // ADC
 		temp = (uint16_t)viM->gpr[reg_src] +
 			(uint16_t)viM->gpr[reg_mod] + (viM->csr[0] & 0x01);
 		sub_add = 1;
-	} else if (inst.load_imm.opcode == 0x0A) { // LI
-		temp = sign_extend(inst.load_imm.imm, 8);
-	} else if (inst.addi.opcode == 0xB) { // ADDI
-		temp = (uint16_t)viM->gpr[reg_src] +
-			(uint16_t)(uint8_t)sign_extend(inst.addi.imm, 6);
-	} else if (inst.loadstore.opcode == 0xD) { // LB
+	} else if (inst.li.op == 0x0A) { // LI
+		temp = sign_extend(inst.li.imm, 8);
+	} else if (inst.addi.op == 0xB) { // ADDI
+		temp = (uint16_t)viM->gpr[reg_src] + (uint8_t)imm_add;
+	} else if (inst.lb.op == 0xD) { // LB
 		temp = memory_read(viM,
 			(uint16_t)((viM->gpr[reg_base] |
 					   viM->gpr[reg_base + 1] << 8) +
-				sign_extend(inst.loadstore.offset, 7)));
+				imm_lb));
 	} else {
 		return false;
 	}
@@ -209,7 +213,8 @@ static bool execute_flags(struct VirtualMachine *viM, uint16_t instruction)
 static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 {
 	Instruction inst = { .raw = instruction };
-	uint8_t reg_base = inst.loadstore.reg_base << 1;
+	uint8_t reg_base = inst.sb.base << 1;
+	int16_t imm_brel = (int16_t)(sign_extend(inst.branch.offset, 9) << 1);
 	uint16_t temp = 0;
 
 	if (instruction == 0x2000) { // RET
@@ -227,12 +232,12 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 		viM->pc |= memory_read(viM, ++temp) << 8;
 		viM->csr[7] = temp >> 8;
 		viM->csr[6] = temp;
-	} else if ((inst.raw & 0x07FF) == 0x0070) { // B reg
+	} else if ((inst.raw & 0x1CFF) == 0x0070) { // B reg
 		if (get_cond(viM, instruction)) {
 			viM->pc = (uint16_t)(viM->gpr[reg_base] |
 				viM->gpr[reg_base + 1] << 8);
 		}
-	} else if ((inst.raw & 0x07FF) == 0x0470) { // BL reg
+	} else if ((inst.raw & 0x1CFF) == 0x00F0) { // BL reg
 		if (get_cond(viM, instruction)) {
 			temp = viM->csr[7] << 8 | viM->csr[6];
 			memory_write(viM, temp--, viM->pc >> 8);
@@ -242,18 +247,14 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 			viM->csr[7] = temp >> 8;
 			viM->csr[6] = temp;
 		}
-	} else if (inst.branch.opcode == 0xE) { // B
-		if (get_cond(viM, instruction)) {
-			viM->pc += (int16_t)(sign_extend(inst.branch.offset, 9)
-				<< 1);
-		}
-	} else if (inst.branch.opcode == 0xF) { // BL
+	} else if (inst.branch.op == 0xE) { // B
+		if (get_cond(viM, instruction)) { viM->pc += imm_brel; }
+	} else if (inst.branch.op == 0xF) { // BL
 		if (get_cond(viM, instruction)) {
 			temp = viM->csr[7] << 8 | viM->csr[6];
 			memory_write(viM, temp--, viM->pc >> 8);
 			memory_write(viM, temp--, viM->pc);
-			viM->pc += (int16_t)(sign_extend(inst.branch.offset, 9)
-				<< 1);
+			viM->pc += imm_brel;
 			viM->csr[7] = temp >> 8;
 			viM->csr[6] = temp;
 		}
@@ -267,35 +268,37 @@ static bool execute_branch(struct VirtualMachine *viM, uint16_t instruction)
 bool decode_execute(struct VirtualMachine *viM, uint16_t instruction)
 {
 	Instruction inst = { .raw = instruction };
-	uint8_t reg_dst = inst.reg3.reg_dst;
-	uint8_t reg_src = inst.reg3.reg_src;
-	uint8_t reg_base = inst.loadstore.reg_base << 1;
+	uint8_t reg_dst = inst.dst;
+	uint8_t reg_src = inst.src;
+	uint8_t reg_base = inst.sb.base << 1;
+	int16_t imm_sb =
+		sign_extend(((inst.sb.offset1 << 4) | inst.sb.offset0), 7);
 	uint16_t temp = 0;
 
 	if (instruction == 0) { return false; }
 	if (execute_branch(viM, instruction)) { return false; }
 	if (execute_flags(viM, instruction)) { return false; }
 
-	if (inst.reg1.opcode == 0x1400) { // SWI
+	if (inst.ss.op == 0x080 && inst.ss.op1 == 0x0) { // SWI
 		interrupt_pushtostack(viM);
-		uint16_t vec_addr = 0xFF00 + ((viM->gpr[reg_dst] & 0x7F) << 1);
+		uint16_t vec_addr = 0xFF00 + ((viM->gpr[reg_src] & 0x7F) << 1);
 		viM->pc = memory_read(viM, vec_addr) |
 			(memory_read(viM, vec_addr + 1) << 8);
-		if ((viM->gpr[reg_dst] & 0x7F) == 0) { viM->running = false; }
-		if ((viM->gpr[reg_dst] & 0x7F) == 1) {
+		if ((viM->gpr[reg_src] & 0x7F) == 0) { viM->running = false; }
+		if ((viM->gpr[reg_src] & 0x7F) == 1) {
 			viM->debug_mode = true;
 		}
-	} else if (inst.reg1.opcode == 0x1C00) { // Push
+	} else if (inst.ss.op == 0x080 && inst.ss.op1 == 0x1) { // Push
 		temp = viM->csr[7] << 8 | viM->csr[6];
-		memory_write(viM, temp--, viM->gpr[reg_dst]);
+		memory_write(viM, temp--, viM->gpr[reg_src]);
 		viM->csr[7] = temp >> 8;
 		viM->csr[6] = temp;
-	} else if (inst.reg2.opcode == 0x0090) { // MOV csr, reg
+	} else if (inst.sdss.op == 0x090) { // MOV csr, reg
 		viM->csr[reg_dst] = viM->gpr[reg_src];
-	} else if (inst.loadstore.opcode == 0xC) { // SB
+	} else if (inst.sb.op == 0xC) { // SB
 		temp = (viM->gpr[reg_base] | viM->gpr[reg_base + 1] << 8) +
-			sign_extend(inst.loadstore.offset, 7);
-		memory_write(viM, temp, viM->gpr[reg_dst]);
+			imm_sb;
+		memory_write(viM, temp, viM->gpr[reg_src]);
 	} else {
 		interrupt_pushtostack(viM);
 		viM->pc = 0xF04;
