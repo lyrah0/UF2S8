@@ -17,16 +17,20 @@ static const char condition_str[8][3] = { "ZS", "ZC", "CS", "CC", "NS", "NC",
 static bool disassemble_loadstore(uint16_t instruction)
 {
 	Instruction inst = { .raw = instruction };
-	uint8_t reg_dst = inst.loadstore.reg_dst;
-	uint8_t reg_base = inst.loadstore.reg_base;
-	int16_t imm_ls = sign_extend(inst.loadstore.offset, 7);
+	uint8_t reg_src = inst.src;
+	uint8_t reg_dst = inst.dst;
+	uint8_t reg_base = inst.sb.base;
+	int16_t imm_sb =
+		sign_extend(((inst.sb.offset1 << 4) | inst.sb.offset0), 7);
+	int16_t imm_lb =
+		sign_extend(((inst.lb.offset1 << 4) | inst.lb.offset0), 7);
 
-	if (inst.loadstore.opcode == 0xC) {
-		printf("SB r%hhu, [a%hhu%c%hhd]", reg_dst, reg_base,
-			imm_ls < 0 ? '-' : '+', imm_ls < 0 ? -imm_ls : imm_ls);
-	} else if (inst.loadstore.opcode == 0xD) {
+	if (inst.sb.op == 0xC) {
+		printf("SB r%hhu, [a%hhu%c%hhd]", reg_src, reg_base,
+			imm_sb < 0 ? '-' : '+', imm_sb < 0 ? -imm_sb : imm_sb);
+	} else if (inst.lb.op == 0xD) {
 		printf("LB r%hhu, [a%hhu%c%hhd]", reg_dst, reg_base,
-			imm_ls < 0 ? '-' : '+', imm_ls < 0 ? -imm_ls : imm_ls);
+			imm_lb < 0 ? '-' : '+', imm_lb < 0 ? -imm_lb : imm_lb);
 	} else {
 		return false;
 	}
@@ -36,10 +40,10 @@ static bool disassemble_loadstore(uint16_t instruction)
 static bool disassemble_mov(uint16_t instruction)
 {
 	Instruction inst = { .raw = instruction };
-	uint8_t reg_dst = inst.reg_dst;
-	uint8_t reg_src = inst.reg_src;
+	uint8_t reg_dst = inst.dst;
+	uint8_t reg_src = inst.src;
 
-	if (inst.reg2.opcode == 0x010) {
+	if (inst.sdss.op == 0x010) {
 		printf("MOV r%hhu, ", reg_dst);
 		switch (reg_src) {
 		case 0:
@@ -54,7 +58,7 @@ static bool disassemble_mov(uint16_t instruction)
 		default:
 			printf("???%hhu", reg_src);
 		}
-	} else if (inst.reg2.opcode == 0x090) {
+	} else if (inst.sdss.op == 0x090) {
 		printf("MOV ");
 		switch (reg_dst) {
 		case 0:
@@ -78,18 +82,18 @@ static bool disassemble_mov(uint16_t instruction)
 static bool disassemble_branch(uint16_t instruction)
 {
 	Instruction inst = { .raw = instruction };
-	uint8_t reg_dst = inst.branch.cond;
-	uint8_t reg_base = inst.loadstore.reg_base;
+	uint8_t cond = inst.branch.cond;
+	uint8_t reg_base = inst.sb.base;
 	int16_t imm_brel = (int16_t)(sign_extend(inst.branch.offset, 9) << 1);
 
-	if ((inst.raw & 0x07FF) == 0x0070) {
-		printf("B %s, [a%hhu]", condition_str[reg_dst], reg_base);
-	} else if ((inst.raw & 0x07FF) == 0x0470) {
-		printf("BL %s, [a%hhu]", condition_str[reg_dst], reg_base);
-	} else if (inst.branch.opcode == 0xE) {
-		printf("B %s, %hd", condition_str[reg_dst], imm_brel);
-	} else if (inst.branch.opcode == 0xF) {
-		printf("BL %s, %hd", condition_str[reg_dst], imm_brel);
+	if ((inst.raw & 0x1CFF) == 0x0070) {
+		printf("B %s, [a%hhu]", condition_str[cond], reg_base);
+	} else if ((inst.raw & 0x1CFF) == 0x00F0) {
+		printf("BL %s, [a%hhu]", condition_str[cond], reg_base);
+	} else if (inst.branch.op == 0xE) {
+		printf("B %s, %hd", condition_str[cond], imm_brel);
+	} else if (inst.branch.op == 0xF) {
+		printf("BL %s, %hd", condition_str[cond], imm_brel);
 	} else {
 		return false;
 	}
@@ -99,11 +103,12 @@ static bool disassemble_branch(uint16_t instruction)
 void disassemble(uint16_t instruction)
 {
 	Instruction inst = { .raw = instruction };
-	uint8_t reg_dst = inst.reg_dst;
-	uint8_t reg_src = inst.reg_src;
-	uint8_t reg_mod = inst.reg_mod;
-	uint8_t imm_li = sign_extend(inst.load_imm.imm, 8);
-	int8_t imm_add = (int8_t)sign_extend(inst.addi.imm, 6);
+	uint8_t reg_dst = inst.dst;
+	uint8_t reg_src = inst.src;
+	uint8_t reg_mod = inst.mod;
+	uint8_t imm_li = sign_extend(inst.li.imm, 8);
+	int8_t imm_add = (int8_t)sign_extend(
+		((inst.addi.imm1 << 3) | inst.addi.imm0), 6);
 
 	if (instruction == 0x0000) {
 		printf("NOP");
@@ -113,30 +118,29 @@ void disassemble(uint16_t instruction)
 		printf("WFI");
 	} else if (instruction == 0x0400) {
 		printf("RETI");
-	} else if (inst.reg1.opcode == 0x1400) {
+	} else if (inst.ss.op == 0x080 && inst.ss.op1 == 0x0) {
 		printf("SWI r%hhu", reg_dst);
-	} else if (inst.reg1.opcode == 0x0800) {
+	} else if (inst.sdss.op == 0x110) {
 		printf("INCC r%hhu", reg_dst);
-	} else if (inst.reg1.opcode == 0x0C00) {
+	} else if (inst.sdss.op == 0x190) {
 		printf("DECB r%hhu", reg_dst);
-	} else if (inst.reg1.opcode == 0x1800) {
+	} else if (inst.sd.op == 0x0100) {
 		printf("POP r%hhu", reg_dst);
-	} else if (inst.reg1.opcode == 0x1C00) {
+	} else if (inst.ss.op == 0x080 && inst.ss.op1 == 0x1) {
 		printf("PUSH r%hhu", reg_dst);
 	} else if (disassemble_mov(instruction)) {
-	} else if (inst.opcode == 0x10) {
-		const char instructions[8][4] = { "???", "???", "CMP", "CMA",
+	} else if (inst.op == 0x20) {
+		const char instructions[8][4] = { "CMP", "CMA", "???", "???",
 			"???", "???", "???", "???" };
-		printf("%s r%hhu, r%hhu",
-			instructions[(instruction >> 7) & 0x7], reg_dst,
-			reg_src);
-	} else if (inst.branch.opcode == 0x1) {
+		printf("%s r%hhu, r%hhu", instructions[inst.ds.op1], reg_src,
+			reg_mod);
+	} else if (inst.branch.op == 0x1) {
 		const char instructions[8][4] = { "SUB", "SBB", "ADD", "ADC",
 			"AND", "OR", "NOR", "XOR" };
 		printf("%s r%hhu, r%hhu, r%hhu",
 			instructions[(instruction >> 4) & 0x7], reg_dst,
 			reg_src, reg_mod);
-	} else if (inst.branch.opcode == 0x2) {
+	} else if (inst.branch.op == 0x2) {
 		const char instructions[8][4] = { "SLL", "SRL", "SRA", "???",
 			"SLL", "SRL", "SRA", "???" };
 		printf("%s r%hhu, r%hhu, ",
@@ -147,9 +151,9 @@ void disassemble(uint16_t instruction)
 		} else {
 			printf("r%hhu", reg_mod);
 		}
-	} else if (inst.load_imm.opcode == 0x0A) {
+	} else if (inst.li.op == 0x0A) {
 		printf("LI r%hhu, 0x%02hhx", reg_dst, imm_li);
-	} else if (inst.addi.opcode == 0xB) {
+	} else if (inst.addi.op == 0xB) {
 		printf("ADD r%hhu, r%hhu, %hhd", reg_dst, reg_src, imm_add);
 	} else if (disassemble_loadstore(instruction)) {
 	} else if (disassemble_branch(instruction)) {
