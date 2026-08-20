@@ -14,7 +14,7 @@ UF2S8 is a custom 8-bit computer architecture designed from scratch, featuring a
 - **Fixed 16-bit instruction encoding** — Clean, orthogonal load/store ISA
 - **8 general-purpose registers** with 4 virtual 16-bit address register pairs
 - **Hardware 2D blitter** — Rectangle fill, memory/VRAM blits, transparency, alpha blending, clipping, flipping, and line drawing
-- **Bank-switched memory** — 512 KB + 128 KB + 16 KB switchable pools over a 64 KB address space
+- **Bank-switched memory** — 7 × 8 KB windows mapping to a 256-bank (2 MB) pool (128 ROM, 120 RAM, 8 VRAM) over a 64 KB address space
 - **Configurable graphics** — Software-defined resolution with 1/2/4/8 bpp colour depth modes (RGB332)
 - **Interrupt system** — Timer, keyboard, software interrupts with a 128-entry vector table
 - **Standardised ABI** — Fastcall calling convention with defined register roles and stack frame layout
@@ -119,17 +119,25 @@ UF2S8 is a load/store architecture with fixed-width 2-byte instructions and 8-bi
 
 ```
 0x0000 ┬───────────────┐
-       │  Window 0     │ 32 KB — Banked (16 × 32 KB from 512 KB pool)
+       │  Window 0     │ 8 KB — Banked (256-bank pool)
+0x2000 ├───────────────┤
+       │  Window 1     │ 8 KB — Banked (256-bank pool)
+0x4000 ├───────────────┤
+       │  Window 2     │ 8 KB — Banked (256-bank pool)
+0x6000 ├───────────────┤
+       │  Window 3     │ 8 KB — Banked (256-bank pool)
 0x8000 ├───────────────┤
-       │  Window 1     │ 16 KB — Banked (8 × 16 KB from 128 KB pool)
+       │  Window 4     │ 8 KB — Banked (256-bank pool)
+0xA000 ├───────────────┤
+       │  Window 5     │ 8 KB — Banked (256-bank pool)
 0xC000 ├───────────────┤
-       │  Window 2     │ 8 KB — Banked (2 × 8 KB from 16 KB pool)
+       │  Window 6     │ 8 KB — Banked (256-bank pool)
 0xE000 ├───────────────┤
-       │  Fixed RAM    │ 7.5 KB — Stack, heap, general use
+       │  Fixed RAM    │ 7.5 KB — Bank 247 (Stack, heap, general use)
 0xFE00 ├───────────────┤
-       │  HW Registers │ 256 B — Blitter, graphics, keyboard, timer
+       │  HW Registers │ 256 B — Blitter, graphics, keyboard, timer, banking
 0xFF00 ├───────────────┤
-       │  Vector Table │ 256 B — Interrupt vectors
+       │  Vector Table │ 256 B — Interrupt vectors (in Bank 247)
 0xFFFF ┴───────────────┘
 ```
 

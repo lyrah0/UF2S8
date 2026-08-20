@@ -8,26 +8,19 @@
 
 struct EncodeState {
 	uint8_t *buffer;
-	int bank_w0;
-	int bank_w1;
-	int bank_w2;
+	int bank_w[NUM_WINDOWS];
 };
 
 static void write_to_buffer(
 	struct EncodeState *state, int addr, const void *data, int size)
 {
 	int offset = 0;
-	if (addr < 0x8000) {
-		offset = (state->bank_w0 * 0x8000) + addr;
-	} else if (addr < 0xC000) {
-		offset = EXT_MEMORY_W0_SIZE + (state->bank_w1 * 0x4000) +
-			(addr - 0x8000);
-	} else if (addr < 0xE000) {
-		offset = EXT_MEMORY_W0_SIZE + EXT_MEMORY_W1_SIZE +
-			(addr - 0xC000);
+	if (addr < 0xE000) {
+		int window = addr / BANK_SIZE;
+		offset = (state->bank_w[window] * BANK_SIZE) +
+			(addr % BANK_SIZE);
 	} else {
-		offset = EXT_MEMORY_W0_SIZE + EXT_MEMORY_W1_SIZE +
-			EXT_MEMORY_W2_SIZE + (addr - 0xE000);
+		return;
 	}
 	if (offset + size > TOTAL_BINARY_SIZE) { return; }
 	memcpy(state->buffer + offset, data, size);
@@ -392,35 +385,17 @@ static bool encode_directive_bank(struct TokenList *tokenList,
 		printf("ERROR: %d: bank expects a number\n", token->line);
 		return true;
 	}
-	switch (window) {
-	case 0:
-		if ((int)token->num_value < 0 || (int)token->num_value >= 16) {
-			printf("ERROR: %d: bank value out of range\n",
-				token->line);
-			return true;
-		}
-		state->bank_w0 = (int)token->num_value;
-		break;
-	case 1:
-		if ((int)token->num_value < 0 || (int)token->num_value >= 8) {
-			printf("ERROR: %d: bank value out of range\n",
-				token->line);
-			return true;
-		}
-		state->bank_w1 = (int)token->num_value;
-		break;
-	case 2:
-		if ((int)token->num_value < 0 || (int)token->num_value >= 2) {
-			printf("ERROR: %d: bank value out of range\n",
-				token->line);
-			return true;
-		}
-		state->bank_w2 = (int)token->num_value;
-		break;
-	default:
+	if (window >= NUM_WINDOWS) {
 		printf("ERROR: %d: invalid window\n", token->line);
 		return true;
 	}
+	if ((int)token->num_value < 0 ||
+		(int)token->num_value >= NUM_ROM_BANKS) {
+		printf("ERROR: %d: bank value out of range (0-%d)\n",
+			token->line, NUM_ROM_BANKS - 1);
+		return true;
+	}
+	state->bank_w[window] = (int)token->num_value;
 	return false;
 }
 
@@ -494,6 +469,22 @@ static bool encode_directives(struct TokenList *tokenList,
 		return encode_directive_bank(
 			tokenList, state, current_token, 2);
 	}
+	if (strcasecmp(next->str, "bankw3") == 0) {
+		return encode_directive_bank(
+			tokenList, state, current_token, 3);
+	}
+	if (strcasecmp(next->str, "bankw4") == 0) {
+		return encode_directive_bank(
+			tokenList, state, current_token, 4);
+	}
+	if (strcasecmp(next->str, "bankw5") == 0) {
+		return encode_directive_bank(
+			tokenList, state, current_token, 5);
+	}
+	if (strcasecmp(next->str, "bankw6") == 0) {
+		return encode_directive_bank(
+			tokenList, state, current_token, 6);
+	}
 
 	return false;
 }
@@ -508,9 +499,9 @@ bool encode_and_write(struct TokenList *tokenList,
 		printf("ERROR: out of memory\n");
 		return true;
 	}
-	state.bank_w0 = 0;
-	state.bank_w1 = 0;
-	state.bank_w2 = 0;
+	for (int i = 0; i < NUM_WINDOWS; i++) {
+		state.bank_w[i] = i;
+	}
 
 	for (int current_token = 0; current_token < tokenList->count;
 		current_token++) {

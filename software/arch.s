@@ -38,7 +38,13 @@
 .equ HW_UART_DATA,         0xFEF3
 .equ HW_UART_STATUS,       0xFEF4
 .equ HW_UART_CTRL,         0xFEF5
-.equ HW_BANK_SEL,          0xFEFD
+.equ HW_BANK_SEL_0,        0xFEF6
+.equ HW_BANK_SEL_1,        0xFEF7
+.equ HW_BANK_SEL_2,        0xFEF8
+.equ HW_BANK_SEL_3,        0xFEF9
+.equ HW_BANK_SEL_4,        0xFEFA
+.equ HW_BANK_SEL_5,        0xFEFB
+.equ HW_BANK_SEL_6,        0xFEFC
 .equ HW_TIMER_HZ,          0xFEFE
 .equ HW_HW_CTRL,           0xFEFF
 
@@ -124,6 +130,12 @@
 .equ OFS2_UART_DATA,   0x33
 .equ OFS2_UART_STATUS, 0x34
 .equ OFS2_UART_CTRL,   0x35
-.equ OFS2_BANK,        0x3D
+.equ OFS2_BANK_SEL_0,  0x36
+.equ OFS2_BANK_SEL_1,  0x37
+.equ OFS2_BANK_SEL_2,  0x38
+.equ OFS2_BANK_SEL_3,  0x39
+.equ OFS2_BANK_SEL_4,  0x3A
+.equ OFS2_BANK_SEL_5,  0x3B
+.equ OFS2_BANK_SEL_6,  0x3C
 .equ OFS2_TIMER_HZ,    0x3E
 .equ OFS2_HW_CTRL,     0x3F

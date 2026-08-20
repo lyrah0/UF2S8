@@ -44,7 +44,9 @@ static int cpu_thread_worker(void *data)
 	for (int i = 0; i < 8; i++) {
 		viM->csr[i] = 0;
 	}
-	viM->bank_select = 0;
+	for (int i = 0; i < NUM_WINDOWS; i++) {
+		viM->bank_sel[i] = i;
+	}
 	uint16_t instruction = 0;
 	uint64_t instruction_count = 0;
 	uint64_t start_ticks = SDL_GetPerformanceCounter();
@@ -172,14 +174,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	// Read Window 0 banks
-	(void)fread(&viM.ext_memory_w0, EXT_MEMORY_W0_SIZE, 1, finput);
-	// Read Window 1 banks
-	(void)fread(&viM.ext_memory_w1, EXT_MEMORY_W1_SIZE, 1, finput);
-	// Read Window 2 banks
-	(void)fread(&viM.ext_memory_w2, EXT_MEMORY_W2_SIZE, 1, finput);
-	// Read Fixed region into memory starting at 0xE000
-	(void)fread(&viM.memory[0xE000], 0x2000, 1, finput);
+	// Read ROM image (128 banks of 8KB = 1024KB)
+	(void)fread(viM.rom, 1, ROM_SIZE, finput);
 
 	(void)fclose(finput);
 

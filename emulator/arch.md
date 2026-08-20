@@ -59,8 +59,15 @@ hardware registers:
 |UART_DATA        |0xFEF3|UART data register (R/W)
 |UART_STATUS      |0xFEF4|UART status register (R)
 |UART_CTRL        |0xFEF5|UART control register (R/W)
-|reserved         |0xFEF6-0xFEFC|Reserved
-|BANK_SEL         |0xFEFD|Bank select register (Bits 0-3: Window 0, Bits 4-7: Window 1)
+|reserved         |0xFE00-0xFEF5|Reserved
+|BANK_SEL_0       |0xFEF6|Window 0 bank select register (8-bit)
+|BANK_SEL_1       |0xFEF7|Window 1 bank select register (8-bit)
+|BANK_SEL_2       |0xFEF8|Window 2 bank select register (8-bit)
+|BANK_SEL_3       |0xFEF9|Window 3 bank select register (8-bit)
+|BANK_SEL_4       |0xFEFA|Window 4 bank select register (8-bit)
+|BANK_SEL_5       |0xFEFB|Window 5 bank select register (8-bit)
+|BANK_SEL_6       |0xFEFC|Window 6 bank select register (8-bit)
+|reserved         |0xFEFD|Reserved
 |TIMER_HZ         |0xFEFE|timer multiplier in hertz (1/hertz) 0=disabled
 |HW_CTRL          |0xFEFF|hardware control
 
@@ -68,20 +75,23 @@ Memory Map:
 
 |Address Range|Size|Type|Description|
 |-------------|----|----|-----------|
-|0x0000-0x7FFF|32KB|Banked|Window 0 (Mapped from 512KB pool, 16 banks)|
-|0x8000-0xBFFF|16KB|Banked|Window 1 (Mapped from 128KB pool, 8 banks)|
-|0xC000-0xDFFF|8KB|Banked|Window 2 (Mapped from 16KB pool, 2 banks)|
-|0xE000-0xFE00|7.5KB|Fixed|Fixed RAM (Stack, Heap, etc.)|
+|0x0000-0x1FFF|8KB|Banked|Window 0 (Mapped to 256 banks)|
+|0x2000-0x3FFF|8KB|Banked|Window 1 (Mapped to 256 banks)|
+|0x4000-0x5FFF|8KB|Banked|Window 2 (Mapped to 256 banks)|
+|0x6000-0x7FFF|8KB|Banked|Window 3 (Mapped to 256 banks)|
+|0x8000-0x9FFF|8KB|Banked|Window 4 (Mapped to 256 banks)|
+|0xA000-0xBFFF|8KB|Banked|Window 5 (Mapped to 256 banks)|
+|0xC000-0xDFFF|8KB|Banked|Window 6 (Mapped to 256 banks)|
+|0xE000-0xFDFF|7.5KB|Fixed|Fixed RAM (Bank 247: Stack, Heap, etc.)|
 |0xFE00-0xFEFF|256B|Fixed|Hardware Registers|
-|0xFF00-0xFFFF|256B|Fixed|Vector table|
+|0xFF00-0xFFFF|256B|Fixed|Vector table (in Bank 247)|
 
-BANK_SEL format:
+Banking format:
 
-|Bit	|Description|
-|-------|-----------|
-|7	|Window 2 bank
-|6-4	|Window 1 bank
-|3-0	|Window 0 bank
+256 banks of 8KB (2MB total addressable pool):
+- Banks 0–127 (0x00–0x7F): 128 ROM banks (1024KB, Read-only)
+- Banks 128–247 (0x80–0xF7): 120 RAM banks (960KB, Read/Write). Bank 247 (0xF7) is the fixed RAM bank starting at 0xE000.
+- Banks 248–255 (0xF8–0xFF): 8 VRAM banks (64KB, Read/Write)
 
 BLIT_FLAGS format:
 

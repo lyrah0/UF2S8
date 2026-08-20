@@ -44,26 +44,36 @@ enum {
 	HW_UART_DATA = 0xFEF3,
 	HW_UART_STATUS = 0xFEF4,
 	HW_UART_CTRL = 0xFEF5,
+	HW_BANK_SEL_0 = 0xFEF6,
+	HW_BANK_SEL_1 = 0xFEF7,
+	HW_BANK_SEL_2 = 0xFEF8,
+	HW_BANK_SEL_3 = 0xFEF9,
+	HW_BANK_SEL_4 = 0xFEFA,
+	HW_BANK_SEL_5 = 0xFEFB,
+	HW_BANK_SEL_6 = 0xFEFC,
 	HW_TIMER_HZ = 0xFEFE,
-	HW_BANK_SEL = 0xFEFD,
 	HW_HW_CTRL = 0xFEFF
 };
 
 enum {
 	MAX_MEMORY = 1 << 16,
 	MAX_BREAKPOINTS = 1 << 4,
-	VRAM_SIZE = 1 << 16,
-	EXT_MEMORY_W0_SIZE = 16 * 0x8000, // 16 banks of 32KB
-	EXT_MEMORY_W1_SIZE = 8 * 0x4000, // 8 banks of 16KB
-	EXT_MEMORY_W2_SIZE = 2 * 0x2000, // 2 banks of 8KB
+	BANK_SIZE = 0x2000,
+	NUM_WINDOWS = 7,
+	NUM_ROM_BANKS = 128,
+	NUM_RAM_BANKS = 120,
+	NUM_VRAM_BANKS = 8,
+	TOTAL_BANKS = 256,
+	ROM_SIZE = NUM_ROM_BANKS * BANK_SIZE, // 1024KB
+	RAM_SIZE = NUM_RAM_BANKS * BANK_SIZE, // 960KB
+	VRAM_SIZE = 1 << 16, // 64KB (8 banks of 8KB)
 };
 
 struct VirtualMachine {
 	uint8_t memory[MAX_MEMORY];
-	uint8_t ext_memory_w0[EXT_MEMORY_W0_SIZE];
-	uint8_t ext_memory_w1[EXT_MEMORY_W1_SIZE];
-	uint8_t ext_memory_w2[EXT_MEMORY_W2_SIZE];
-	uint8_t bank_select;
+	uint8_t rom[ROM_SIZE];
+	uint8_t ram[RAM_SIZE];
+	uint8_t bank_sel[NUM_WINDOWS];
 	uint8_t gpr[8];
 	uint8_t csr[8];
 	uint16_t pc;

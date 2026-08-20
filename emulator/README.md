@@ -11,7 +11,7 @@ The UF2S8 Emulator provides a complete virtual environment for executing softwar
 
 - **CPU Core** — Full emulation of the UF2S8 instruction set, registers, and flags.
 - **Hardware Blitter** — SDL3-accelerated 2D graphics engine supporting fills, blits, transparency, and clipping.
-- **Banked Memory** — Sophisticated memory controller supporting up to 656 KB of addressable space via bank switching.
+- **Banked Memory** — Sophisticated memory controller supporting 7 × 8 KB windows over 256 banks (2 MB) via bank switching.
 - **Integrated Debugger** — CLI-based debugger for stepping through code, inspecting registers, and memory.
 - **I/O Emulation** — Realistic interrupt-driven keyboard and timer support.
 

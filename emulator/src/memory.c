@@ -56,21 +56,26 @@ void memory_write(struct VirtualMachine *viM, uint16_t address, uint8_t value)
 	} else if (address == HW_GFX_DATA) {
 		viM->vram[viM->vram_ptr] = value;
 		if (viM->memory[HW_GFX_CTRL] & 0x4) { viM->vram_ptr++; }
-	} else if (address == HW_BANK_SEL) {
-		viM->bank_select = value;
-	} else if (address < 0x8000) {
-		viM->ext_memory_w0[((viM->bank_select & 0x0F) * 0x8000) +
-			address] = value;
-	} else if (address < 0xC000) {
-		viM->ext_memory_w1[(((viM->bank_select >> 4) & 0x07) *
-					   0x4000) +
-			(address - 0x8000)] = value;
+	} else if (address >= HW_BANK_SEL_0 && address <= HW_BANK_SEL_6) {
+		viM->bank_sel[address - HW_BANK_SEL_0] = value;
 	} else if (address < 0xE000) {
-		viM->ext_memory_w2[(((viM->bank_select >> 7) & 0x01) *
-					   0x2000) +
-			(address - 0xC000)] = value;
-	} else {
+		uint8_t win = address / BANK_SIZE;
+		uint8_t bank = viM->bank_sel[win];
+		uint16_t offset = address % BANK_SIZE;
+		if (bank < 128) {
+			// ROM: Read-only, ignore write
+			return;
+		}
+		if (bank < 248) {
+			viM->ram[((bank - 128) * BANK_SIZE) + offset] = value;
+			return;
+		}
+		viM->vram[((bank - 248) * BANK_SIZE) + offset] = value;
+	} else if (address >= 0xFE00 && address <= 0xFEFF) {
 		viM->memory[address] = value;
+	} else {
+		// Fixed RAM: Bank 247 (last RAM bank, index 119 in ram[])
+		viM->ram[(119 * BANK_SIZE) + (address - 0xE000)] = value;
 	}
 }
 
@@ -119,23 +124,24 @@ uint8_t memory_read(struct VirtualMachine *viM, uint16_t address)
 		if (viM->memory[HW_GFX_CTRL] & 0x8) { viM->vram_ptr++; }
 		return value;
 	}
-	if (address == HW_BANK_SEL) { return viM->bank_select; }
-
-	if (address < 0x8000) {
-		return viM
-			->ext_memory_w0[((viM->bank_select & 0x0F) * 0x8000) +
-				address];
-	}
-	if (address < 0xC000) {
-		return viM->ext_memory_w1[(((viM->bank_select >> 4) & 0x07) *
-						  0x4000) +
-			(address - 0x8000)];
+	if (address >= HW_BANK_SEL_0 && address <= HW_BANK_SEL_6) {
+		return viM->bank_sel[address - HW_BANK_SEL_0];
 	}
 	if (address < 0xE000) {
-		return viM->ext_memory_w2[(((viM->bank_select >> 7) & 0x01) *
-						  0x2000) +
-			(address - 0xC000)];
+		uint8_t win = address / BANK_SIZE;
+		uint8_t bank = viM->bank_sel[win];
+		uint16_t offset = address % BANK_SIZE;
+		if (bank < 128) {
+			return viM->rom[(bank * BANK_SIZE) + offset];
+		}
+		if (bank < 248) {
+			return viM->ram[((bank - 128) * BANK_SIZE) + offset];
+		}
+		return viM->vram[((bank - 248) * BANK_SIZE) + offset];
 	}
-
-	return viM->memory[address];
+	if (address >= 0xFE00 && address <= 0xFEFF) {
+		return viM->memory[address];
+	}
+	// Fixed RAM: Bank 247 (last RAM bank, index 119 in ram[])
+	return viM->ram[(119 * BANK_SIZE) + (address - 0xE000)];
 }

@@ -25,34 +25,43 @@ static void test_banking()
 	struct VirtualMachine *viM = calloc(1, sizeof(struct VirtualMachine));
 	assert(viM);
 
-	// Test Window 0 (0x0000 - 0x7FFF) with banking
-	// Bank 0
-	memory_write(viM, HW_BANK_SEL, 0x00);
+	// By default, viM has bank_sel[0..6] = 0 (ROM bank 0)
+	// ROM is read-only: writes should be ignored
+	memory_write(viM, 0x1000, 0x55);
+	assert(memory_read(viM, 0x1000) == 0x00);
+
+	// Test Window 0 (0x0000 - 0x1FFF) mapped to RAM Bank 128
+	memory_write(viM, HW_BANK_SEL_0, 128);
 	memory_write(viM, 0x1000, 0x01);
 	assert(memory_read(viM, 0x1000) == 0x01);
 
-	// Bank 1
-	memory_write(viM, HW_BANK_SEL, 0x01);
+	// Switch Window 0 to RAM Bank 129
+	memory_write(viM, HW_BANK_SEL_0, 129);
+	assert(memory_read(viM, 0x1000) == 0x00);
 	memory_write(viM, 0x1000, 0x02);
 	assert(memory_read(viM, 0x1000) == 0x02);
 
-	// Check Bank 0 again
-	memory_write(viM, HW_BANK_SEL, 0x00);
+	// Switch back to Bank 128
+	memory_write(viM, HW_BANK_SEL_0, 128);
 	assert(memory_read(viM, 0x1000) == 0x01);
 
-	// Test Window 1 (0x8000 - 0xBFFF)
-	// Bank 0
-	memory_write(viM, HW_BANK_SEL, 0x00);
-	memory_write(viM, 0x9000, 0x10);
-	assert(memory_read(viM, 0x9000) == 0x10);
+	// Test Window 4 (0x8000 - 0x9FFF) mapped to RAM Bank 130
+	memory_write(viM, HW_BANK_SEL_4, 130);
+	memory_write(viM, 0x8500, 0x42);
+	assert(memory_read(viM, 0x8500) == 0x42);
 
-	// Bank 1 (bits 4-6 of bank_select)
-	memory_write(viM, HW_BANK_SEL, 0x10);
-	memory_write(viM, 0x9000, 0x20);
-	assert(memory_read(viM, 0x9000) == 0x20);
+	// Test Window 1 mapped to Bank 247 (Fixed RAM)
+	memory_write(viM, HW_BANK_SEL_1, 247);
+	// Write to fixed address 0xE500 (offset 0x500 in bank 247)
+	memory_write(viM, 0xE500, 0x99);
+	// Read through Window 1 at 0x2500 (offset 0x500 in window 1)
+	assert(memory_read(viM, 0x2500) == 0x99);
 
-	memory_write(viM, HW_BANK_SEL, 0x00);
-	assert(memory_read(viM, 0x9000) == 0x10);
+	// Test Window 2 mapped to Bank 248 (VRAM Bank 0)
+	memory_write(viM, HW_BANK_SEL_2, 248);
+	memory_write(viM, 0x4000, 0x77);
+	assert(viM->vram[0] == 0x77);
+	assert(memory_read(viM, 0x4000) == 0x77);
 
 	free(viM);
 	(void)printf("test_banking passed\n");
