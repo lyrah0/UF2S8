@@ -12,15 +12,16 @@ This directory contains the hardware implementation of the UF2S8 architecture. T
 - **Modular Design** — Clean separation between the ALU, Register File, Control Unit, and Address Generation Unit.
 - **Single-Cycle Execution** — A complete instruction is executed in one clock cycle.
 - **Multicycle Design** — Complete implementation focusing on shared components and state-machine control. Includes a Wishbone interface. Notably, this design features only a single shared adder for all arithmetic and address calculations.
-- **Simulation Ready** — Includes a testbench for functional verification using Icarus Verilog.
-- **Roadmap** — Moving towards pipelined designs.
+- **5-Stage Pipelined Design** — High-performance 5-stage pipeline (IF, ID, EX, MEM, WB) with complete operand forwarding, load-use stall insertion, multi-cycle branch/subroutine engine, full interrupt handling (SWI, hardware interrupts, vector dispatch), and WFI low-power sleep state.
+- **Simulation Ready** — Includes dedicated testbenches and verification test suites for all core architectures using Icarus Verilog.
 
 ## Directory Structure
 
 | Path | Description |
 |------|-------------|
-| `singlecycle/` | Standard single-cycle CPU implementation. |
-| `multicycle/`  | Multicycle CPU implementation with Wishbone interface. |
+| [`singlecycle/`](singlecycle/) | Standard single-cycle CPU implementation. |
+| [`multicycle/`](multicycle/)  | Multicycle CPU implementation with Wishbone interface. |
+| [`pipelined/`](pipelined/)   | 5-stage pipelined CPU implementation with forwarding, hazards, and interrupt controller. |
 
 ## Single-Cycle Architecture
 
@@ -31,6 +32,17 @@ This directory contains the hardware implementation of the UF2S8 architecture. T
 
 ![Multicycle data & control paths](multicycle/Diagram.webp)
 *Multicycle data & control paths*
+
+## Pipelined Architecture
+
+The pipelined core splits instruction execution into 5 distinct stages:
+- **IF (Instruction Fetch)**: Fetches 16-bit instructions, increments PC, and flushes on branch/interrupt delay slots.
+- **ID (Instruction Decode)**: Decodes instructions, reads GPRs/CSRs, evaluates branch conditions, and resolves forwarding.
+- **EX (Execute)**: Computes ALU results and calculates branch/memory addresses.
+- **MEM (Memory Access)**: Reads/writes byte data and handles address pairs.
+- **WB (Writeback)**: Commits results to the register file, CSRs (`flags`, `SP`), and updates PC on branches/returns.
+
+See the dedicated [Pipelined Core README](pipelined/README.md) for full architecture details, module breakdown, and test results.
 
 ## Simulation
 

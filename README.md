@@ -28,7 +28,7 @@ UF2S8 is a custom 8-bit computer architecture designed from scratch, featuring a
 | `assembler/` | Two-pass assembler (C, GNU23) — lexer, encoder, symbol table |
 | `emulator/`  | SDL3-based emulator (C, GNU23) — CPU, graphics, debugger     |
 | `software/`  | Example assembly programs (graphics demos, fonts)            |
-| `verilog/`   | SystemVerilog hardware implementation (Single-cycle & Multicycle) |
+| `verilog/`   | SystemVerilog implementations (Single-cycle, Multicycle, & 5-Stage Pipelined) |
 | `tools/`     | Utilities — `img2bit.py` image-to-sprite converter           |
 
 ## Building
@@ -57,13 +57,17 @@ Both targets support `make debug=1` for debug builds with full symbols.
 
 ### Run Hardware Simulation
 
-The CPU can be simulated using Icarus Verilog:
+The SystemVerilog cores can be simulated using Icarus Verilog:
 
 ```sh
-# Generate memory hex from binary
-hexdump -v -e '1/1 "%02X\n"' output.bin > verilog/singlecycle/mem.hex
+# Pipelined core (full test suite with SWI, WFI, & Hardware Interrupts)
+cd verilog/pipelined
+../../assembler/bin/assembler test.s test.bin
+iverilog -g2012 -o tb_cpu *.sv
+vvp tb_cpu
 
-# Compile and run testbench
+# Single-cycle core
+hexdump -v -e '1/1 "%02X\n"' output.bin > verilog/singlecycle/mem.hex
 cd verilog/singlecycle && iverilog -g2012 -o cpu_sim *.sv && vvp cpu_sim
 ```
 
