@@ -36,18 +36,15 @@ static int cpu_thread_worker(void *data)
 	viM->wait_for_interrupt = false;
 	viM->pc = 0;
 	viM->bp_count = 0;
-	viM->memory[HW_HW_CTRL] = 0;
+	viM->hw_regs[HW_HW_CTRL - 0xFE00] = 0;
 	// Default to RGB332 mode
-	viM->memory[HW_GFX_CTRL] = 0;
+	viM->hw_regs[HW_GFX_CTRL - 0xFE00] = 0;
 	viM->uart_head = 0;
 	viM->uart_tail = 0;
 	for (int i = 0; i < 8; i++) {
 		viM->csr[i] = 0;
 	}
-	for (int i = 0; i < 7; i++) {
-		viM->bank_sel[i] = i;
-	}
-	viM->bank_sel[7] = 247;
+	memory_init(viM);
 	uint16_t instruction = 0;
 	uint64_t instruction_count = 0;
 	uint64_t start_ticks = SDL_GetPerformanceCounter();

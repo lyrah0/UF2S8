@@ -71,10 +71,12 @@ enum {
 };
 
 struct VirtualMachine {
-	uint8_t memory[MAX_MEMORY];
+	uint8_t hw_regs[256];
 	uint8_t rom[ROM_SIZE];
 	uint8_t ram[RAM_SIZE];
 	uint8_t bank_sel[NUM_WINDOWS];
+	const uint8_t *bank_read_ptr[NUM_WINDOWS];
+	uint8_t *bank_write_ptr[NUM_WINDOWS];
 	uint8_t gpr[8];
 	uint8_t csr[8];
 	uint16_t pc;

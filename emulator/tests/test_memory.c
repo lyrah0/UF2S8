@@ -8,7 +8,7 @@ static void test_basic_memory()
 {
 	struct VirtualMachine *viM = calloc(1, sizeof(struct VirtualMachine));
 	assert(viM);
-	viM->bank_sel[7] = 247;
+	memory_init(viM);
 
 	// Test basic RAM in Window 7 (address > 0xE000)
 	memory_write(viM, 0xF000, 0xAA);
@@ -25,8 +25,9 @@ static void test_banking()
 {
 	struct VirtualMachine *viM = calloc(1, sizeof(struct VirtualMachine));
 	assert(viM);
+	memory_init(viM);
 
-	// By default, viM has bank_sel[0..7] = 0 (ROM bank 0)
+	// Test default Window 0 mapped to Bank 0 (ROM bank 0)
 	// ROM is read-only: writes should be ignored
 	memory_write(viM, 0x1000, 0x55);
 	assert(memory_read(viM, 0x1000) == 0x00);
@@ -98,7 +99,7 @@ static void test_vram_access()
 	assert(memory_read(viM, HW_GFX_DATA) == 0xBE);
 
 	// Test auto-increment (needs HW_GFX_CTRL bit 2 for write, bit 3 for read)
-	viM->memory[HW_GFX_CTRL] = 0x0C; // Both bits set
+	memory_write(viM, HW_GFX_CTRL, 0x0C); // Both bits set
 	memory_write(viM, HW_GFX_DATA, 0xEF);
 	assert(viM->vram[0x1235] == 0xEF);
 	assert(viM->vram_ptr == 0x1236);
