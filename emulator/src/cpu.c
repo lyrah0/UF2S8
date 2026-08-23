@@ -145,11 +145,8 @@ static bool execute_op0(struct VirtualMachine *viM, uint16_t instruction)
 	}
 
 	if (inst.ss.op == 0x080 && inst.ss.op1 == 0x0) { // SWI
-		interrupt_pushtostack(viM);
 		uint8_t swi_id = viM->gpr[reg_src] & 0x7F;
-		uint16_t vec_addr = (uint16_t)(0xFF00 + (swi_id << 1));
-		viM->pc = (uint16_t)(memory_read(viM, vec_addr) |
-			(memory_read(viM, (uint16_t)(vec_addr + 1)) << 8));
+		trigger_interrupt(viM, swi_id);
 		if (swi_id == 0) { viM->running = false; }
 		if (swi_id == 1) { viM->debug_mode = true; }
 		return false;
@@ -384,7 +381,7 @@ bool decode_execute(struct VirtualMachine *viM, uint16_t instruction)
 	}
 
 illegal:
-	interrupt_pushtostack(viM);
+	trigger_interrupt(viM, 0x02);
 	viM->pc = 0x0F04;
 	printf("ERROR: illegal instruction: 0x%04x\n", instruction);
 	return true;

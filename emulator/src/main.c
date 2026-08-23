@@ -55,9 +55,7 @@ static int cpu_thread_worker(void *data)
 		// Get ticks only once every 1000 instructions to reduce overhead
 		if (loop_count % 1000 == 0 || viM->wait_for_interrupt) {
 			ticks_ns = SDL_GetTicksNS();
-			interrupt_timer(viM, ticks_ns);
-			interrupt_input(viM);
-			interrupt_uart(viM);
+			check_and_dispatch_interrupts(viM, ticks_ns);
 		}
 		if (!viM->wait_for_interrupt) {
 			instruction = fetch_instruction(viM);

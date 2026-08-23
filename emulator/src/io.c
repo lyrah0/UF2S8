@@ -7,67 +7,55 @@
 #include <termios.h>
 #include <stdlib.h>
 
-void interrupt_pushtostack(struct VirtualMachine *viM)
+void trigger_interrupt(struct VirtualMachine *viM, uint8_t int_id)
 {
-	uint16_t stackp = viM->csr[7] << 8 | viM->csr[6];
+	uint16_t stackp = (uint16_t)((viM->csr[7] << 8) | viM->csr[6]);
 
-	memory_write(viM, stackp--, viM->pc >> 8);
-	memory_write(viM, stackp--, viM->pc);
+	memory_write(viM, stackp--, (uint8_t)(viM->pc >> 8));
+	memory_write(viM, stackp--, (uint8_t)(viM->pc & 0xFF));
 	memory_write(viM, stackp--, viM->csr[0]);
 
-	viM->csr[7] = stackp >> 8;
-	viM->csr[6] = stackp;
+	viM->csr[7] = (uint8_t)(stackp >> 8);
+	viM->csr[6] = (uint8_t)stackp;
 	viM->csr[0] &= 0x7F;
-}
-
-void interrupt_timer(struct VirtualMachine *viM, const uint64_t ticks_ns)
-{
-	uint8_t hertz = memory_read(viM, HW_TIMER_HZ);
-
-	if ((viM->csr[0] & 0x80) == 0 ||
-		(memory_read(viM, HW_HW_CTRL) & 0x01) == 0 || hertz == 0) {
-		return;
-	}
-
-	static uint64_t last_ticks = 0;
-	uint64_t period_ns = 1000000000ULL / hertz;
-
-	if (ticks_ns - last_ticks < period_ns) { return; }
-	last_ticks = ticks_ns;
 
 	viM->wait_for_interrupt = false;
 
-	interrupt_pushtostack(viM);
-
-	uint16_t vector_addr = 0xFF20;
-	viM->pc = memory_read(viM, vector_addr) |
-		memory_read(viM, vector_addr + 1) << 8;
+	uint16_t vector_addr = (uint16_t)(0xFF00 + ((int_id & 0x7F) << 1));
+	viM->pc = (uint16_t)(memory_read(viM, vector_addr) |
+		(memory_read(viM, (uint16_t)(vector_addr + 1)) << 8));
 }
 
-void interrupt_input(struct VirtualMachine *viM)
+void check_and_dispatch_interrupts(
+	struct VirtualMachine *viM, uint64_t ticks_ns)
 {
-	// Only interrupt if interrupts are enabled, the keyboard interrupt is enabled, and there are keys in the buffer.
-	if ((viM->csr[0] >> 7) == 1 && (memory_read(viM, HW_HW_CTRL) & 0x02) &&
-		viM->key_head != viM->key_tail) {
-		viM->wait_for_interrupt = false;
-		interrupt_pushtostack(viM);
+	if ((viM->csr[0] & 0x80) == 0) { return; }
 
-		uint16_t vector_addr = 0xFF22;
-		viM->pc = memory_read(viM, vector_addr) |
-			memory_read(viM, vector_addr + 1) << 8;
+	uint8_t hw_ctrl = viM->hw_regs[HW_HW_CTRL - 0xFE00];
+
+	// 1. Timer Interrupt (Priority 1, ID 0x10)
+	uint8_t hertz = viM->hw_regs[HW_TIMER_HZ - 0xFE00];
+	if ((hw_ctrl & 0x01) && hertz > 0) {
+		static uint64_t last_ticks = 0;
+		uint64_t period_ns = 1000000000ULL / hertz;
+		if (ticks_ns - last_ticks >= period_ns) {
+			last_ticks = ticks_ns;
+			trigger_interrupt(viM, 0x10);
+			return;
+		}
 	}
-}
-void interrupt_uart(struct VirtualMachine *viM)
-{
-	// Only interrupt if interrupts are enabled, the UART RX interrupt is enabled, and there is data in the buffer.
-	if ((viM->csr[0] & 0x80) && (memory_read(viM, HW_UART_CTRL) & 0x01) &&
-		viM->uart_head != viM->uart_tail) {
-		viM->wait_for_interrupt = false;
-		interrupt_pushtostack(viM);
 
-		uint16_t vector_addr = 0xFF24;
-		viM->pc = memory_read(viM, vector_addr) |
-			memory_read(viM, vector_addr + 1) << 8;
+	// 2. Keyboard Interrupt (Priority 2, ID 0x11)
+	if ((hw_ctrl & 0x02) && viM->key_head != viM->key_tail) {
+		trigger_interrupt(viM, 0x11);
+		return;
+	}
+
+	// 3. UART RX Interrupt (Priority 3, ID 0x12)
+	uint8_t uart_ctrl = viM->hw_regs[HW_UART_CTRL - 0xFE00];
+	if ((uart_ctrl & 0x01) && viM->uart_head != viM->uart_tail) {
+		trigger_interrupt(viM, 0x12);
+		return;
 	}
 }
 
