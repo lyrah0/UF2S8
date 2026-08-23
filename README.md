@@ -14,7 +14,7 @@ UF2S8 is a custom 8-bit computer architecture designed from scratch, featuring a
 - **Fixed 16-bit instruction encoding** — Clean, orthogonal load/store ISA
 - **8 general-purpose registers** with 4 virtual 16-bit address register pairs
 - **Hardware 2D blitter** — Rectangle fill, memory/VRAM blits, transparency, alpha blending, clipping, flipping, and line drawing
-- **Bank-switched memory** — 7 × 8 KB windows mapping to a 256-bank (2 MB) pool (128 ROM, 120 RAM, 8 VRAM) over a 64 KB address space
+- **Bank-switched memory** — 8 × 8 KB windows mapping to a 256-bank (2 MB) pool (128 ROM, 120 RAM, 8 VRAM) over a 64 KB address space
 - **Configurable graphics** — Software-defined resolution with 1/2/4/8 bpp colour depth modes (RGB332)
 - **Interrupt system** — Timer, keyboard, software interrupts with a 128-entry vector table
 - **Standardised ABI** — Fastcall calling convention with defined register roles and stack frame layout
@@ -137,11 +137,11 @@ UF2S8 is a load/store architecture with fixed-width 2-byte instructions and 8-bi
 0xC000 ├───────────────┤
        │  Window 6     │ 8 KB — Banked (256-bank pool)
 0xE000 ├───────────────┤
-       │  Fixed RAM    │ 7.5 KB — Bank 247 (Stack, heap, general use)
+       │  Window 7     │ 7.5 KB — Banked (256-bank pool)
 0xFE00 ├───────────────┤
        │  HW Registers │ 256 B — Blitter, graphics, keyboard, timer, banking
 0xFF00 ├───────────────┤
-       │  Vector Table │ 256 B — Interrupt vectors (in Bank 247)
+       │  Vector Table │ 256 B — Banked (Window 7)
 0xFFFF ┴───────────────┘
 ```
 

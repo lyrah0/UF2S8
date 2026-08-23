@@ -244,7 +244,8 @@ static bool symbol_directives(struct TokenList *tokenList,
 		strcasecmp(next->str, "bankw3") == 0 ||
 		strcasecmp(next->str, "bankw4") == 0 ||
 		strcasecmp(next->str, "bankw5") == 0 ||
-		strcasecmp(next->str, "bankw6") == 0) {
+		strcasecmp(next->str, "bankw6") == 0 ||
+		strcasecmp(next->str, "bankw7") == 0) {
 		*current_token += 2;
 		return false;
 	}

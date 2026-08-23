@@ -14,14 +14,9 @@ struct EncodeState {
 static void write_to_buffer(
 	struct EncodeState *state, int addr, const void *data, int size)
 {
-	int offset = 0;
-	if (addr < 0xE000) {
-		int window = addr / BANK_SIZE;
-		offset = (state->bank_w[window] * BANK_SIZE) +
-			(addr % BANK_SIZE);
-	} else {
-		return;
-	}
+	int window = addr / BANK_SIZE;
+	if (window >= NUM_WINDOWS) { return; }
+	int offset = (state->bank_w[window] * BANK_SIZE) + (addr % BANK_SIZE);
 	if (offset + size > TOTAL_BINARY_SIZE) { return; }
 	memcpy(state->buffer + offset, data, size);
 }
@@ -484,6 +479,10 @@ static bool encode_directives(struct TokenList *tokenList,
 	if (strcasecmp(next->str, "bankw6") == 0) {
 		return encode_directive_bank(
 			tokenList, state, current_token, 6);
+	}
+	if (strcasecmp(next->str, "bankw7") == 0) {
+		return encode_directive_bank(
+			tokenList, state, current_token, 7);
 	}
 
 	return false;

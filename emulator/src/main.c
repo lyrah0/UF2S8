@@ -44,9 +44,10 @@ static int cpu_thread_worker(void *data)
 	for (int i = 0; i < 8; i++) {
 		viM->csr[i] = 0;
 	}
-	for (int i = 0; i < NUM_WINDOWS; i++) {
+	for (int i = 0; i < 7; i++) {
 		viM->bank_sel[i] = i;
 	}
+	viM->bank_sel[7] = 247;
 	uint16_t instruction = 0;
 	uint64_t instruction_count = 0;
 	uint64_t start_ticks = SDL_GetPerformanceCounter();

@@ -45,6 +45,7 @@
 .equ HW_BANK_SEL_4,        0xFEFA
 .equ HW_BANK_SEL_5,        0xFEFB
 .equ HW_BANK_SEL_6,        0xFEFC
+.equ HW_BANK_SEL_7,        0xFEFD
 .equ HW_TIMER_HZ,          0xFEFE
 .equ HW_HW_CTRL,           0xFEFF
 
@@ -137,5 +138,6 @@
 .equ OFS2_BANK_SEL_4,  0x3A
 .equ OFS2_BANK_SEL_5,  0x3B
 .equ OFS2_BANK_SEL_6,  0x3C
+.equ OFS2_BANK_SEL_7,  0x3D
 .equ OFS2_TIMER_HZ,    0x3E
 .equ OFS2_HW_CTRL,     0x3F

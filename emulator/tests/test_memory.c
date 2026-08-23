@@ -8,8 +8,9 @@ static void test_basic_memory()
 {
 	struct VirtualMachine *viM = calloc(1, sizeof(struct VirtualMachine));
 	assert(viM);
+	viM->bank_sel[7] = 247;
 
-	// Test basic RAM (address > 0xE000)
+	// Test basic RAM in Window 7 (address > 0xE000)
 	memory_write(viM, 0xF000, 0xAA);
 	assert(memory_read(viM, 0xF000) == 0xAA);
 
@@ -25,7 +26,7 @@ static void test_banking()
 	struct VirtualMachine *viM = calloc(1, sizeof(struct VirtualMachine));
 	assert(viM);
 
-	// By default, viM has bank_sel[0..6] = 0 (ROM bank 0)
+	// By default, viM has bank_sel[0..7] = 0 (ROM bank 0)
 	// ROM is read-only: writes should be ignored
 	memory_write(viM, 0x1000, 0x55);
 	assert(memory_read(viM, 0x1000) == 0x00);
@@ -50,12 +51,24 @@ static void test_banking()
 	memory_write(viM, 0x8500, 0x42);
 	assert(memory_read(viM, 0x8500) == 0x42);
 
-	// Test Window 1 mapped to Bank 247 (Fixed RAM)
-	memory_write(viM, HW_BANK_SEL_1, 247);
-	// Write to fixed address 0xE500 (offset 0x500 in bank 247)
+	// Test Window 7 (0xE000 - 0xFFFF) mapped to Bank 247
+	memory_write(viM, HW_BANK_SEL_7, 247);
 	memory_write(viM, 0xE500, 0x99);
-	// Read through Window 1 at 0x2500 (offset 0x500 in window 1)
+	assert(memory_read(viM, 0xE500) == 0x99);
+
+	// Test Window 1 mapped to Bank 247 seeing same data as Window 7
+	memory_write(viM, HW_BANK_SEL_1, 247);
 	assert(memory_read(viM, 0x2500) == 0x99);
+
+	// Switch Window 7 to RAM Bank 131
+	memory_write(viM, HW_BANK_SEL_7, 131);
+	assert(memory_read(viM, 0xE500) == 0x00);
+	memory_write(viM, 0xE500, 0x33);
+	assert(memory_read(viM, 0xE500) == 0x33);
+
+	// Switch Window 7 back to Bank 247
+	memory_write(viM, HW_BANK_SEL_7, 247);
+	assert(memory_read(viM, 0xE500) == 0x99);
 
 	// Test Window 2 mapped to Bank 248 (VRAM Bank 0)
 	memory_write(viM, HW_BANK_SEL_2, 248);

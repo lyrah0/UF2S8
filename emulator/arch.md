@@ -67,7 +67,7 @@ hardware registers:
 |BANK_SEL_4       |0xFEFA|Window 4 bank select register (8-bit)
 |BANK_SEL_5       |0xFEFB|Window 5 bank select register (8-bit)
 |BANK_SEL_6       |0xFEFC|Window 6 bank select register (8-bit)
-|reserved         |0xFEFD|Reserved
+|BANK_SEL_7       |0xFEFD|Window 7 bank select register (8-bit)
 |TIMER_HZ         |0xFEFE|timer multiplier in hertz (1/hertz) 0=disabled
 |HW_CTRL          |0xFEFF|hardware control
 
@@ -82,9 +82,9 @@ Memory Map:
 |0x8000-0x9FFF|8KB|Banked|Window 4 (Mapped to 256 banks)|
 |0xA000-0xBFFF|8KB|Banked|Window 5 (Mapped to 256 banks)|
 |0xC000-0xDFFF|8KB|Banked|Window 6 (Mapped to 256 banks)|
-|0xE000-0xFDFF|7.5KB|Fixed|Fixed RAM (Bank 247: Stack, Heap, etc.)|
+|0xE000-0xFDFF|7.5KB|Banked|Window 7 (Mapped to 256 banks)|
 |0xFE00-0xFEFF|256B|Fixed|Hardware Registers|
-|0xFF00-0xFFFF|256B|Fixed|Vector table (in Bank 247)|
+|0xFF00-0xFFFF|256B|Banked|Vector table / upper part of Window 7 (Mapped to 256 banks)|
 
 Banking format:
 
