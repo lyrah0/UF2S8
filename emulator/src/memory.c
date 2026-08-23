@@ -16,13 +16,17 @@ void memory_set_bank(struct VirtualMachine *viM, uint8_t win, uint8_t bank)
 	if (win >= NUM_WINDOWS) { return; }
 	viM->bank_sel[win] = bank;
 	if (bank < 128) {
-		viM->bank_read_ptr[win] = &viM->rom[(ptrdiff_t)(bank * BANK_SIZE)];
+		viM->bank_read_ptr[win] =
+			&viM->rom[(ptrdiff_t)(bank * BANK_SIZE)];
 		viM->bank_write_ptr[win] = nullptr;
 	} else if (bank < 248) {
-		viM->bank_read_ptr[win] = &viM->ram[(ptrdiff_t)((bank - 128) * BANK_SIZE)];
-		viM->bank_write_ptr[win] = &viM->ram[(ptrdiff_t)((bank - 128) * BANK_SIZE)];
+		viM->bank_read_ptr[win] =
+			&viM->ram[(ptrdiff_t)((bank - 128) * BANK_SIZE)];
+		viM->bank_write_ptr[win] =
+			&viM->ram[(ptrdiff_t)((bank - 128) * BANK_SIZE)];
 	} else {
-		viM->bank_read_ptr[win] = &viM->vram[(ptrdiff_t)((bank - 248) * BANK_SIZE)];
+		viM->bank_read_ptr[win] =
+			&viM->vram[(ptrdiff_t)((bank - 248) * BANK_SIZE)];
 		viM->bank_write_ptr[win] =
 			&viM->vram[(ptrdiff_t)((bank - 248) * BANK_SIZE)];
 	}
