@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include "handle.h"
 #include "structures.h"
 
 static bool handle_errors(const struct TokenList *const tokenList,
@@ -22,7 +23,7 @@ static bool handle_errors(const struct TokenList *const tokenList,
 			token->line);
 		return true;
 	}
-	if (next1->num_value > 9) {
+	if (next1->num_value < 0 || next1->num_value > 15) {
 		printf("ERROR: %d: invalid register '%s'.\n", token->line,
 			next1->str);
 		return true;
@@ -38,7 +39,7 @@ static bool handle_errors(const struct TokenList *const tokenList,
 				token->line);
 			return true;
 		}
-		if (next3->num_value > 9) {
+		if (next3->num_value < 0 || next3->num_value > 15) {
 			printf("ERROR: %d: invalid register '%s' in "
 			       "instruction %s.\n",
 				token->line, next3->str, token->str);
@@ -56,7 +57,7 @@ static bool handle_errors(const struct TokenList *const tokenList,
 				token->line);
 			return true;
 		}
-		if (next5->num_value > 9) {
+		if (next5->num_value < 0 || next5->num_value > 15) {
 			printf("ERROR: %d: invalid register '%s' in "
 			       "instruction %s.\n",
 				token->line, next5->str, token->str);
@@ -65,6 +66,19 @@ static bool handle_errors(const struct TokenList *const tokenList,
 	}
 	return false;
 }
+
+static inline uint8_t pack_imm8_mid(uint8_t imm)
+{ return (uint8_t)((imm & 0xF0) | ((imm & 0x07) << 1) | ((imm >> 3) & 0x01)); }
+
+static inline uint16_t pack_imm5_mem(uint8_t imm)
+{ return (uint16_t)(((imm >> 1) & 0x0F) << 12 | (imm & 0x01) << 8); }
+
+static inline uint16_t pack_imm12_branch(uint16_t imm)
+{
+	return (uint16_t)(((imm >> 4) & 0xFF) << 8 | (imm & 0x07) << 5 |
+		((imm >> 3) & 0x01) << 4);
+}
+
 static int handle_symbol(
 	const struct SymbolTable *symbolTable, const char *symbol)
 {
@@ -140,13 +154,14 @@ static bool handle_bracketparse(const struct TokenList *tokenList,
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
 	struct Token *next2 = &tokenList->tokens[*current_token + 2];
 	if (token->type == TOKEN_REGISTER) {
-		if (token->num_value < 10 || token->num_value > 19) {
-			printf("ERROR: %d: invalid register %s, only a0-3 "
+		if (token->num_value < 20 || token->num_value > 27) {
+			printf("ERROR: %d: invalid register %s, only a0-7 "
 			       "allowed.\n",
 				token->line, token->str);
 			return true;
 		}
-		*base_reg = next1->num_value - 10;
+		*base_reg = (uint8_t)(token->num_value - 20);
+		*immediate = 0;
 		return false;
 	}
 	*current_token += 2;
@@ -159,12 +174,12 @@ static bool handle_bracketparse(const struct TokenList *tokenList,
 			token->line);
 		return true;
 	}
-	if (next1->num_value < 10 || next1->num_value > 19) {
-		printf("ERROR: %d: invalid register %s, only a0-3 allowed.\n",
+	if (next1->num_value < 20 || next1->num_value > 27) {
+		printf("ERROR: %d: invalid register %s, only a0-7 allowed.\n",
 			token->line, next1->str);
 		return true;
 	}
-	*base_reg = next1->num_value - 10;
+	*base_reg = (uint8_t)(next1->num_value - 20);
 	if (next2->type == TOKEN_BRACKET_CLOSE) {
 		*immediate = 0;
 		return false;
@@ -176,11 +191,11 @@ static bool handle_bracketparse(const struct TokenList *tokenList,
 		return true;
 	}
 	int8_t signed_imm = (int8_t)*immediate;
-	if (signed_imm > 63) {
-		printf("Warning: %d: offset greater than 63, truncated.\n",
+	if (signed_imm > 15) {
+		printf("Warning: %d: offset greater than 15, truncated.\n",
 			token->line);
-	} else if (signed_imm < -64) {
-		printf("Warning: %d: offset less than -64, truncated.\n",
+	} else if (signed_imm < -16) {
+		printf("Warning: %d: offset less than -16, truncated.\n",
 			token->line);
 	}
 	(*current_token)++;
@@ -215,26 +230,29 @@ bool handle_mov(const struct TokenList *tokenList, int *current_token,
 			token->line);
 		return true;
 	}
-	if ((next1->num_value > 9 && next1->num_value < 20) ||
-		(next3->num_value > 9 && next3->num_value < 20)) {
+	if ((next1->num_value >= 20 && next1->num_value <= 27) ||
+		(next3->num_value >= 20 && next3->num_value <= 27)) {
 		printf("ERROR: %d: address registers not allowed in MOV.\n",
 			token->line);
 		return true;
 	}
-	if (next1->num_value > 19) {
-		if (next3->num_value > 19) {
+	if (next1->num_value >= 40) {
+		if (next3->num_value >= 40) {
 			printf("ERROR: %d: cannot move CSR to CSR.\n",
 				token->line);
 			return true;
 		}
-		*machine_code = 0x0090 | (next1->num_value - 20) << 13 |
-			next3->num_value << 10;
-	} else if (next3->num_value > 19) {
-		*machine_code = 0x0010 | next1->num_value << 13 |
-			(next3->num_value - 20) << 10;
+		uint8_t csr = (uint8_t)(next1->num_value - 40);
+		uint8_t s = (uint8_t)next3->num_value;
+		*machine_code = 0xB000 | (s << 8) | (csr << 4);
+	} else if (next3->num_value >= 40) {
+		uint8_t d = (uint8_t)next1->num_value;
+		uint8_t csr = (uint8_t)(next3->num_value - 40);
+		*machine_code = 0xA000 | (csr << 8) | (d << 4);
 	} else {
-		*machine_code = 0x0041 | next1->num_value << 13 |
-			next3->num_value << 10 | next3->num_value << 7;
+		uint8_t d = (uint8_t)next1->num_value;
+		uint8_t s = (uint8_t)next3->num_value;
+		*machine_code = 0x3000 | (s << 8) | (d << 4);
 	}
 	*current_token += 3;
 	return false;
@@ -245,7 +263,7 @@ bool handle_ss(const struct TokenList *tokenList, int *current_token,
 {
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
 	if (handle_errors(tokenList, current_token, 1)) { return true; }
-	*machine_code = base | next1->num_value << 10;
+	*machine_code = base | (next1->num_value << 4);
 	*current_token += 1;
 	return false;
 }
@@ -255,30 +273,50 @@ bool handle_sd(const struct TokenList *tokenList, int *current_token,
 {
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
 	if (handle_errors(tokenList, current_token, 1)) { return true; }
-	*machine_code = base | next1->num_value << 13;
+	*machine_code = base | (next1->num_value << 4);
 	*current_token += 1;
 	return false;
 }
 
-bool handle_sdss(const struct TokenList *tokenList, int *current_token,
+bool handle_unary(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code, uint16_t base)
 {
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
+	struct Token *next2 = &tokenList->tokens[*current_token + 2];
 	struct Token *next3 = &tokenList->tokens[*current_token + 3];
-	if (handle_errors(tokenList, current_token, 3)) { return true; }
-	*machine_code = base | next1->num_value << 13 | next3->num_value << 10;
-	*current_token += 3;
+
+	if (next1->type != TOKEN_REGISTER || next1->num_value < 0 ||
+		next1->num_value > 15) {
+		printf("ERROR: %d: expected register after instruction.\n",
+			tokenList->tokens[*current_token].line);
+		return true;
+	}
+	uint8_t d = (uint8_t)next1->num_value;
+	uint8_t s = d;
+	if (next2->type == TOKEN_COMMA) {
+		if (next3->type != TOKEN_REGISTER || next3->num_value < 0 ||
+			next3->num_value > 15) {
+			printf("ERROR: %d: expected register after comma.\n",
+				tokenList->tokens[*current_token].line);
+			return true;
+		}
+		s = (uint8_t)next3->num_value;
+		*current_token += 3;
+	} else {
+		*current_token += 1;
+	}
+	*machine_code = base | (s << 8) | (d << 4);
 	return false;
 }
 
-// Handles compare register register instructions: CMP, CMN, CMA
 bool handle_ds(const struct TokenList *tokenList, int *current_token,
 	uint16_t *machine_code, uint16_t base)
 {
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
 	struct Token *next3 = &tokenList->tokens[*current_token + 3];
 	if (handle_errors(tokenList, current_token, 3)) { return true; }
-	*machine_code = base | next1->num_value << 10 | next3->num_value << 7;
+	*machine_code = base | (next1->num_value << 8) |
+		(next3->num_value << 4);
 	*current_token += 3;
 	return false;
 }
@@ -288,11 +326,25 @@ bool handle_rrr(const struct TokenList *tokenList, int *current_token,
 {
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
 	struct Token *next3 = &tokenList->tokens[*current_token + 3];
+	struct Token *next4 = &tokenList->tokens[*current_token + 4];
 	struct Token *next5 = &tokenList->tokens[*current_token + 5];
-	if (handle_errors(tokenList, current_token, 5)) { return true; }
-	*machine_code = base | next1->num_value << 13 |
-		next3->num_value << 10 | next5->num_value << 7;
-	*current_token += 5;
+
+	if (next4->type == TOKEN_COMMA && next5->type == TOKEN_REGISTER) {
+		if (handle_errors(tokenList, current_token, 5)) {
+			return true;
+		}
+		uint8_t d = (uint8_t)next1->num_value;
+		uint8_t m = (uint8_t)next5->num_value;
+		*machine_code = base | (m << 8) | (d << 4);
+		*current_token += 5;
+		return false;
+	}
+
+	if (handle_errors(tokenList, current_token, 3)) { return true; }
+	uint8_t d = (uint8_t)next1->num_value;
+	uint8_t m = (uint8_t)next3->num_value;
+	*machine_code = base | (m << 8) | (d << 4);
+	*current_token += 3;
 	return false;
 }
 
@@ -306,55 +358,69 @@ bool handle_add(const struct TokenList *tokenList,
 	struct Token *next3 = &tokenList->tokens[*current_token + 3];
 	struct Token *next4 = &tokenList->tokens[*current_token + 4];
 	struct Token *next5 = &tokenList->tokens[*current_token + 5];
-	struct Token *next6 = &tokenList->tokens[*current_token + 6];
-	if (next5->type == TOKEN_REGISTER) {
-		if (handle_errors(tokenList, current_token, 5)) {
-			return true;
-		}
-		*machine_code = 0x0021 | next1->num_value << 13 |
-			next3->num_value << 10 | next5->num_value << 7;
-		*current_token += 5;
-		return false;
-	}
-	*current_token += 5;
-	if (next1->type != TOKEN_REGISTER) {
+
+	if (next1->type != TOKEN_REGISTER || next1->num_value < 0 ||
+		next1->num_value > 15) {
 		printf("ERROR: %d: expected register after instruction.\n",
 			token->line);
 		return true;
 	}
-	if (next2->type != TOKEN_COMMA || next4->type != TOKEN_COMMA) {
+	if (next2->type != TOKEN_COMMA) {
 		printf("ERROR: %d: expected comma after operand.\n",
 			token->line);
 		return true;
 	}
-	if (next3->type != TOKEN_REGISTER) {
-		printf("ERROR: %d: expected register after comma.\n",
-			token->line);
-		return true;
+
+	uint8_t d = (uint8_t)next1->num_value;
+
+	if (next3->type == TOKEN_REGISTER && next4->type == TOKEN_COMMA) {
+		if (next5->type == TOKEN_REGISTER) {
+			if (next5->num_value < 0 || next5->num_value > 15) {
+				printf("ERROR: %d: invalid register '%s'.\n",
+					token->line, next5->str);
+				return true;
+			}
+			uint8_t m = (uint8_t)next5->num_value;
+			*machine_code = 0x2001 | (m << 8) | (d << 4);
+			*current_token += 5;
+			return false;
+		}
+		*current_token += 4;
+		uint8_t immediate = 0;
+		if (handle_immediate(tokenList, symbolTable, current_token,
+			    &immediate)) {
+			return true;
+		}
+		*machine_code = 0x0008 | (d << 4) |
+			((uint16_t)pack_imm8_mid(immediate) << 8);
+		return false;
 	}
-	if (next5->type != TOKEN_NUMBER && next6->type != TOKEN_NUMBER) {
-		printf("ERROR: %d: expected number or register after comma.\n",
-			token->line);
-		return true;
+
+	if (next3->type == TOKEN_REGISTER) {
+		if (next3->num_value < 0 || next3->num_value > 15) {
+			printf("ERROR: %d: invalid register '%s'.\n",
+				token->line, next3->str);
+			return true;
+		}
+		uint8_t m = (uint8_t)next3->num_value;
+		*machine_code = 0x2001 | (m << 8) | (d << 4);
+		*current_token += 3;
+		return false;
 	}
-	if (next1->num_value > 9 || next3->num_value > 9) {
-		printf("ERROR: %d: only r0-7 are valid in %s.\n", token->line,
-			token->str);
-		return true;
-	}
+
+	*current_token += 2;
 	uint8_t immediate = 0;
 	if (handle_immediate(
 		    tokenList, symbolTable, current_token, &immediate)) {
 		return true;
 	}
-	*machine_code = 0x000B | next1->num_value << 13 |
-		next3->num_value << 10 | (immediate & 0x7) << 7 |
-		(immediate >> 3 & 0x7) << 4;
+	*machine_code = 0x0008 | (d << 4) |
+		((uint16_t)pack_imm8_mid(immediate) << 8);
 	return false;
 }
 
 bool handle_shift(const struct TokenList *tokenList, int *current_token,
-	uint16_t *machine_code, uint16_t base)
+	uint16_t *machine_code, uint16_t reg_base, uint16_t imm_base)
 {
 	struct Token *token = &tokenList->tokens[*current_token];
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
@@ -362,50 +428,151 @@ bool handle_shift(const struct TokenList *tokenList, int *current_token,
 	struct Token *next3 = &tokenList->tokens[*current_token + 3];
 	struct Token *next4 = &tokenList->tokens[*current_token + 4];
 	struct Token *next5 = &tokenList->tokens[*current_token + 5];
-	if (next5->type == TOKEN_REGISTER) {
-		if (handle_errors(tokenList, current_token, 5)) {
+
+	if (next1->type != TOKEN_REGISTER || next1->num_value < 0 ||
+		next1->num_value > 15) {
+		printf("ERROR: %d: expected register after instruction.\n",
+			token->line);
+		return true;
+	}
+	if (next2->type != TOKEN_COMMA) {
+		printf("ERROR: %d: expected comma after operand.\n",
+			token->line);
+		return true;
+	}
+
+	uint8_t d = (uint8_t)next1->num_value;
+
+	if (next3->type == TOKEN_REGISTER && next4->type == TOKEN_COMMA) {
+		if (next5->type == TOKEN_REGISTER) {
+			if (next5->num_value < 0 || next5->num_value > 15) {
+				printf("ERROR: %d: invalid register '%s'.\n",
+					token->line, next5->str);
+				return true;
+			}
+			uint8_t m = (uint8_t)next5->num_value;
+			*machine_code = reg_base | (m << 8) | (d << 4);
+			*current_token += 5;
+			return false;
+		}
+		if (next5->type == TOKEN_NUMBER) {
+			if (next5->num_value > 7) {
+				printf("Warning: %d: shift value greater than "
+				       "7, truncated.\n",
+					next5->line);
+			}
+			uint8_t imm = (uint8_t)(next5->num_value & 0x7);
+			*machine_code = imm_base | (imm << 9) | (d << 4);
+			*current_token += 5;
+			return false;
+		}
+		printf("ERROR: %d: expected register or number.\n",
+			token->line);
+		return true;
+	}
+
+	if (next3->type == TOKEN_REGISTER) {
+		if (next3->num_value < 0 || next3->num_value > 15) {
+			printf("ERROR: %d: invalid register '%s'.\n",
+				token->line, next3->str);
 			return true;
 		}
-		*machine_code = 0x0000 | base | next1->num_value << 13 |
-			next3->num_value << 10 | next5->num_value << 7;
-		*current_token += 5;
+		uint8_t m = (uint8_t)next3->num_value;
+		*machine_code = reg_base | (m << 8) | (d << 4);
+		*current_token += 3;
 		return false;
 	}
+	if (next3->type == TOKEN_NUMBER) {
+		if (next3->num_value > 7) {
+			printf("Warning: %d: shift value greater than 7, "
+			       "truncated.\n",
+				next3->line);
+		}
+		uint8_t imm = (uint8_t)(next3->num_value & 0x7);
+		*machine_code = imm_base | (imm << 9) | (d << 4);
+		*current_token += 3;
+		return false;
+	}
+
+	printf("ERROR: %d: expected register or number after comma.\n",
+		token->line);
+	return true;
+}
+
+bool handle_bit_ops(const struct TokenList *tokenList, int *current_token,
+	uint16_t *machine_code, enum BitOpType op_type)
+{
+	struct Token *token = &tokenList->tokens[*current_token];
+	struct Token *next1 = &tokenList->tokens[*current_token + 1];
+	struct Token *next2 = &tokenList->tokens[*current_token + 2];
+	struct Token *next3 = &tokenList->tokens[*current_token + 3];
+
 	if (next1->type != TOKEN_REGISTER) {
 		printf("ERROR: %d: expected register after instruction.\n",
 			token->line);
 		return true;
 	}
-	if (next2->type != TOKEN_COMMA || next4->type != TOKEN_COMMA) {
+	if (next2->type != TOKEN_COMMA) {
 		printf("ERROR: %d: expected comma after operand.\n",
 			token->line);
 		return true;
 	}
-	if (next3->type != TOKEN_REGISTER) {
-		printf("ERROR: %d: expected register after comma.\n",
-			token->line);
-		return true;
-	}
-	if (next5->type != TOKEN_NUMBER) {
-		printf("ERROR: %d: expected number or register after comma.\n",
-			token->line);
-		return true;
-	}
-	if (next1->num_value > 9 || next3->num_value > 9) {
-		printf("ERROR: %d: only registers r0-7 are valid in %s.\n",
-			token->line, token->str);
-		return true;
-	}
-	if (next5->num_value > 7) {
-		printf("Warning: %d: shift value greater than 7, will wrap "
-		       "around.\n",
-			next5->line);
-	}
-	*machine_code = 0x0040 | base | next1->num_value << 13 |
-		next3->num_value << 10 | (next5->num_value & 0x7) << 7;
 
-	*current_token += 5;
-	return false;
+	if (next1->num_value == 40) {
+		if (next3->type != TOKEN_NUMBER) {
+			printf("ERROR: %d: expected bit number after comma.\n",
+				token->line);
+			return true;
+		}
+		uint8_t imm = (uint8_t)(next3->num_value & 0x7);
+		if (op_type == BIT_OP_BST) {
+			*machine_code = 0x1E00 | (imm << 5);
+		} else if (op_type == BIT_OP_BIC) {
+			*machine_code = 0x1E10 | (imm << 5);
+		} else {
+			*machine_code = 0x1F00 | (imm << 5);
+		}
+		*current_token += 3;
+		return false;
+	}
+
+	if (next1->num_value < 0 || next1->num_value > 15) {
+		printf("ERROR: %d: invalid register '%s'.\n", token->line,
+			next1->str);
+		return true;
+	}
+	uint8_t reg = (uint8_t)next1->num_value;
+
+	if (next3->type == TOKEN_NUMBER) {
+		uint8_t imm = (uint8_t)(next3->num_value & 0x7);
+		if (op_type == BIT_OP_BST) {
+			*machine_code = 0x4000 | (imm << 9) | (reg << 4);
+		} else if (op_type == BIT_OP_BIC) {
+			*machine_code = 0x4010 | (imm << 9) | (reg << 4);
+		} else {
+			*machine_code = 0xF011 | (imm << 9) | (reg << 4);
+		}
+		*current_token += 3;
+		return false;
+	}
+
+	if (next3->type == TOKEN_REGISTER && next3->num_value >= 0 &&
+		next3->num_value <= 15) {
+		uint8_t m = (uint8_t)next3->num_value;
+		if (op_type == BIT_OP_BST) {
+			*machine_code = 0x0002 | (m << 8) | (reg << 4);
+		} else if (op_type == BIT_OP_BIC) {
+			*machine_code = 0x1002 | (m << 8) | (reg << 4);
+		} else {
+			*machine_code = 0x2002 | (m << 8) | (reg << 4);
+		}
+		*current_token += 3;
+		return false;
+	}
+
+	printf("ERROR: %d: expected bit number or register after comma.\n",
+		token->line);
+	return true;
 }
 
 bool handle_li(const struct TokenList *tokenList,
@@ -417,7 +584,7 @@ bool handle_li(const struct TokenList *tokenList,
 	struct Token *next2 = &tokenList->tokens[*current_token + 2];
 	uint8_t immediate = 0;
 	if (handle_errors(tokenList, current_token, 1)) { return true; }
-	*current_token += 3;
+	*current_token += 2;
 	if (next2->type != TOKEN_COMMA) {
 		printf("ERROR: %d: expected comma after register.\n",
 			token->line);
@@ -427,11 +594,11 @@ bool handle_li(const struct TokenList *tokenList,
 		    tokenList, symbolTable, current_token, &immediate)) {
 		return true;
 	}
-	*machine_code = 0x000A | next1->num_value << 13 | immediate << 5;
+	*machine_code = 0x0009 | (next1->num_value << 4) |
+		((uint16_t)pack_imm8_mid(immediate) << 8);
 	return false;
 }
 
-// Handles SB and LB
 bool handle_loadstore(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
 	uint16_t *machine_code, bool load)
@@ -450,30 +617,30 @@ bool handle_loadstore(const struct TokenList *tokenList,
 		return true;
 	}
 	if (next3->type == TOKEN_REGISTER) {
-		if (next3->num_value < 10 || next3->num_value > 19) {
-			printf("ERROR: %d: only a0-3 are valid in %s.\n",
+		if (next3->num_value < 20 || next3->num_value > 27) {
+			printf("ERROR: %d: only a0-7 are valid in %s.\n",
 				token->line, token->str);
 			return true;
 		}
-		base_reg = next3->num_value - 10;
+		base_reg = (uint8_t)(next3->num_value - 20);
+		immediate = 0;
 	} else if (handle_bracketparse(tokenList, symbolTable, current_token,
 			   &base_reg, &immediate)) {
 		return true;
 	}
-	immediate &= 0x7F;
+	immediate &= 0x1F;
+	uint16_t packed_imm = pack_imm5_mem(immediate);
 	if (load) {
-		*machine_code = 0x000D | next1->num_value << 13 |
-			base_reg << 8 | (immediate & 0xF) << 4 |
-			(immediate >> 4) << 10;
+		*machine_code = 0x000B | (next1->num_value << 4) |
+			(base_reg << 9) | packed_imm;
 	} else {
-		*machine_code = 0x000C | next1->num_value << 10 |
-			base_reg << 8 | (immediate & 0xF) << 4 |
-			(immediate >> 4) << 13;
+		*machine_code = 0x000A | (next1->num_value << 4) |
+			(base_reg << 9) | packed_imm;
 	}
 	return false;
 }
 
-bool handle_branch_cond_parse(const struct TokenList *tokenList,
+static bool handle_branch_target_parse(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
 	uint16_t current_address, uint8_t *base_reg, uint16_t *offset,
 	bool *is_relative)
@@ -489,102 +656,105 @@ bool handle_branch_cond_parse(const struct TokenList *tokenList,
 				token->str);
 			return true;
 		}
-		*offset = (symbolTable->symbols[symbol_num].address -
-				  current_address - 2) >>
-			1;
-		if ((int16_t)*offset > 511 || (int16_t)*offset < -512) {
-			printf("Warning: %d: Branch target too far away from "
-			       "%s.\n",
-				token->line, token->str);
-		}
+		int32_t diff =
+			(int32_t)symbolTable->symbols[symbol_num].address -
+			(int32_t)(current_address + 2);
+		*offset = (uint16_t)(diff >> 1);
 		*is_relative = true;
-	} else if (token->type == TOKEN_NUMBER) {
-		if ((token->num_value > 511 || token->num_value < -512)) {
-			printf("Warning: %d: value %lld outside max "
-			       "offset, will wrap around.\n",
-				token->line, token->num_value);
-		}
+		return false;
+	}
+	if (token->type == TOKEN_NUMBER) {
 		if (token->num_value % 2) {
 			printf("Warning: %d: odd value %lld will be "
 			       "rounded.\n",
 				token->line, token->num_value);
 		}
-		*offset = token->num_value >> 1;
+		*offset = (uint16_t)(token->num_value >> 1);
 		*is_relative = true;
-	} else if (token->type == TOKEN_BRACKET_OPEN) {
-		if (next1->type != TOKEN_REGISTER) {
-			printf("ERROR: %d: expected [a?] after comma.\n",
+		return false;
+	}
+	if (token->type == TOKEN_BRACKET_OPEN) {
+		if (next1->type != TOKEN_REGISTER || next1->num_value < 20 ||
+			next1->num_value > 27) {
+			printf("ERROR: %d: expected address register a0-a7 in "
+			       "[ab].\n",
 				token->line);
-			return true;
-		}
-		if (next1->num_value < 10 || next1->num_value > 19) {
-			printf("ERROR: %d: only a0-3 are valid in %s.\n",
-				token->line, token->str);
 			return true;
 		}
 		if (next2->type != TOKEN_BRACKET_CLOSE) {
-			printf("ERROR: %d: expected ] after register.\n",
+			printf("ERROR: %d: expected ']' after register.\n",
 				token->line);
 			return true;
 		}
-		*base_reg = next1->num_value - 10;
+		*base_reg = (uint8_t)(next1->num_value - 20);
 		*current_token += 2;
-	} else if (token->type == TOKEN_REGISTER) {
-		if (token->num_value < 10 || token->num_value > 19) {
-			printf("ERROR: %d: only a0-3 are valid in %s.\n",
-				token->line, token->str);
-			return true;
-		}
-		*base_reg = token->num_value - 10;
-	} else {
-		printf("ERROR: %d: expected [a?] after comma.\n", token->line);
-		return true;
+		*is_relative = false;
+		return false;
+	}
+	if (token->type == TOKEN_REGISTER && token->num_value >= 20 &&
+		token->num_value <= 27) {
+		*base_reg = (uint8_t)(token->num_value - 20);
+		*is_relative = false;
+		return false;
 	}
 
-	return false;
+	printf("ERROR: %d: invalid branch target %s.\n", token->line,
+		token->str);
+	return true;
 }
 
-// Handles B, BL
-bool handle_branch_cond(const struct TokenList *tokenList,
+bool handle_branch(const struct TokenList *tokenList,
 	const struct SymbolTable *symbolTable, int *current_token,
 	uint16_t *machine_code, bool link, uint16_t current_address)
 {
+	struct Token *token = &tokenList->tokens[*current_token];
 	struct Token *next1 = &tokenList->tokens[*current_token + 1];
-	struct Token *next2 = &tokenList->tokens[*current_token + 2];
+
+	if (next1->type == TOKEN_CONDITION) {
+		struct Token *next2 = &tokenList->tokens[*current_token + 2];
+		if (next2->type != TOKEN_COMMA) {
+			printf("ERROR: %d: expected comma after condition in "
+			       "%s.\n",
+				token->line, token->str);
+			return true;
+		}
+		*current_token += 3;
+		uint8_t base_reg = 0;
+		uint16_t offset = 0;
+		bool is_relative = false;
+		if (handle_branch_target_parse(tokenList, symbolTable,
+			    current_token, current_address, &base_reg, &offset,
+			    &is_relative)) {
+			return true;
+		}
+		uint8_t cond = (uint8_t)next1->num_value;
+		if (is_relative) {
+			uint8_t imm8 = (uint8_t)(offset & 0xFF);
+			uint16_t base = (int)link ? 0x000D : 0x000C;
+			*machine_code = base | (cond << 4) |
+				((uint16_t)pack_imm8_mid(imm8) << 8);
+		} else {
+			uint16_t base = (int)link ? 0x2010 : 0x2000;
+			*machine_code = base | (base_reg << 9) | (cond << 4);
+		}
+		return false;
+	}
+
+	*current_token += 1;
 	uint8_t base_reg = 0;
 	uint16_t offset = 0;
 	bool is_relative = false;
-	uint16_t base = 0x0000;
-	*current_token += 3;
-	if (next1->type != TOKEN_CONDITION) {
-		printf("ERROR: %d: expected condition after instruction.\n",
-			next1->line);
-		return true;
-	}
-	if (next2->type != TOKEN_COMMA) {
-		printf("ERROR: %d: expected comma after condition.\n",
-			next2->line);
-		return true;
-	}
-	if (handle_branch_cond_parse(tokenList, symbolTable, current_token,
+	if (handle_branch_target_parse(tokenList, symbolTable, current_token,
 		    current_address, &base_reg, &offset, &is_relative)) {
 		return true;
 	}
 	if (is_relative) {
-		offset &= 0x1FF;
-		if (link) {
-			base = 0x000F;
-		} else {
-			base = 0x000E;
-		}
-		*machine_code = base | next1->num_value << 13 | offset << 4;
+		uint16_t imm12 = offset & 0x0FFF;
+		uint16_t base = (int)link ? 0x000F : 0x000E;
+		*machine_code = base | pack_imm12_branch(imm12);
 	} else {
-		if (link) {
-			base = 0x00F0;
-		} else {
-			base = 0x0070;
-		}
-		*machine_code = base | next1->num_value << 13 | base_reg << 8;
+		uint16_t base = (int)link ? 0x1D10 : 0x1D00;
+		*machine_code = base | (base_reg << 5);
 	}
 	return false;
 }

@@ -31,48 +31,68 @@ static bool encode_instructions(struct TokenList *tokenList,
 	if (!strcasecmp(token->str, "NOP")) {
 		machine_code = 0x0000;
 	} else if (!strcasecmp(token->str, "RET")) {
-		machine_code = 0x2000;
+		machine_code = 0x0010;
 	} else if (!strcasecmp(token->str, "WFI")) {
-		machine_code = 0x4000;
+		machine_code = 0x0020;
 	} else if (!strcasecmp(token->str, "RETI")) {
-		machine_code = 0x0400;
+		machine_code = 0x0030;
 	} else if (!strcasecmp(token->str, "SWI")) {
 		if (handle_ss(
-			    tokenList, current_token, &machine_code, 0x0080)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "INCC")) {
-		if (handle_sdss(
-			    tokenList, current_token, &machine_code, 0x0110)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "DECB")) {
-		if (handle_sdss(
-			    tokenList, current_token, &machine_code, 0x0190)) {
-			goto error;
-		}
-	} else if (!strcasecmp(token->str, "POP")) {
-		if (handle_sd(
-			    tokenList, current_token, &machine_code, 0x0100)) {
+			    tokenList, current_token, &machine_code, 0x1100)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "PUSH")) {
 		if (handle_ss(
-			    tokenList, current_token, &machine_code, 0x2080)) {
+			    tokenList, current_token, &machine_code, 0x1200)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "POP")) {
+		if (handle_sd(
+			    tokenList, current_token, &machine_code, 0x1300)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "MOV")) {
 		if (handle_mov(tokenList, current_token, &machine_code)) {
 			goto error;
 		}
+	} else if (!strcasecmp(token->str, "NOT")) {
+		if (handle_unary(
+			    tokenList, current_token, &machine_code, 0x6000)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "NEG")) {
+		if (handle_unary(
+			    tokenList, current_token, &machine_code, 0x7000)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "INC")) {
+		if (handle_unary(
+			    tokenList, current_token, &machine_code, 0x8000)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "DEC")) {
+		if (handle_unary(
+			    tokenList, current_token, &machine_code, 0x9000)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "INCC")) {
+		if (handle_unary(
+			    tokenList, current_token, &machine_code, 0xC000)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "DECB")) {
+		if (handle_unary(
+			    tokenList, current_token, &machine_code, 0xD000)) {
+			goto error;
+		}
 	} else if (!strcasecmp(token->str, "CMP")) {
 		if (handle_ds(
-			    tokenList, current_token, &machine_code, 0x0020)) {
+			    tokenList, current_token, &machine_code, 0xE000)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "CMA")) {
 		if (handle_ds(
-			    tokenList, current_token, &machine_code, 0x2020)) {
+			    tokenList, current_token, &machine_code, 0xF000)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "SUB")) {
@@ -82,7 +102,7 @@ static bool encode_instructions(struct TokenList *tokenList,
 		}
 	} else if (!strcasecmp(token->str, "SBB")) {
 		if (handle_rrr(
-			    tokenList, current_token, &machine_code, 0x0011)) {
+			    tokenList, current_token, &machine_code, 0x1001)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "ADD")) {
@@ -92,42 +112,67 @@ static bool encode_instructions(struct TokenList *tokenList,
 		}
 	} else if (!strcasecmp(token->str, "ADC")) {
 		if (handle_rrr(
-			    tokenList, current_token, &machine_code, 0x0031)) {
+			    tokenList, current_token, &machine_code, 0x3001)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "AND")) {
 		if (handle_rrr(
-			    tokenList, current_token, &machine_code, 0x0041)) {
+			    tokenList, current_token, &machine_code, 0x4001)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "ANDN")) {
+		if (handle_rrr(
+			    tokenList, current_token, &machine_code, 0x5001)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "OR")) {
 		if (handle_rrr(
-			    tokenList, current_token, &machine_code, 0x0051)) {
+			    tokenList, current_token, &machine_code, 0x6001)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "ORN")) {
+		if (handle_rrr(
+			    tokenList, current_token, &machine_code, 0x7001)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "NOR")) {
 		if (handle_rrr(
-			    tokenList, current_token, &machine_code, 0x0061)) {
+			    tokenList, current_token, &machine_code, 0x8001)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "XOR")) {
 		if (handle_rrr(
-			    tokenList, current_token, &machine_code, 0x0071)) {
+			    tokenList, current_token, &machine_code, 0x9001)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "SLL")) {
-		if (handle_shift(
-			    tokenList, current_token, &machine_code, 0x0002)) {
+		if (handle_shift(tokenList, current_token, &machine_code,
+			    0xA001, 0xD001)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "SRL")) {
-		if (handle_shift(
-			    tokenList, current_token, &machine_code, 0x0012)) {
+		if (handle_shift(tokenList, current_token, &machine_code,
+			    0xB001, 0xE011)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "SRA")) {
-		if (handle_shift(
-			    tokenList, current_token, &machine_code, 0x0022)) {
+		if (handle_shift(tokenList, current_token, &machine_code,
+			    0xC001, 0xF001)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "BST")) {
+		if (handle_bit_ops(tokenList, current_token, &machine_code,
+			    BIT_OP_BST)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "BIC")) {
+		if (handle_bit_ops(tokenList, current_token, &machine_code,
+			    BIT_OP_BIC)) {
+			goto error;
+		}
+	} else if (!strcasecmp(token->str, "BTS")) {
+		if (handle_bit_ops(tokenList, current_token, &machine_code,
+			    BIT_OP_BTS)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "LI")) {
@@ -146,12 +191,12 @@ static bool encode_instructions(struct TokenList *tokenList,
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "B")) {
-		if (handle_branch_cond(tokenList, symbolTable, current_token,
+		if (handle_branch(tokenList, symbolTable, current_token,
 			    &machine_code, false, *current_address)) {
 			goto error;
 		}
 	} else if (!strcasecmp(token->str, "BL")) {
-		if (handle_branch_cond(tokenList, symbolTable, current_token,
+		if (handle_branch(tokenList, symbolTable, current_token,
 			    &machine_code, true, *current_address)) {
 			goto error;
 		}
