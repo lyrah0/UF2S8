@@ -160,7 +160,7 @@ void test_integration_v2()
 	assert(buffer[18] == 0x26DB); // LB r13, [a3 + 4]
 	assert(buffer[19] == 0x0EEA); // SB r14, [a7]
 	assert(buffer[20] == 0x2400); // B EQ, a2
-	assert(buffer[21] == 0x2820); // BL NE, [a4]
+	assert(buffer[21] == 0x2910); // BL NE, [a4]
 
 	fclose(input_file);
 	free(tokens);

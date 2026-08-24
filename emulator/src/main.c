@@ -41,7 +41,8 @@ static int cpu_thread_worker(void *data)
 	viM->hw_regs[HW_GFX_CTRL - 0xFE00] = 0;
 	viM->uart_head = 0;
 	viM->uart_tail = 0;
-	for (int i = 0; i < 8; i++) {
+	for (int i = 0; i < 16; i++) {
+		viM->gpr[i] = 0;
 		viM->csr[i] = 0;
 	}
 	memory_init(viM);
@@ -77,10 +78,7 @@ static int cpu_thread_worker(void *data)
 				viM->running = false;
 				break;
 			}
-			viM->csr[0] &= 0x8F;
-			for (int i = 1; i < 6; i++) {
-				viM->csr[i] = 0;
-			}
+			viM->csr[0] &= 0x9F;
 			instruction_count++;
 		} else {
 			// Wait for 1000000/255/10 microseconds

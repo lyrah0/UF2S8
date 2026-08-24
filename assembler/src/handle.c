@@ -548,7 +548,7 @@ bool handle_bit_ops(const struct TokenList *tokenList, int *current_token,
 		if (op_type == BIT_OP_BST) {
 			*machine_code = 0x4000 | (imm << 9) | (reg << 4);
 		} else if (op_type == BIT_OP_BIC) {
-			*machine_code = 0x4010 | (imm << 9) | (reg << 4);
+			*machine_code = 0x4100 | (imm << 9) | (reg << 4);
 		} else {
 			*machine_code = 0xF011 | (imm << 9) | (reg << 4);
 		}
@@ -734,7 +734,7 @@ bool handle_branch(const struct TokenList *tokenList,
 			*machine_code = base | (cond << 4) |
 				((uint16_t)pack_imm8_mid(imm8) << 8);
 		} else {
-			uint16_t base = (int)link ? 0x2010 : 0x2000;
+			uint16_t base = (int)link ? 0x2100 : 0x2000;
 			*machine_code = base | (base_reg << 9) | (cond << 4);
 		}
 		return false;

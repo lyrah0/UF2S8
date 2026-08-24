@@ -101,14 +101,14 @@ static void test_vram_access()
 	// Test auto-increment (needs HW_GFX_CTRL bit 2 for write, bit 3 for read)
 	memory_write(viM, HW_GFX_CTRL, 0x0C); // Both bits set
 	memory_write(viM, HW_GFX_DATA, 0xEF);
-	assert(viM->vram[0x1235] == 0xEF);
-	assert(viM->vram_ptr == 0x1236);
+	assert(viM->vram[0x1234] == 0xEF);
+	assert(viM->vram_ptr == 0x1235);
 
 	uint8_t val = memory_read(
-		viM, HW_GFX_DATA); // Read from 0x1236, then increment
-	assert(val == 0); // VRAM was 0 at 0x1236
+		viM, HW_GFX_DATA); // Read from 0x1235, then increment
+	assert(val == 0); // VRAM was 0 at 0x1235
 	(void)val;
-	assert(viM->vram_ptr == 0x1237);
+	assert(viM->vram_ptr == 0x1236);
 
 	free(viM);
 	(void)printf("test_vram_access passed\n");

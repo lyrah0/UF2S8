@@ -9,19 +9,21 @@
 
 void trigger_interrupt(struct VirtualMachine *viM, uint8_t int_id)
 {
-	uint16_t stackp = (uint16_t)((viM->csr[7] << 8) | viM->csr[6]);
+	uint16_t stackp = (uint16_t)((viM->csr[0xF] << 8) | viM->csr[0xE]);
 
 	memory_write(viM, stackp--, (uint8_t)(viM->pc >> 8));
 	memory_write(viM, stackp--, (uint8_t)(viM->pc & 0xFF));
 	memory_write(viM, stackp--, viM->csr[0]);
 
-	viM->csr[7] = (uint8_t)(stackp >> 8);
-	viM->csr[6] = (uint8_t)stackp;
+	viM->csr[0xF] = (uint8_t)(stackp >> 8);
+	viM->csr[0xE] = (uint8_t)stackp;
 	viM->csr[0] &= 0x7F;
 
 	viM->wait_for_interrupt = false;
 
-	uint16_t vector_addr = (uint16_t)(0xFF00 + ((int_id & 0x7F) << 1));
+	uint16_t vbr_base = (uint16_t)((viM->csr[1] & 0xFE) << 8);
+	if (viM->csr[1] == 0) { vbr_base = 0xFF00; }
+	uint16_t vector_addr = (uint16_t)(vbr_base + ((int_id & 0x7F) << 1));
 	viM->pc = (uint16_t)(memory_read(viM, vector_addr) |
 		(memory_read(viM, (uint16_t)(vector_addr + 1)) << 8));
 }

@@ -77,8 +77,8 @@ struct VirtualMachine {
 	uint8_t bank_sel[NUM_WINDOWS];
 	const uint8_t *bank_read_ptr[NUM_WINDOWS];
 	uint8_t *bank_write_ptr[NUM_WINDOWS];
-	uint8_t gpr[8];
-	uint8_t csr[8];
+	uint8_t gpr[16];
+	uint8_t csr[16];
 	uint16_t pc;
 	uint16_t breakpoint[MAX_BREAKPOINTS];
 	int bp_count;
