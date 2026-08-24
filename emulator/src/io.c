@@ -33,11 +33,11 @@ void check_and_dispatch_interrupts(
 {
 	if ((viM->csr[0] & 0x80) == 0) { return; }
 
-	uint8_t hw_ctrl = viM->hw_regs[HW_HW_CTRL - 0xFE00];
+	uint8_t hw_ctrl = viM->hw_regs[HW_HW_CTRL - 0xFFF0];
 
 	// 1. Timer Interrupt (Priority 1, ID 0x10)
-	uint8_t hertz = viM->hw_regs[HW_TIMER_HZ - 0xFE00];
-	if ((hw_ctrl & 0x01) && hertz > 0) {
+	uint8_t hertz = viM->hw_regs[HW_TIMER_HZ - 0xFFF0];
+	if (hertz > 0) {
 		static uint64_t last_ticks = 0;
 		uint64_t period_ns = 1000000000ULL / hertz;
 		if (ticks_ns - last_ticks >= period_ns) {
@@ -47,17 +47,34 @@ void check_and_dispatch_interrupts(
 		}
 	}
 
-	// 2. Keyboard Interrupt (Priority 2, ID 0x11)
-	if ((hw_ctrl & 0x02) && viM->key_head != viM->key_tail) {
+	// 2. Keyboard Interrupt (Priority 2, ID 0x11, HW_CTRL bit 6)
+	if ((hw_ctrl & 0x40) && viM->key_head != viM->key_tail) {
 		trigger_interrupt(viM, 0x11);
 		return;
 	}
 
-	// 3. UART RX Interrupt (Priority 3, ID 0x12)
-	uint8_t uart_ctrl = viM->hw_regs[HW_UART_CTRL - 0xFE00];
-	if ((uart_ctrl & 0x01) && viM->uart_head != viM->uart_tail) {
+	// 3. UART RX Interrupt (Priority 3, ID 0x12, HW_CTRL bit 7)
+	if ((hw_ctrl & 0x80) && viM->uart_head != viM->uart_tail) {
 		trigger_interrupt(viM, 0x12);
 		return;
+	}
+
+	// 4. Vsync Interrupt (Priority 4, ID 0x13, HW_CTRL bit 5)
+	if (hw_ctrl & 0x20) {
+		if (viM->vsync_pending) {
+			viM->vsync_pending = false;
+			trigger_interrupt(viM, 0x13);
+			return;
+		}
+		if (!viM->graphics) {
+			static uint64_t last_vsync_ticks = 0;
+			uint64_t period_ns = 1000000000ULL / 60;
+			if (ticks_ns - last_vsync_ticks >= period_ns) {
+				last_vsync_ticks = ticks_ns;
+				trigger_interrupt(viM, 0x13);
+				return;
+			}
+		}
 	}
 }
 

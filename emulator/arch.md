@@ -11,161 +11,79 @@ interrupts:
 |0x10|Timer	|Timer interrupt
 |0x11|Keyboard  |Keyboard interrupt
 |0x12|UART      |UART RX interrupt
-|0x13-0x1F|Reserved|Reserved
+|0x13|Vsync	|Vertical sync interrupt
+|0x14-0x1F|Reserved|Reserved
 
 hardware registers:
 
-|Name	          |Address|Description|
-|-----------------|------|-----------|
-|reserved         |0xFE00-0xFEBF|Reserved
-|BLIT_SRC_X_L     |0xFEC0|Blitter source x coordinate / address low
-|BLIT_SRC_X_H     |0xFEC1|Blitter source x coordinate / address high
-|BLIT_SRC_Y_L     |0xFEC2|Blitter source y coordinate low
-|BLIT_SRC_Y_H     |0xFEC3|Blitter source y coordinate high
-|BLIT_DST_X_L     |0xFEC4|Blitter destination x coordinate low
-|BLIT_DST_X_H     |0xFEC5|Blitter destination x coordinate high
-|BLIT_DST_Y_L     |0xFEC6|Blitter destination y coordinate low
-|BLIT_DST_Y_H     |0xFEC7|Blitter destination y coordinate high
-|BLIT_CLIP_X_MIN_L|0xFEC8|Blitter clip x coordinate minimum low
-|BLIT_CLIP_X_MIN_H|0xFEC9|Blitter clip x coordinate minimum high
-|BLIT_CLIP_Y_MIN_L|0xFECA|Blitter clip y coordinate minimum low
-|BLIT_CLIP_Y_MIN_H|0xFECB|Blitter clip y coordinate minimum high
-|BLIT_CLIP_X_MAX_L|0xFECC|Blitter clip x coordinate maximum low
-|BLIT_CLIP_X_MAX_H|0xFECD|Blitter clip x coordinate maximum high
-|BLIT_CLIP_Y_MAX_L|0xFECE|Blitter clip y coordinate maximum low
-|BLIT_CLIP_Y_MAX_H|0xFECF|Blitter clip y coordinate maximum high
-|BLIT_SRC_STRIDE_L|0xFED0|Blitter source stride low
-|BLIT_SRC_STRIDE_H|0xFED1|Blitter source stride high
-|BLIT_DST_STRIDE_L|0xFED2|Blitter destination stride low
-|BLIT_DST_STRIDE_H|0xFED3|Blitter destination stride high
-|BLIT_WIDTH_L     |0xFED4|Blitter width low
-|BLIT_WIDTH_H     |0xFED5|Blitter width high
-|BLIT_HEIGHT_L    |0xFED6|Blitter height low
-|BLIT_HEIGHT_H    |0xFED7|Blitter height high
-|reserved         |0xFED8-0xFEDB|Reserved
-|BLIT_ALPHA       |0xFEDC|Blitter alpha level (0=transparent, 255=opaque)
-|BLIT_FLAGS       |0xFEDD|Blitter flags
-|BLIT_COLOR       |0xFEDE|Blitter color
-|BLIT_CMD         |0xFEDF|Blitter command
-|GFX_ADDR_L       |0xFEE0|Graphics VRAM address low
-|GFX_ADDR_H       |0xFEE1|Graphics VRAM address high
-|GFX_WIDTH        |0xFEE2|Graphics width (Pixels = Value * 8)
-|GFX_HEIGHT       |0xFEE3|Graphics height (Pixels = Value * 8)
-|reserved         |0xFEE4-0xFEED|Reserved
-|GFX_DATA         |0xFEEE|Graphics VRAM data
-|GFX_CTRL         |0xFEEF|graphics control
-|KBD_DATA         |0xFEF1|keyboard data
-|KBD_STATUS       |0xFEF2|keyboard status
-|UART_DATA        |0xFEF3|UART data register (R/W)
-|UART_STATUS      |0xFEF4|UART status register (R)
-|UART_CTRL        |0xFEF5|UART control register (R/W)
-|reserved         |0xFE00-0xFEF5|Reserved
-|BANK_SEL_0       |0xFEF6|Window 0 bank select register (8-bit)
-|BANK_SEL_1       |0xFEF7|Window 1 bank select register (8-bit)
-|BANK_SEL_2       |0xFEF8|Window 2 bank select register (8-bit)
-|BANK_SEL_3       |0xFEF9|Window 3 bank select register (8-bit)
-|BANK_SEL_4       |0xFEFA|Window 4 bank select register (8-bit)
-|BANK_SEL_5       |0xFEFB|Window 5 bank select register (8-bit)
-|BANK_SEL_6       |0xFEFC|Window 6 bank select register (8-bit)
-|BANK_SEL_7       |0xFEFD|Window 7 bank select register (8-bit)
-|TIMER_HZ         |0xFEFE|timer multiplier in hertz (1/hertz) 0=disabled
-|HW_CTRL          |0xFEFF|hardware control
+|Name		|Address|Description|
+|---------------|------|-----------|
+|TIMER_HZ	|0xFFF0|timer multiplier in hertz (1/hertz) 0=disabled
+|HW_CTRL	|0xFFF1|hardware control
+|HW_STATUS	|0xFFF2|keyboard status
+|KBD_DATA	|0xFFF3|keyboard data
+|UART_STATUS	|0xFFF4|UART status register (R)
+|UART_DATA	|0xFFF5|UART data register (R/W)
+|reserved 	|0xFFF6-0xFFF7|Reserved
+|BANK_SEL_0	|0xFFF8|Window 0 bank select register (8-bit)
+|BANK_SEL_1	|0xFFF9|Window 1 bank select register (8-bit)
+|BANK_SEL_2	|0xFFFA|Window 2 bank select register (8-bit)
+|BANK_SEL_3	|0xFFFB|Window 3 bank select register (8-bit)
+|BANK_SEL_4	|0xFFFC|Window 4 bank select register (8-bit)
+|BANK_SEL_5	|0xFFFD|Window 5 bank select register (8-bit)
+|BANK_SEL_6	|0xFFFE|Window 6 bank select register (8-bit)
+|BANK_SEL_7	|0xFFFF|Window 7 bank select register (8-bit)
 
 Memory Map:
 
 |Address Range|Size|Type|Description|
 |-------------|----|----|-----------|
-|0x0000-0x1FFF|8KB|Banked|Window 0 (Mapped to 256 banks)|
-|0x2000-0x3FFF|8KB|Banked|Window 1 (Mapped to 256 banks)|
-|0x4000-0x5FFF|8KB|Banked|Window 2 (Mapped to 256 banks)|
-|0x6000-0x7FFF|8KB|Banked|Window 3 (Mapped to 256 banks)|
-|0x8000-0x9FFF|8KB|Banked|Window 4 (Mapped to 256 banks)|
-|0xA000-0xBFFF|8KB|Banked|Window 5 (Mapped to 256 banks)|
-|0xC000-0xDFFF|8KB|Banked|Window 6 (Mapped to 256 banks)|
-|0xE000-0xFDFF|7.5KB|Banked|Window 7 (Mapped to 256 banks)|
-|0xFE00-0xFEFF|256B|Fixed|Hardware Registers|
-|0xFF00-0xFFFF|256B|Banked|Vector table / upper part of Window 7 (Mapped to 256 banks)|
+|0x0000-0x1FFF|8KiB|Banked|Window 0 (Mapped to 256 banks)|
+|0x2000-0x3FFF|8KiB|Banked|Window 1 (Mapped to 256 banks)|
+|0x4000-0x5FFF|8KiB|Banked|Window 2 (Mapped to 256 banks)|
+|0x6000-0x7FFF|8KiB|Banked|Window 3 (Mapped to 256 banks)|
+|0x8000-0x9FFF|8KiB|Banked|Window 4 (Mapped to 256 banks)|
+|0xA000-0xBFFF|8KiB|Banked|Window 5 (Mapped to 256 banks)|
+|0xC000-0xDFFF|8KiB|Banked|Window 6 (Mapped to 256 banks)|
+|0xE000-0xFFEF|7.98KiB|Banked|Window 7 (Mapped to 256 banks)|
+|0xFFF0-0xFFFF|16B|Fixed|Hardware Registers|
 
 Banking format:
 
 256 banks of 8KB (2MB total addressable pool):
 - Banks 0–127 (0x00–0x7F): 128 ROM banks (1024KB, Read-only)
-- Banks 128–247 (0x80–0xF7): 120 RAM banks (960KB, Read/Write). Bank 247 (0xF7) is the fixed RAM bank starting at 0xE000.
+- Banks 128–247 (0x80–0xF7): 120 RAM banks (960KB, Read/Write)
 - Banks 248–255 (0xF8–0xFF): 8 VRAM banks (64KB, Read/Write)
-
-BLIT_FLAGS format:
-
-|Bit	|Description|
-|-------|-----------|
-|7-4	|Reserved|
-|3      |Clip enable
-|2	|Alpha blending enable
-|1	|Vertical flip
-|0	|Horizontal flip
-
-BLIT_CMD list:
-
-|Value |Name               |Description|
-|------|-------------------|-----------|
-|0x01  |FILL_RECT          |Fill destination rectangle with BLIT_COLOR
-|0x02  |BLIT_MEM           |Copy block from Memory to VRAM
-|0x03  |BLIT_MEM_TRANS     |Copy block from Memory to VRAM (skip BLIT_COLOR pixels)
-|0x04  |BLIT_VRAM          |Copy block from VRAM to VRAM
-|0x05  |BLIT_VRAM_TRANS    |Copy block from VRAM to VRAM (skip BLIT_COLOR pixels)
-|0x06  |BLIT_XOR           |XOR source pixels with destination
-|0x07  |LINE               |Draw line from (SRC_X, SRC_Y) to (DST_X, DST_Y) using BLIT_COLOR
-
-
-GFX_CTRL format:
-
-|Bit	|Description|
-|-------|-----------|
-|7-4	|Reserved|
-|3      |auto increment address on read (VRAM)
-|2      |auto increment address on write (VRAM)
-|1-0	|color depth mode
-
-* color depth modes:
-        - 0 = 8bpp(RGB332)
-        - 1 = 4bpp
-        - 2 = 2bpp
-        - 3 = 1bpp
-
 
 HW_CTRL format:
 
 |Bit	|Description|
 |-------|-----------|
-|7-2	|Reserved|
-|1	|keyboard interrupt enable|
-|0	|Timer enable|
+|7	|UART receiver interrupt enable|
+|6	|Keyboard interrupt enable|
+|5	|Vsync interrupt enable|
+|4-3	|Reserved|
+|1-0	|Color depth mode|
 
+* color depth modes:
+	- all modes are 256x256 resolution
+	- 0 = 8bpp(RGB332) - 64KiB
+	- 1 = 4bpp - 32KiB
+	- 2 = 2bpp - 16KiB
+	- 3 = 1bpp - 8KiB
 
-KBD_STATUS format:
+HW_STATUS format:
 
 |Bit	|Description|
 |-------|-----------|
-|7-2	|Reserved|
-|1	|Press-Release (0=Press, 1=Release)|
+|7-4	|Reserved|
+|3	|UART transmitter empty (Always 1 in emulator)|
+|2	|UART receiver ready (0=No data, 1=Data available)|
+|1	|Keyboard Press-Release (0=Press, 1=Release)|
 |0	|Keyboard ready (0=Not ready, 1=Ready)|
-|
-|UART_STATUS format:
-|
-|Bit	|Description|
-|-------|-----------|
-|7-2	|Reserved|
-|1	|Transmitter empty (Always 1 in emulator)|
-|0	|Receiver ready (0=No data, 1=Data available)|
-|
-|UART_CTRL format:
-|
-|Bit	|Description|
-|-------|-----------|
-|7-1	|Reserved|
-|0	|Receiver interrupt enable|
 
 graphics VRAM:
 
 |Address|size|purpose|
 |-------|----|-------|
-|0xFFF0|16B|palette
+|0xFFF0|16B|palette(only valid in less than 8bpp)|

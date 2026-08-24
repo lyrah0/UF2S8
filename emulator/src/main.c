@@ -36,9 +36,9 @@ static int cpu_thread_worker(void *data)
 	viM->wait_for_interrupt = false;
 	viM->pc = 0;
 	viM->bp_count = 0;
-	viM->hw_regs[HW_HW_CTRL - 0xFE00] = 0;
-	// Default to RGB332 mode
-	viM->hw_regs[HW_GFX_CTRL - 0xFE00] = 0;
+	for (int i = 0; i < 16; i++) {
+		viM->hw_regs[i] = 0;
+	}
 	viM->uart_head = 0;
 	viM->uart_tail = 0;
 	for (int i = 0; i < 16; i++) {

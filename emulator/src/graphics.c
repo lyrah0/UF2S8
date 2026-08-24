@@ -1,30 +1,16 @@
 #include "graphics.h"
-#include "memory.h"
 #include "vm.h"
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_keyboard.h>
 #include <SDL3/SDL_pixels.h>
-#include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_surface.h>
 #include <SDL3/SDL_video.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-static inline uint16_t get_reg16(
-	const struct VirtualMachine *viM, uint16_t addr)
-{
-	return (uint16_t)(viM->hw_regs[addr - 0xFE00] |
-		(viM->hw_regs[addr + 1 - 0xFE00] << 8));
-}
-
-static inline uint8_t get_reg8(const struct VirtualMachine *viM, uint16_t addr)
-{ return viM->hw_regs[addr - 0xFE00]; }
 
 void handle_graphics_events(struct VirtualMachine *viM)
 {
@@ -48,131 +34,10 @@ void handle_graphics_events(struct VirtualMachine *viM)
 	}
 }
 
-static inline uint8_t read_pixel_vram(struct VirtualMachine *viM, uint8_t mode,
-	int pos_x, int pos_y, int stride)
-{
-	if (mode == 0) { // 8bpp
-		return viM->vram[(pos_y * stride) + pos_x];
-	}
-	if (mode == 1) { // 4bpp
-		uint8_t val =
-			viM->vram[(pos_y * (stride >> 1)) + (pos_x >> 1)];
-		return (pos_x & 1) ? (val & 0x0F) : (val >> 4);
-	}
-	if (mode == 2) { // 2bpp
-		uint8_t val =
-			viM->vram[(pos_y * (stride >> 2)) + (pos_x >> 2)];
-		return (val >> ((3 - (pos_x & 3)) * 2)) & 0x03;
-	}
-	if (mode == 3) { // 1bpp
-		uint8_t val =
-			viM->vram[(pos_y * (stride >> 3)) + (pos_x >> 3)];
-		return (val >> (7 - (pos_x & 7))) & 0x01;
-	}
-	return 0;
-}
-
-static inline void write_pixel_vram(struct VirtualMachine *viM, uint8_t mode,
-	int pos_x, int pos_y, int stride, uint8_t color, uint8_t flags,
-	uint8_t alpha, uint8_t cmd)
-{
-	uint8_t pixel_to_write = color;
-
-	if (mode == 0) { // 8bpp
-		uint16_t vram_addr = (uint16_t)((pos_y * stride) + pos_x);
-		if (cmd == 0x06) { // XOR
-			pixel_to_write = viM->vram[vram_addr] ^ color;
-		} else if (flags & 0x04) { // Alpha
-			uint8_t dst_color = viM->vram[vram_addr];
-			int src_r = (pixel_to_write >> 5) & 0x07;
-			int src_g = (pixel_to_write >> 2) & 0x07;
-			int src_b = pixel_to_write & 0x03;
-			int dst_r = (dst_color >> 5) & 0x07;
-			int dst_g = (dst_color >> 2) & 0x07;
-			int dst_b = dst_color & 0x03;
-			int res_r =
-				((src_r * alpha) + (dst_r * (255 - alpha))) /
-				255;
-			int res_g =
-				((src_g * alpha) + (dst_g * (255 - alpha))) /
-				255;
-			int res_b =
-				((src_b * alpha) + (dst_b * (255 - alpha))) /
-				255;
-			pixel_to_write =
-				(uint8_t)((res_r << 5) | (res_g << 2) | res_b);
-		}
-		viM->vram[vram_addr] = pixel_to_write;
-	} else if (mode == 1) { // 4bpp
-		uint16_t vram_addr =
-			(uint16_t)((pos_y * (stride >> 1)) + (pos_x >> 1));
-		uint8_t val = viM->vram[vram_addr];
-		if (cmd == 0x06) {
-			pixel_to_write = (((pos_x & 1) == 0) ? (val >> 4) :
-							       (val & 0x0F)) ^
-				(color & 0x0F);
-		}
-		if ((pos_x & 1) == 0) {
-			val = (uint8_t)((val & 0x0F) | (pixel_to_write << 4));
-		} else {
-			val = (uint8_t)((val & 0xF0) |
-				(pixel_to_write & 0x0F));
-		}
-		viM->vram[vram_addr] = val;
-	} else if (mode == 2) { // 2bpp
-		uint16_t vram_addr =
-			(uint16_t)((pos_y * (stride >> 2)) + (pos_x >> 2));
-		uint8_t val = viM->vram[vram_addr];
-		int shift = (3 - (pos_x & 3)) * 2;
-		if (cmd == 0x06) {
-			pixel_to_write = ((val >> shift) & 0x03) ^
-				(color & 0x03);
-		}
-		val = (uint8_t)((val & ~(0x03 << shift)) |
-			((pixel_to_write & 0x03) << shift));
-		viM->vram[vram_addr] = val;
-	} else if (mode == 3) { // 1bpp
-		uint16_t vram_addr =
-			(uint16_t)((pos_y * (stride >> 3)) + (pos_x >> 3));
-		uint8_t val = viM->vram[vram_addr];
-		int shift = 7 - (pos_x & 7);
-		if (cmd == 0x06) {
-			pixel_to_write = ((val >> shift) & 0x01) ^
-				(color & 0x01);
-		}
-		val = (uint8_t)((val & ~(0x01 << shift)) |
-			((pixel_to_write & 0x01) << shift));
-		viM->vram[vram_addr] = val;
-	}
-}
-
 static void update_colors(
 	struct VirtualMachine *viM, SDL_Color *colors, uint8_t mode)
 {
-	if (mode != 0) {
-		int pal_size = 0;
-		switch (mode) {
-		case 1:
-			pal_size = 16;
-			break;
-		case 2:
-			pal_size = 4;
-			break;
-		case 3:
-			pal_size = 2;
-			break;
-		default:
-			return;
-		}
-		for (int i = 0; i < pal_size; i++) {
-			uint8_t val = viM->vram[HW_PALETTE_START + i];
-			colors[i].r = (uint8_t)((val >> 5) * 255 / 7);
-			colors[i].g = (uint8_t)(((val >> 2) & 0x07) * 255 / 7);
-			colors[i].b = (uint8_t)((val & 0x03) * 255 / 3);
-			colors[i].a = 255;
-		}
-		SDL_SetPaletteColors(viM->sdl_palette, colors, 0, pal_size);
-	} else {
+	if (mode == 0) { // 8bpp RGB332 direct mode
 		static SDL_Color s_rgb332[256];
 		static bool s_rgb332_init = false;
 		if (!s_rgb332_init) {
@@ -187,6 +52,15 @@ static void update_colors(
 			s_rgb332_init = true;
 		}
 		SDL_SetPaletteColors(viM->sdl_palette, s_rgb332, 0, 256);
+	} else { // Indexed color modes (< 8bpp): read 16-entry palette from VRAM 0xFFF0..0xFFFF
+		for (int i = 0; i < 16; i++) {
+			uint8_t pal = viM->vram[0xFFF0 + i];
+			colors[i].r = (uint8_t)((pal >> 5) * 255 / 7);
+			colors[i].g = (uint8_t)(((pal >> 2) & 0x07) * 255 / 7);
+			colors[i].b = (uint8_t)((pal & 0x03) * 255 / 3);
+			colors[i].a = 255;
+		}
+		SDL_SetPaletteColors(viM->sdl_palette, colors, 0, 16);
 	}
 }
 
@@ -194,15 +68,13 @@ void render_graphics_frame(struct VirtualMachine *viM)
 {
 	if (!viM->graphics) { return; }
 
-	uint8_t mode = get_reg8(viM, HW_GFX_CTRL) & 0x03;
-	uint8_t *source_data = viM->vram;
-	int res_w = get_reg8(viM, HW_GFX_WIDTH) * 8;
-	int res_h = get_reg8(viM, HW_GFX_HEIGHT) * 8;
-	if (res_w == 0) { res_w = 320; }
-	if (res_h == 0) { res_h = 200; }
+	uint8_t mode = viM->hw_regs[HW_HW_CTRL - 0xFFF0] & 0x03;
+	const uint8_t *source_data = viM->vram;
+	const int res_w = 256;
+	const int res_h = 256;
 
 	if (viM->current_res_w != res_w || viM->current_res_h != res_h) {
-		SDL_SetWindowSize(viM->window, res_w, res_h);
+		SDL_SetWindowSize(viM->window, 512, 512);
 		SDL_SetRenderLogicalPresentation(viM->renderer, res_w, res_h,
 			SDL_LOGICAL_PRESENTATION_LETTERBOX);
 		viM->current_res_w = res_w;
@@ -212,24 +84,25 @@ void render_graphics_frame(struct VirtualMachine *viM)
 	SDL_Color colors[256];
 	update_colors(viM, colors, mode);
 
-	int pixels = res_w * res_h;
+	int pixels = res_w * res_h; // 65536
 	int vram_bytes = 0;
 	switch (mode) {
 	case 0:
-		vram_bytes = pixels;
+		vram_bytes = pixels; // 64KiB
 		break;
 	case 1:
-		vram_bytes = pixels >> 1;
+		vram_bytes = pixels >> 1; // 32KiB
 		break;
 	case 2:
-		vram_bytes = pixels >> 2;
+		vram_bytes = pixels >> 2; // 16KiB
 		break;
 	case 3:
-		vram_bytes = pixels >> 3;
+		vram_bytes = pixels >> 3; // 8KiB
 		break;
 	default:
 		break;
 	}
+
 	if (mode == 1) {
 		for (int i = 0; i < vram_bytes; i++) {
 			uint8_t vbyte = source_data[i];
@@ -259,187 +132,12 @@ void render_graphics_frame(struct VirtualMachine *viM)
 		source_data = viM->processed_vram;
 	}
 
-	SDL_Rect update_rect = { 0, 0, res_w, res_h };
-	SDL_UpdateTexture(
-		viM->dynamic_texture, &update_rect, source_data, res_w);
+	SDL_UpdateTexture(viM->dynamic_texture, nullptr, source_data, res_w);
 	SDL_RenderClear(viM->renderer);
-	SDL_FRect src_rect = { 0.0F, 0.0F, (float)res_w, (float)res_h };
-	SDL_FRect dst_rect = { 0.0F, 0.0F, (float)res_w, (float)res_h };
 	SDL_RenderTexture(
-		viM->renderer, viM->dynamic_texture, &src_rect, &dst_rect);
+		viM->renderer, viM->dynamic_texture, nullptr, nullptr);
 	SDL_RenderPresent(viM->renderer);
-}
-
-static void blit_line(struct VirtualMachine *viM, uint8_t mode, uint16_t src_x,
-	uint16_t src_y, int16_t dst_x, int16_t dst_y, uint16_t dst_stride,
-	uint8_t color, uint8_t flags, uint8_t alpha, uint8_t cmd,
-	int clip_x_min, int clip_x_max, int clip_y_min, int clip_y_max)
-{
-	int start_x = src_x;
-	int start_y = src_y;
-	int end_x = dst_x;
-	int end_y = dst_y;
-	int delta_x = abs(end_x - start_x);
-	int delta_y = -abs(end_y - start_y);
-	int step_x = start_x < end_x ? 1 : -1;
-	int step_y = start_y < end_y ? 1 : -1;
-	int err = delta_x + delta_y;
-
-	while (1) {
-		if (start_x >= clip_x_min && start_x <= clip_x_max &&
-			start_y >= clip_y_min && start_y <= clip_y_max) {
-			write_pixel_vram(viM, mode, start_x, start_y,
-				dst_stride, color, flags, alpha, cmd);
-		}
-		if (start_x == end_x && start_y == end_y) { break; }
-		int err_twice = 2 * err;
-		if (err_twice >= delta_y) {
-			err += delta_y;
-			start_x += step_x;
-		}
-		if (err_twice <= delta_x) {
-			err += delta_x;
-			start_y += step_y;
-		}
-	}
-}
-
-static uint8_t get_source_pixel(struct VirtualMachine *viM, uint8_t mode,
-	uint16_t src_x, uint16_t src_y, uint16_t src_stride, int cur_x,
-	int cur_y, uint8_t cmd, int res_w, int res_h)
-{
-	if (cmd <= 0x03) { // From Memory
-		uint16_t src_addr =
-			(uint16_t)(src_x + (cur_y * src_stride) + cur_x);
-		return memory_read(viM, src_addr);
-	}
-	// From VRAM
-	int in_x = src_x + cur_x;
-	int in_y = src_y + cur_y;
-	if (in_x < 0 || in_x >= res_w || in_y < 0 || in_y >= res_h) {
-		return 0;
-	}
-	return read_pixel_vram(viM, mode, in_x, in_y, src_stride);
-}
-
-static void blit_rectangle(struct VirtualMachine *viM, uint8_t mode,
-	uint16_t src_x, uint16_t src_y, int16_t dst_x, int16_t dst_y,
-	uint16_t width, uint16_t height, uint16_t src_stride,
-	uint16_t dst_stride, uint8_t color, uint8_t flags, uint8_t alpha,
-	uint8_t cmd, int clip_x_min, int clip_x_max, int clip_y_min,
-	int clip_y_max, int res_w, int res_h)
-{
-	// Fast path: 8bpp opaque FILL_RECT without flip, alpha or XOR
-	if (mode == 0 && cmd == 0x01 && (flags & 0x07) == 0) {
-		int start_x = (dst_x < clip_x_min) ? clip_x_min : dst_x;
-		int end_x = (dst_x + width - 1 > clip_x_max) ?
-			clip_x_max :
-			dst_x + width - 1;
-		if (start_x <= end_x) {
-			size_t span = (size_t)(end_x - start_x + 1);
-			for (int cur_y = 0; cur_y < height; cur_y++) {
-				int out_y = dst_y + cur_y;
-				if (out_y < clip_y_min || out_y > clip_y_max) {
-					continue;
-				}
-				uint16_t row_addr =
-					(uint16_t)((out_y * dst_stride) +
-						start_x);
-				(void)memset(
-					&viM->vram[row_addr], color, span);
-			}
-			return;
-		}
-	}
-
-	// General fallback for all modes & effects
-	for (int cur_y = 0; cur_y < height; cur_y++) {
-		for (int cur_x = 0; cur_x < width; cur_x++) {
-			int out_x = dst_x +
-				((flags & 0x01) ? (width - 1 - cur_x) : cur_x);
-			int out_y = dst_y +
-				((flags & 0x02) ? (height - 1 - cur_y) :
-						  cur_y);
-
-			if (out_x < clip_x_min || out_x > clip_x_max ||
-				out_y < clip_y_min || out_y > clip_y_max) {
-				continue;
-			}
-
-			uint8_t pixel_to_write = color;
-
-			if (cmd >= 0x02 && cmd <= 0x05) { // Blit commands
-				uint8_t src_pixel = get_source_pixel(viM, mode,
-					src_x, src_y, src_stride, cur_x, cur_y,
-					cmd, res_w, res_h);
-
-				if ((cmd == 0x03 || cmd == 0x05) &&
-					src_pixel == color) {
-					continue; // Transparent
-				}
-				pixel_to_write = src_pixel;
-			}
-
-			write_pixel_vram(viM, mode, out_x, out_y, dst_stride,
-				pixel_to_write, flags, alpha, cmd);
-		}
-	}
-}
-
-void execute_blit(struct VirtualMachine *viM, uint8_t cmd)
-{
-	if (cmd == 0) { return; }
-
-	// Read registers directly from MMIO block
-	uint16_t src_x = get_reg16(viM, HW_BLIT_SRC_X_L);
-	uint16_t src_y = get_reg16(viM, HW_BLIT_SRC_Y_L);
-	int16_t dst_x = (int16_t)get_reg16(viM, HW_BLIT_DST_X_L);
-	int16_t dst_y = (int16_t)get_reg16(viM, HW_BLIT_DST_Y_L);
-
-	uint16_t width = get_reg16(viM, HW_BLIT_WIDTH_L);
-	uint16_t height = get_reg16(viM, HW_BLIT_HEIGHT_L);
-	uint16_t src_stride = get_reg16(viM, HW_BLIT_SRC_STRIDE_L);
-	uint16_t dst_stride = get_reg16(viM, HW_BLIT_DST_STRIDE_L);
-
-	uint8_t color = get_reg8(viM, HW_BLIT_COLOR);
-	uint8_t alpha = get_reg8(viM, HW_BLIT_ALPHA);
-	uint8_t flags = get_reg8(viM, HW_BLIT_FLAGS);
-
-	uint8_t mode = get_reg8(viM, HW_GFX_CTRL) & 0x03;
-	int res_w = get_reg8(viM, HW_GFX_WIDTH) * 8;
-	int res_h = get_reg8(viM, HW_GFX_HEIGHT) * 8;
-	if (res_w == 0) { res_w = 320; }
-	if (res_h == 0) { res_h = 200; }
-
-	// Use res_w as default stride if 0
-	if (!src_stride) {
-		src_stride = (cmd <= 0x03) ? width : (uint16_t)res_w;
-	}
-	if (!dst_stride) { dst_stride = (uint16_t)res_w; }
-
-	// Clipping bounds
-	int clip_x_min = 0;
-	int clip_x_max = res_w - 1;
-	int clip_y_min = 0;
-	int clip_y_max = res_h - 1;
-
-	if (flags & 0x08) {
-		clip_x_min = get_reg16(viM, HW_BLIT_CLIP_X_MIN_L);
-		clip_x_max = get_reg16(viM, HW_BLIT_CLIP_X_MAX_L);
-		clip_y_min = get_reg16(viM, HW_BLIT_CLIP_Y_MIN_L);
-		clip_y_max = get_reg16(viM, HW_BLIT_CLIP_Y_MAX_L);
-	}
-
-	if (cmd == 0x07) { // LINE DRAW
-		blit_line(viM, mode, src_x, src_y, dst_x, dst_y, dst_stride,
-			color, flags, alpha, cmd, clip_x_min, clip_x_max,
-			clip_y_min, clip_y_max);
-	} else {
-		blit_rectangle(viM, mode, src_x, src_y, dst_x, dst_y, width,
-			height, src_stride, dst_stride, color, flags, alpha,
-			cmd, clip_x_min, clip_x_max, clip_y_min, clip_y_max,
-			res_w, res_h);
-	}
+	viM->vsync_pending = true;
 }
 
 bool init_sdl(struct VirtualMachine *viM) // NOLINT
@@ -450,7 +148,7 @@ bool init_sdl(struct VirtualMachine *viM) // NOLINT
 	}
 
 	viM->window = SDL_CreateWindow(
-		"UF2S8 Emulator", 640, 400, SDL_WINDOW_RESIZABLE);
+		"UF2S8 Emulator", 512, 512, SDL_WINDOW_RESIZABLE);
 	if (!viM->window) {
 		printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
 		SDL_Quit();
@@ -477,8 +175,7 @@ bool init_sdl(struct VirtualMachine *viM) // NOLINT
 	}
 
 	viM->dynamic_texture = SDL_CreateTexture(viM->renderer,
-		SDL_PIXELFORMAT_INDEX8, SDL_TEXTUREACCESS_STREAMING, 1024,
-		1024);
+		SDL_PIXELFORMAT_INDEX8, SDL_TEXTUREACCESS_STREAMING, 256, 256);
 	if (!viM->dynamic_texture) {
 		printf("SDL_CreateTexture Error: %s\n", SDL_GetError());
 		SDL_DestroyRenderer(viM->renderer);

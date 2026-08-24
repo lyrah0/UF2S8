@@ -10,12 +10,12 @@ static void test_basic_memory()
 	assert(viM);
 	memory_init(viM);
 
-	// Test basic RAM in Window 7 (address > 0xE000)
+	// Test basic RAM in Window 7 (0xE000 - 0xFFEF)
 	memory_write(viM, 0xF000, 0xAA);
 	assert(memory_read(viM, 0xF000) == 0xAA);
 
-	memory_write(viM, 0xFFFF, 0x55);
-	assert(memory_read(viM, 0xFFFF) == 0x55);
+	memory_write(viM, 0xFFEE, 0x55);
+	assert(memory_read(viM, 0xFFEE) == 0x55);
 
 	free(viM);
 	(void)printf("test_basic_memory passed\n");
@@ -52,7 +52,7 @@ static void test_banking()
 	memory_write(viM, 0x8500, 0x42);
 	assert(memory_read(viM, 0x8500) == 0x42);
 
-	// Test Window 7 (0xE000 - 0xFFFF) mapped to Bank 247
+	// Test Window 7 (0xE000 - 0xFFEF) mapped to Bank 247
 	memory_write(viM, HW_BANK_SEL_7, 247);
 	memory_write(viM, 0xE500, 0x99);
 	assert(memory_read(viM, 0xE500) == 0x99);
@@ -81,43 +81,40 @@ static void test_banking()
 	(void)printf("test_banking passed\n");
 }
 
-static void test_vram_access()
+static void test_hw_registers()
 {
 	struct VirtualMachine *viM = calloc(1, sizeof(struct VirtualMachine));
 	assert(viM);
+	memory_init(viM);
 
-	// Set VRAM address to 0x1234
-	memory_write(viM, HW_GFX_ADDR_L, 0x34);
-	memory_write(viM, HW_GFX_ADDR_H, 0x12);
-	assert(viM->vram_ptr == 0x1234);
+	// Test TIMER_HZ register (0xFFF0)
+	memory_write(viM, HW_TIMER_HZ, 60);
+	assert(memory_read(viM, HW_TIMER_HZ) == 60);
 
-	// Write to VRAM via HW_GFX_DATA
-	memory_write(viM, HW_GFX_DATA, 0xBE);
-	assert(viM->vram[0x1234] == 0xBE);
+	// Test HW_CTRL register (0xFFF1)
+	memory_write(viM, HW_HW_CTRL, 0xC1);
+	assert(memory_read(viM, HW_HW_CTRL) == 0xC1);
 
-	// Read from VRAM via HW_GFX_DATA
-	assert(memory_read(viM, HW_GFX_DATA) == 0xBE);
+	// Test HW_STATUS (0xFFF2): UART TX empty always 1 (bit 3 = 0x08)
+	uint8_t status = memory_read(viM, HW_HW_STATUS);
+	assert((status & 0x08) != 0);
 
-	// Test auto-increment (needs HW_GFX_CTRL bit 2 for write, bit 3 for read)
-	memory_write(viM, HW_GFX_CTRL, 0x0C); // Both bits set
-	memory_write(viM, HW_GFX_DATA, 0xEF);
-	assert(viM->vram[0x1234] == 0xEF);
-	assert(viM->vram_ptr == 0x1235);
-
-	uint8_t val = memory_read(
-		viM, HW_GFX_DATA); // Read from 0x1235, then increment
-	assert(val == 0); // VRAM was 0 at 0x1235
-	(void)val;
-	assert(viM->vram_ptr == 0x1236);
+	// Test BANK_SEL registers (0xFFF8 - 0xFFFF)
+	for (int i = 0; i < 8; i++) {
+		memory_write(viM, (uint16_t)(HW_BANK_SEL_0 + i), 100 + i);
+		assert(memory_read(viM, (uint16_t)(HW_BANK_SEL_0 + i)) ==
+			100 + i);
+		assert(viM->bank_sel[i] == 100 + i);
+	}
 
 	free(viM);
-	(void)printf("test_vram_access passed\n");
+	(void)printf("test_hw_registers passed\n");
 }
 
 int main()
 {
 	test_basic_memory();
 	test_banking();
-	test_vram_access();
+	test_hw_registers();
 	return 0;
 }
