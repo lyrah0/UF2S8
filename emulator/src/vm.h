@@ -68,6 +68,7 @@ struct VirtualMachine {
 	int uart_head;
 	int uart_tail;
 	volatile bool vsync_pending;
+	uint16_t lfsr;
 };
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 static inline int16_t sign_extend(uint16_t value, uint8_t bits)

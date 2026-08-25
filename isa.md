@@ -40,6 +40,9 @@ Control&status registers(i.e csr):
 |-------|-------|-----------|
 |flags	|0x0	|flags register
 |vbr    |0x1    |Vector branch register(7 upper bits, lowest bit hardwired to 0)
+|rng    |0x2    |Hardware random number generator (R: next 8-bit random value, W: seed)
+|cycl   |0xC    |Cycle counter low byte (16-bit cycle counter low)
+|cych   |0xD    |Cycle counter high byte (16-bit cycle counter high)
 |spl	|0xE	|Stack register low
 |sph	|0xF	|Stack register high
 

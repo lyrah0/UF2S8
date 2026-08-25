@@ -13,7 +13,8 @@ const struct registers registers[] = { { "r0", 0 }, { "r1", 1 }, { "r2", 2 },
 	{ "r13", 13 }, { "r14", 14 }, { "r15", 15 }, { "a0", 20 },
 	{ "a1", 21 }, { "a2", 22 }, { "a3", 23 }, { "a4", 24 }, { "a5", 25 },
 	{ "a6", 26 }, { "a7", 27 }, { "flags", 40 }, { "vbr", 41 },
-	{ "spl", 54 }, { "sph", 55 } };
+	{ "rng", 42 }, { "cycl", 52 }, { "cych", 53 }, { "spl", 54 },
+	{ "sph", 55 } };
 
 const struct conditions conditions[] = { { "ZS", 0 }, { "EQ", 0 }, { "ZC", 1 },
 	{ "NE", 1 }, { "CS", 2 }, { "HS", 2 }, { "CC", 3 }, { "LO", 3 },

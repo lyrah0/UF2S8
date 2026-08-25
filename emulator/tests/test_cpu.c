@@ -202,6 +202,54 @@ static void test_v2_new_instructions()
 	(void)printf("test_v2_new_instructions passed\n");
 }
 
+static void test_csrs()
+{
+	struct VirtualMachine *viM = calloc(1, sizeof(struct VirtualMachine));
+	assert(viM);
+	viM->lfsr = 0x1AC;
+
+	// Test cycle counter increments
+	assert(viM->csr[0xC] == 0 && viM->csr[0xD] == 0);
+	// Execute NOP (0x0000)
+	decode_execute(viM, 0x0000);
+	assert(viM->csr[0xC] == 1 && viM->csr[0xD] == 0);
+
+	// MOV r0, cycl (CSR 12) -> 0xA000 | (12 << 8) | (0 << 4)
+	decode_execute(viM, (uint16_t)(0xA000 | (12 << 8) | (0 << 4)));
+	assert(viM->gpr[0] == 2);
+
+	// Test RNG (CSR 2)
+	decode_execute(viM, (uint16_t)(0xA000 | (2 << 8) | (1 << 4)));
+	uint8_t rand1 = viM->gpr[1];
+
+	decode_execute(viM, (uint16_t)(0xA000 | (2 << 8) | (2 << 4)));
+	uint8_t rand2 = viM->gpr[2];
+	assert(rand1 != rand2);
+
+	// Verify that 9-bit LFSR can generate 0x00
+	viM->lfsr = 0x100; // bit 8 is 1, bits 0-7 are 0
+	decode_execute(viM, (uint16_t)(0xA000 | (2 << 8) | (0 << 4)));
+	// Next state from 0x100: lsb=0 -> 0x080 -> next value
+	// If state becomes 0x100:
+	bool found_zero = false;
+	for (int i = 0; i < 512; i++) {
+		decode_execute(viM, (uint16_t)(0xA000 | (2 << 8) | (0 << 4)));
+		if (viM->gpr[0] == 0x00) {
+			found_zero = true;
+			break;
+		}
+	}
+	assert(found_zero);
+
+	// Test RNG seed
+	viM->gpr[3] = 0x55;
+	decode_execute(viM, (uint16_t)(0xB000 | (3 << 8) | (2 << 4)));
+	assert(viM->lfsr == 0x155);
+
+	free(viM);
+	(void)printf("test_csrs passed\n");
+}
+
 int main()
 {
 	test_li();
@@ -210,5 +258,6 @@ int main()
 	test_stack();
 	test_branch();
 	test_v2_new_instructions();
+	test_csrs();
 	return 0;
 }

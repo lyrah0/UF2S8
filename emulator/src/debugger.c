@@ -21,6 +21,12 @@ static const char *get_csr_name(uint8_t csr)
 		return "flags";
 	case 1:
 		return "vbr";
+	case 2:
+		return "rng";
+	case 12:
+		return "cycl";
+	case 13:
+		return "cych";
 	case 14:
 		return "spl";
 	case 15:

@@ -159,6 +159,16 @@ static inline uint16_t get_addr_reg(
 	return (uint16_t)(viM->gpr[idx] | (viM->gpr[idx + 1] << 8));
 }
 
+static inline uint8_t lfsr_next(struct VirtualMachine *viM)
+{
+	uint16_t lfsr = viM->lfsr ? viM->lfsr : 0x1AC;
+	uint16_t lsb = lfsr & 1;
+	lfsr >>= 1;
+	if (lsb) { lfsr ^= 0x110; }
+	viM->lfsr = lfsr;
+	return (uint8_t)(lfsr & 0xFF);
+}
+
 static bool execute_op0(struct VirtualMachine *viM, uint16_t instruction)
 {
 	if (instruction == 0x0000) { // NOP
@@ -294,11 +304,18 @@ static bool execute_op0(struct VirtualMachine *viM, uint16_t instruction)
 		return false;
 	}
 	if (hi_nibble == 0xA) { // MOV rd, csr
-		viM->gpr[dst_nibble] = viM->csr[mod_nibble];
+		if (mod_nibble == 2) { // rng
+			viM->gpr[dst_nibble] = lfsr_next(viM);
+		} else {
+			viM->gpr[dst_nibble] = viM->csr[mod_nibble];
+		}
 		set_flags_logic(viM, viM->gpr[dst_nibble]);
 		return false;
 	}
 	if (hi_nibble == 0xB) { // MOV csr, rs
+		if (dst_nibble == 2) { // seed rng
+			viM->lfsr = (uint16_t)(viM->gpr[mod_nibble] | 0x100);
+		}
 		viM->csr[dst_nibble] = viM->gpr[mod_nibble];
 		return false;
 	}
@@ -334,6 +351,11 @@ static bool execute_op0(struct VirtualMachine *viM, uint16_t instruction)
 
 bool decode_execute(struct VirtualMachine *viM, uint16_t instruction)
 {
+	uint16_t cycles = (uint16_t)(viM->csr[0xC] | (viM->csr[0xD] << 8));
+	cycles++;
+	viM->csr[0xC] = (uint8_t)(cycles & 0xFF);
+	viM->csr[0xD] = (uint8_t)(cycles >> 8);
+
 	uint8_t major_op = instruction & 0x0F;
 	uint8_t dst = (uint8_t)((instruction >> 4) & 0x0F);
 	uint8_t mod = (uint8_t)((instruction >> 8) & 0x0F);

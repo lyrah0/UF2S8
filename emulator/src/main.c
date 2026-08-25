@@ -5,6 +5,7 @@
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_thread.h>
+#include <stdlib.h>
 #include <unistd.h> //NOLINT
 #include <bits/getopt_core.h> //NOLINT
 #define XOPEN_SOURCE 700
@@ -45,6 +46,7 @@ static int cpu_thread_worker(void *data)
 		viM->gpr[i] = 0;
 		viM->csr[i] = 0;
 	}
+	viM->lfsr = 0x100 | rand(); // simulate random value on CPU reset
 	memory_init(viM);
 	uint16_t instruction = 0;
 	uint64_t instruction_count = 0;
