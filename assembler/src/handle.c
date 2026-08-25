@@ -385,7 +385,7 @@ bool handle_add(const struct TokenList *tokenList,
 			*current_token += 5;
 			return false;
 		}
-		*current_token += 4;
+		*current_token += 5;
 		uint8_t immediate = 0;
 		if (handle_immediate(tokenList, symbolTable, current_token,
 			    &immediate)) {
@@ -408,7 +408,7 @@ bool handle_add(const struct TokenList *tokenList,
 		return false;
 	}
 
-	*current_token += 2;
+	*current_token += 3;
 	uint8_t immediate = 0;
 	if (handle_immediate(
 		    tokenList, symbolTable, current_token, &immediate)) {
@@ -458,15 +458,16 @@ bool handle_shift(const struct TokenList *tokenList, int *current_token,
 		if (next5->type == TOKEN_NUMBER) {
 			if (next5->num_value > 7) {
 				printf("Warning: %d: shift value greater than "
-				       "7, truncated.\n",
-					next5->line);
+				       "7, will truncate to 3 bits.\n",
+					token->line);
 			}
-			uint8_t imm = (uint8_t)(next5->num_value & 0x7);
-			*machine_code = imm_base | (imm << 9) | (d << 4);
+			uint8_t imm = (uint8_t)(next5->num_value & 0x07);
+			*machine_code = imm_base | (imm << 8) | (d << 4);
 			*current_token += 5;
 			return false;
 		}
-		printf("ERROR: %d: expected register or number.\n",
+		printf("ERROR: %d: expected register or shift amount after "
+		       "comma.\n",
 			token->line);
 		return true;
 	}
@@ -484,17 +485,17 @@ bool handle_shift(const struct TokenList *tokenList, int *current_token,
 	}
 	if (next3->type == TOKEN_NUMBER) {
 		if (next3->num_value > 7) {
-			printf("Warning: %d: shift value greater than 7, "
-			       "truncated.\n",
-				next3->line);
+			printf("Warning: %d: shift value greater than 7, will "
+			       "truncate to 3 bits.\n",
+				token->line);
 		}
-		uint8_t imm = (uint8_t)(next3->num_value & 0x7);
-		*machine_code = imm_base | (imm << 9) | (d << 4);
+		uint8_t imm = (uint8_t)(next3->num_value & 0x07);
+		*machine_code = imm_base | (imm << 8) | (d << 4);
 		*current_token += 3;
 		return false;
 	}
 
-	printf("ERROR: %d: expected register or number after comma.\n",
+	printf("ERROR: %d: expected register or shift amount after comma.\n",
 		token->line);
 	return true;
 }
@@ -584,12 +585,12 @@ bool handle_li(const struct TokenList *tokenList,
 	struct Token *next2 = &tokenList->tokens[*current_token + 2];
 	uint8_t immediate = 0;
 	if (handle_errors(tokenList, current_token, 1)) { return true; }
-	*current_token += 2;
 	if (next2->type != TOKEN_COMMA) {
 		printf("ERROR: %d: expected comma after register.\n",
 			token->line);
 		return true;
 	}
+	*current_token += 3;
 	if (handle_immediate(
 		    tokenList, symbolTable, current_token, &immediate)) {
 		return true;
