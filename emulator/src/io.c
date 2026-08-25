@@ -1,4 +1,5 @@
 #include "io.h"
+#include "graphics.h"
 #include "memory.h"
 #include "vm.h"
 #include <stdint.h>
@@ -74,6 +75,25 @@ void check_and_dispatch_interrupts(
 				trigger_interrupt(viM, 0x13);
 				return;
 			}
+		}
+	}
+
+	// 5. Hsync Interrupt (Priority 5, ID 0x14, HW_CTRL bit 4)
+	if (hw_ctrl & 0x10) {
+		static uint64_t last_hsync_ticks = 0;
+		int total_lines = get_graphics_mode_height(viM);
+		if (total_lines <= 0) { total_lines = 256; }
+		uint64_t period_ns = 1000000000ULL / (60ULL * (uint64_t)total_lines);
+		if (ticks_ns - last_hsync_ticks >= period_ns) {
+			last_hsync_ticks = ticks_ns;
+			render_scanline(viM, viM->current_scanline);
+			viM->current_scanline++;
+			if (viM->current_scanline >= total_lines) {
+				viM->current_scanline = 0;
+				viM->vsync_pending = true;
+			}
+			trigger_interrupt(viM, 0x14);
+			return;
 		}
 	}
 }

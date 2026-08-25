@@ -60,7 +60,7 @@ struct VirtualMachine {
 	int current_res_h;
 	SDL_Palette *sdl_palette;
 	uint8_t vram[VRAM_SIZE];
-	uint8_t processed_vram[256 * 256];
+	uint8_t processed_vram[896 * 704];
 	uint16_t key_buffer[64];
 	int key_head;
 	int key_tail;
@@ -69,6 +69,7 @@ struct VirtualMachine {
 	int uart_tail;
 	volatile bool vsync_pending;
 	uint16_t lfsr;
+	int current_scanline;
 };
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 static inline int16_t sign_extend(uint16_t value, uint8_t bits)

@@ -12,7 +12,8 @@ interrupts:
 |0x11|Keyboard  |Keyboard interrupt
 |0x12|UART      |UART RX interrupt
 |0x13|Vsync	|Vertical sync interrupt
-|0x14-0x1F|Reserved|Reserved
+|0x14|Hsync	|Horizontal sync interrupt
+|0x15-0x1F|Reserved|Reserved
 
 hardware registers:
 
@@ -62,15 +63,23 @@ HW_CTRL format:
 |7	|UART receiver interrupt enable|
 |6	|Keyboard interrupt enable|
 |5	|Vsync interrupt enable|
-|4-3	|Reserved|
-|1-0	|Color depth mode|
+|4	|Hsync interrupt enable|
+|3-0	|Graphics mode|
 
+8bpp is RGB332
 * color depth modes:
-	- all modes are 256x256 resolution
-	- 0 = 8bpp(RGB332) - 64KiB
-	- 1 = 4bpp - 32KiB
-	- 2 = 2bpp - 16KiB
-	- 3 = 1bpp - 8KiB
+	- 0 = 8bpp - 256x256 - 64KiB
+	- 1 = 4bpp - 256x256 - 32KiB
+	- 2 = 2bpp - 256x256 - 16KiB
+	- 3 = 1bpp - 256x256 - 8KiB
+	- 4 = 4bpp - 352x352 - 61952B
+	- 5 = 2bpp - 496x496 - 61504B
+	- 6 = 1bpp - 704x704 - 63504B
+	- 7 = 8bpp - 304x208 - 63232B
+	- 8 = 4bpp - 448x288 - 64512B
+	- 9 = 2bpp - 624x416 - 64896B
+	- 10 = 1bpp - 896x576 - 64512B
+	- 11-15 = reserved
 
 HW_STATUS format:
 
