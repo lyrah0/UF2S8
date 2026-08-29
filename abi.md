@@ -22,11 +22,16 @@ The hardware Stack Pointer (`spl`, `sph`) is stored in Control/Status Registers 
 ## Calling Convention (Fastcall)
 
 ### Argument Passing
-1. **First Argument**: Passed in `a0` (16-bit) or `r0` (8-bit).
-2. **Second Argument**: Passed in `a1` (16-bit) or `r2` (8-bit).
-3. **Third Argument**: Passed in `a2` (16-bit) or `r4` (8-bit).
-4. **Fourth Argument**: Passed in `a3` (16-bit) or `r6` (8-bit).
-5. **Additional Arguments**: Pushed onto the stack in reverse order (right-to-left).
+Arguments are allocated from left-to-right into the argument register pool (`r0–r7` / `a0–a3`):
+
+1. **8-bit Arguments**: Allocated to the next available general purpose register (`r0` through `r7`).
+2. **16-bit Arguments / Pointers**: Allocated to the next available even-aligned address pair (`a0 = r1:r0`, `a1 = r3:r2`, `a2 = r5:r4`, `a3 = r7:r6`). If the current free register is odd, it is skipped (padded) to maintain 16-bit alignment.
+3. **Stack Arguments**: Any argument that cannot fit in the remaining argument registers (`r0–r7`) is pushed onto the stack in reverse order (right-to-left).
+
+#### Example Allocations
+- `func(u8 a, u8 b, u8 c, u8 d, u8 e)` $\to$ `r0, r1, r2, r3, r4` (all in registers).
+- `func(u8 a, u16 b, u8 c, u16 d)` $\to$ `r0, a1 (r3:r2), r4, a3 (r7:r6)` (`r1` and `r5` skipped for alignment).
+- `func(u16 a, u16 b, u16 c, u16 d)` $\to$ `a0, a1, a2, a3`.
 
 ### Return Values
 - **8-bit**: Returned in `r0`.
@@ -35,6 +40,7 @@ The hardware Stack Pointer (`spl`, `sph`) is stored in Control/Status Registers 
 ### Preservation Rules
 - `a0` through `a3` (`r0-r7`) are **volatile (caller-saved)**. The caller must save them if their values are needed after a function call.
 - `a4` through `a7` (`r8-r15`) are **non-volatile (callee-saved)**. The callee must save and restore them if modified.
+- **Stack Arguments**: Arguments passed on the stack are owned by the callee and are considered volatile. The callee is permitted to overwrite incoming stack argument slots (e.g. `[a7 + 5]`) as local scratch space; the caller cannot assume their contents are preserved after a call. The caller remains responsible for cleaning up stack arguments upon return.
 
 ## Stack Frame Layout
 
