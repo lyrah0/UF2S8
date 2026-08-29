@@ -83,7 +83,8 @@ void check_and_dispatch_interrupts(
 		static uint64_t last_hsync_ticks = 0;
 		int total_lines = get_graphics_mode_height(viM);
 		if (total_lines <= 0) { total_lines = 256; }
-		uint64_t period_ns = 1000000000ULL / (60ULL * (uint64_t)total_lines);
+		uint64_t period_ns =
+			1000000000ULL / (60ULL * (uint64_t)total_lines);
 		if (ticks_ns - last_hsync_ticks >= period_ns) {
 			last_hsync_ticks = ticks_ns;
 			render_scanline(viM, viM->current_scanline);

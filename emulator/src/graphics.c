@@ -11,6 +11,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 void handle_graphics_events(struct VirtualMachine *viM)
 {
@@ -45,7 +46,7 @@ static const struct GraphicsModeInfo GFX_MODES[11] = {
 	{ 256, 256, 8, 65536 }, // 0: 8bpp 256x256 64KiB
 	{ 256, 256, 4, 32768 }, // 1: 4bpp 256x256 32KiB
 	{ 256, 256, 2, 16384 }, // 2: 2bpp 256x256 16KiB
-	{ 256, 256, 1, 8192  }, // 3: 1bpp 256x256 8KiB
+	{ 256, 256, 1, 8192 }, // 3: 1bpp 256x256 8KiB
 	{ 352, 352, 4, 61952 }, // 4: 4bpp 352x352 61952B
 	{ 496, 496, 2, 61504 }, // 5: 2bpp 496x496 61504B
 	{ 704, 704, 1, 63504 }, // 6: 1bpp 704x704 63504B
@@ -79,7 +80,7 @@ void render_scanline(struct VirtualMachine *viM, int y)
 			uint8_t p0 = (vbyte >> 4) & 0x0F;
 			uint8_t p1 = vbyte & 0x0F;
 			dst[(ptrdiff_t)x * 2] = viM->vram[0xFFF0 + p0];
-			dst[(ptrdiff_t)x * 2 + 1] = viM->vram[0xFFF0 + p1];
+			dst[((ptrdiff_t)x * 2) + 1] = viM->vram[0xFFF0 + p1];
 		}
 	} else if (bpp == 2) {
 		int vram_row_bytes = res_w / 4;
@@ -88,8 +89,11 @@ void render_scanline(struct VirtualMachine *viM, int y)
 		for (int x = 0; x < vram_row_bytes; x++) {
 			uint8_t vbyte = src[x];
 			for (int j = 0; j < 4; j++) {
-				uint8_t p = (uint8_t)((vbyte >> ((3 - j) * 2)) & 0x03);
-				dst[(ptrdiff_t)x * 4 + j] = viM->vram[0xFFF0 + p];
+				uint8_t p =
+					(uint8_t)((vbyte >> ((3 - j) * 2)) &
+						0x03);
+				dst[((ptrdiff_t)x * 4) + j] =
+					viM->vram[0xFFF0 + p];
 			}
 		}
 	} else if (bpp == 1) {
@@ -99,8 +103,10 @@ void render_scanline(struct VirtualMachine *viM, int y)
 		for (int x = 0; x < vram_row_bytes; x++) {
 			uint8_t vbyte = src[x];
 			for (int j = 0; j < 8; j++) {
-				uint8_t p = (uint8_t)((vbyte >> (7 - j)) & 0x01);
-				dst[(ptrdiff_t)x * 8 + j] = viM->vram[0xFFF0 + p];
+				uint8_t p =
+					(uint8_t)((vbyte >> (7 - j)) & 0x01);
+				dst[((ptrdiff_t)x * 8) + j] =
+					viM->vram[0xFFF0 + p];
 			}
 		}
 	}
@@ -130,10 +136,13 @@ void render_graphics_frame(struct VirtualMachine *viM)
 			SDL_DestroyTexture(viM->dynamic_texture);
 		}
 		viM->dynamic_texture = SDL_CreateTexture(viM->renderer,
-			SDL_PIXELFORMAT_INDEX8, SDL_TEXTUREACCESS_STREAMING, res_w, res_h);
+			SDL_PIXELFORMAT_INDEX8, SDL_TEXTUREACCESS_STREAMING,
+			res_w, res_h);
 		if (viM->dynamic_texture) {
-			SDL_SetTexturePalette(viM->dynamic_texture, viM->sdl_palette);
-			SDL_SetTextureScaleMode(viM->dynamic_texture, SDL_SCALEMODE_NEAREST);
+			SDL_SetTexturePalette(
+				viM->dynamic_texture, viM->sdl_palette);
+			SDL_SetTextureScaleMode(
+				viM->dynamic_texture, SDL_SCALEMODE_NEAREST);
 		}
 		SDL_SetRenderLogicalPresentation(viM->renderer, res_w, res_h,
 			SDL_LOGICAL_PRESENTATION_LETTERBOX);
@@ -148,7 +157,8 @@ void render_graphics_frame(struct VirtualMachine *viM)
 		}
 	}
 
-	SDL_UpdateTexture(viM->dynamic_texture, nullptr, viM->processed_vram, res_w);
+	SDL_UpdateTexture(
+		viM->dynamic_texture, nullptr, viM->processed_vram, res_w);
 	SDL_RenderClear(viM->renderer);
 	SDL_RenderTexture(
 		viM->renderer, viM->dynamic_texture, nullptr, nullptr);
