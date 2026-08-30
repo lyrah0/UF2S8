@@ -322,7 +322,7 @@ module stage_decode (
 			3'h4: w_id_adata = i_wb_adata;
 			3'h5: w_id_adata = {8'hFF, r_int_id, 1'b0};
 			3'h6: w_id_adata = {8'hFF, r_int_id, 1'b1};
-			default: o_id_adata = 16'hx;
+			default: w_id_adata = 16'hx;
 		endcase
 		case (w_id_adata_selp)
 			4'h0: o_id_adata = w_id_adata;
